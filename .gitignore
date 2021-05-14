@@ -1,3 +1,14 @@
+# CMake user-specific
+ALL_BUILD*
+INSTALL*
+ZERO_CHECK*
+CMakeCache.txt
+CMakeFiles/
+HimitsuAPI*
+_deps/
+cmake_install.cmake
+lib/
+
 # User-specific files
 *.rsuser
 *.suo

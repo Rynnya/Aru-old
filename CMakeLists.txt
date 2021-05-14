@@ -7,6 +7,7 @@ project(${project_name})
 option(USE_MARIADB "Use MariaDB instead of MySQL" OFF)
 set(OATPP_BUILD_TESTS OFF CACHE BOOL "Create test target for oat++")
 set(BUILD_TESTING OFF CACHE BOOL "Build tests")
+set(ENABLE_TESTS OFF CACHE BOOL "Build unit tests")
 
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/libs/oatpp/CMakeLists.txt)
   message(FATAL_ERROR "oatpp is missing in folder /libs/oatpp. Have you initialized the submodules / downloaded the extra libraries?")
@@ -128,5 +129,13 @@ if (MSVC)
     tacopie
     PROPERTIES FOLDER libs
   )
+  # https://stackoverflow.com/a/54531576
+  file(GLOB_RECURSE _source_list *.cpp* *.h* *.hpp*)
+  foreach(_source IN ITEMS ${_source_list})
+    get_filename_component(_source_path "${_source}" PATH)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
+    string(REPLACE "/" "\\" _group_path "${_group_path}")
+    source_group("${_group_path}" FILES "${_source}")
+  endforeach()
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME}-exe)
 endif()

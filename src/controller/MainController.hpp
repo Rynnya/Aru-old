@@ -39,7 +39,6 @@ public:
 		QUERY(Int32, user_mode, "mode", "0"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"), QUERY(String, country, "country", ""))
 	{
 		std::string mode = himitsu::osu::modeToString(user_mode);
-		std::string table = "users_stats";
 		std::string key = "ripple:leaderboard:" + mode;
 		if (country != "")
 		{

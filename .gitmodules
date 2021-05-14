@@ -4,18 +4,23 @@
 [submodule "libs/sqlpp11"]
 	path = libs/sqlpp11
 	url = https://github.com/rbock/sqlpp11
+	ignore = dirty
 [submodule "libs/sqlpp11-connector-mysql"]
 	path = libs/sqlpp11-connector-mysql
 	url = https://github.com/rbock/sqlpp11-connector-mysql
+	ignore = dirty
 [submodule "libs/oatpp"]
 	path = libs/oatpp
 	url = https://github.com/oatpp/oatpp
+	ignore = dirty
 [submodule "libs/fmt"]
 	path = libs/fmt
 	url = https://github.com/fmtlib/fmt
+	ignore = dirty
 [submodule "libs/json"]
 	path = libs/json
 	url = https://github.com/nlohmann/json
+	ignore = dirty
 [submodule "libs/cpp_redis"]
 	path = libs/cpp_redis
 	url = https://github.com/cpp-redis/cpp_redis

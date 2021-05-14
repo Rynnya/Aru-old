@@ -50,6 +50,6 @@ void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 		}
 
 		// Don't overuse osu!API, always remember about 60 request per minute
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::seconds(4));
 	}
 }
