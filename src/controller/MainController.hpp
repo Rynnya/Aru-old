@@ -1,27 +1,19 @@
 #ifndef MainController_hpp
 #define MainController_hpp
 
-#include "Globals.h"
-#include "dto/DTOs.hpp"
+#include "Globals.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
-#include "database/tables/UsersTable.h"
+#include "database/tables/UsersTable.hpp"
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- Begin codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
-/**
- * Sample Api Controller.
- */
 class MainController : public oatpp::web::server::api::ApiController {
 private:
 	typedef MainController __ControllerType;
 public:
-	/**
-	 * Constructor with object mapper.
-	 * @param objectMapper - default object mapper used to serialize/deserialize DTOs.
-	 */
 	MainController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
@@ -29,10 +21,10 @@ public:
 
 	ENDPOINT("GET", "/ping", Ping)
 	{
-		DefaultDTO::Wrapper pong = DefaultDTO::createShared();
-		pong->statusCode = 200;
-		pong->message = himitsu::memes[rand() % himitsu::memes.size()].c_str();
-		return createDtoResponse(Status::CODE_200, pong);
+		json response;
+		response["statusCode"] = 200;
+		response["message"] = himitsu::memes[rand() % himitsu::memes.size()].c_str();
+		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/leaderboard", Leaderboard, 
@@ -62,7 +54,10 @@ public:
 		catch (...)
 		{
 			range.~vector();
-			return error500();
+			json error;
+			error["statusCode"] = 500;
+			error["message"] = "something bad happend :c";
+			return createResponse(Status::CODE_500, error.dump().c_str());
 		};
 
 		if (range.empty())
@@ -72,9 +67,7 @@ public:
 			response["statusCode"] = 200;
 			response["users"] = json::array();
 
-			auto w = createResponse(Status::CODE_200, response.dump().c_str());
-			CORS_SUPPORT(w);
-			return w;
+			return createResponse(Status::CODE_200, response.dump().c_str());
 		}
 
 		std::string users_vec;
@@ -212,14 +205,11 @@ public:
 		}
 
 		range.~vector();
-
-		auto w = createResponse(Status::CODE_200, response.dump().c_str());
-		CORS_SUPPORT(w);
-		return w;
+		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 };
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- End codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
-#endif // !MainController_hpp
+#endif

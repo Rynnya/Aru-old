@@ -1,7 +1,7 @@
-#ifndef UserTable
-#define UserTable
+#ifndef UserTable_hpp
+#define UserTable_hpp
 
-#include "CoreTable.h"
+#include "CoreTable.hpp"
 
 struct users_objects
 {
@@ -226,4 +226,4 @@ database_table(users_stats_relax,
 	users_stats_objects::count_XH_ctb
 );
 
-#endif // !UserTable
+#endif

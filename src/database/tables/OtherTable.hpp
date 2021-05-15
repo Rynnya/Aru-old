@@ -1,7 +1,7 @@
-#ifndef OtherTable
-#define OtherTable
+#ifndef OtherTable_hpp
+#define OtherTable_hpp
 
-#include "CoreTable.h"
+#include "CoreTable.hpp"
 
 struct token_objects
 {
@@ -22,4 +22,4 @@ database_table(tokens,
 	token_objects::last_updated
 );
 
-#endif // !OtherTable
+#endif

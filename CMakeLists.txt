@@ -28,13 +28,11 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/libs/json/CMakeLists.txt)
   message(FATAL_ERROR "nlohmann-json is missing in folder /libs/json. Have you initialized the submodules / downloaded the extra libraries?")
 endif()
 
-if (MSVC)
-  add_compile_options(
+add_compile_options(
     $<$<CONFIG:>:/MD>
     $<$<CONFIG:Debug>:/MDd>
     $<$<CONFIG:Release>:/MD>
-  )
-endif()
+)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(libs/oatpp/)
@@ -49,29 +47,27 @@ include_directories(src)
 add_library(${project_name}-lib
 	src/controller/BeatmapController.cpp
 	src/controller/BeatmapController.hpp
-	src/controller/MainController.cpp
 	src/controller/MainController.hpp
 	src/controller/UsersController.cpp
 	src/controller/UsersController.hpp
 	src/database/connection/HimitsuDB.cpp
-	src/database/connection/HimitsuDB.h
+	src/database/connection/HimitsuDB.hpp
 	src/database/connection/Redis.cpp
-	src/database/connection/Redis.h
-	src/database/tables/CoreTable.h
-	src/database/tables/BeatmapTable.h
-	src/database/tables/OtherTable.h
-	src/database/tables/ScoresTable.h
-	src/database/tables/UsersTable.h
-	src/database/SQL.h
-	src/dto/DTOs.hpp
-	src/utils/curl.h
-	src/utils/math.h
-	src/utils/osu.h
-	src/utils/time.h
-	src/utils/utils.h
+	src/database/connection/Redis.hpp
+	src/database/tables/CoreTable.hpp
+	src/database/tables/BeatmapTable.hpp
+	src/database/tables/OtherTable.hpp
+	src/database/tables/ScoresTable.hpp
+	src/database/tables/UsersTable.hpp
+	src/database/SQL.hpp
+	src/utils/curl.hpp
+	src/utils/math.hpp
+	src/utils/osu.hpp
+	src/utils/time.hpp
+	src/utils/utils.hpp
 	src/AppComponent.hpp
-	src/Config.h
-	src/Globals.h
+	src/Config.hpp
+	src/Globals.hpp
 )
 
 add_executable(${project_name}-exe src/App.cpp)

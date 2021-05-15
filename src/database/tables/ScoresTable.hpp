@@ -1,7 +1,7 @@
-#ifndef ScoresTable
-#define ScoresTable
+#ifndef ScoresTable_hpp
+#define ScoresTable_hpp
 
-#include "CoreTable.h"
+#include "CoreTable.hpp"
 
 struct scores_objects
 {
@@ -67,4 +67,4 @@ database_table(scores_first,
 	scores_first_objects::is_relax
 );
 
-#endif // !BeatmapTable
+#endif

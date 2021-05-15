@@ -1,7 +1,7 @@
-#ifndef HIMITSU_DB
-#define HIMITSU_DB
+#ifndef HimitsuDB_hpp
+#define HimitsuDB_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 namespace himitsu
 {
@@ -33,8 +33,6 @@ namespace himitsu
 		std::mutex _mtx;
 		std::list<std::shared_ptr<Connection>> m_connections;
 	};
-
-	
 }
 
-#endif // !HIMITSU_DB
+#endif

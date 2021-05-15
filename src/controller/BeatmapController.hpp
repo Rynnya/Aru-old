@@ -1,42 +1,35 @@
 #ifndef BeatmapController_hpp
 #define BeatmapController_hpp
 
-#include "Globals.h"
-#include "dto/DTOs.hpp"
+#include "Globals.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
-#include "database/tables/BeatmapTable.h"
-#include "database/tables/ScoresTable.h"
-#include "database/tables/UsersTable.h"
+
+#include "database/tables/BeatmapTable.hpp"
+#include "database/tables/ScoresTable.hpp"
+#include "database/tables/UsersTable.hpp"
+
 #include <thread>
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- Begin codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
-/**
- * Sample Api Controller.
- */
 class BeatmapController : public oatpp::web::server::api::ApiController {
 private:
 	typedef BeatmapController __ControllerType;
 public:
-	/**
-	 * Constructor with object mapper.
-	 * @param objectMapper - default object mapper used to serialize/deserialize DTOs.
-	 */
 	BeatmapController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
 	void setDifficulties(std::vector<int> beatmaps_v);
 public:
 
-	// Perform download from osu!API, requested by LETS
+	// Perform download from osu!API, requested by Bancho
 	ENDPOINT("GET", "/beatmaps/{id}/download", beatmapsDownload, PATH(Int32, id))
 	{
 		if (!config::api_enabled)
 		{
-			// Don't make more errors when API is disabled
 			return createResponse(Status::CODE_200, "OK");
 		}
 
@@ -137,10 +130,10 @@ public:
 
 		if (result.empty())
 		{
-			DefaultDTO::Wrapper repo = DefaultDTO::createShared();
-			repo->statusCode = 404;
-			repo->message = "cannot find beatmap set";
-			return createDtoResponse(Status::CODE_404, repo);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "cannot find beatmap set";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		json response = json::array();
@@ -209,10 +202,10 @@ public:
 
 		if (result.empty())
 		{
-			DefaultDTO::Wrapper repo = DefaultDTO::createShared();
-			repo->statusCode = 404;
-			repo->message = "cannot find beatmap";
-			return createDtoResponse(Status::CODE_404, repo);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "cannot find beatmap set";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		const auto& row = result.front();
@@ -276,10 +269,10 @@ public:
 		int play_mode = mode;
 		if (play_mode == 3 && isRelax)
 		{
-			DefaultDTO::Wrapper def = DefaultDTO::createShared();
-			def->statusCode = 404;
-			def->message = "mania don't have relax mode";
-			return this->createDtoResponse(Status::CODE_404, def);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "mania don't have relax mode";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		std::string md5 = "";
@@ -290,10 +283,10 @@ public:
 		);
 		if (res.empty())
 		{
-			DefaultDTO::Wrapper repo = DefaultDTO::createShared();
-			repo->statusCode = 404;
-			repo->message = "cannot find beatmap";
-			return createDtoResponse(Status::CODE_404, repo);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "cannot find beatmap";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 		const auto& r = res.front();
 		if (play_mode == -1) play_mode = r.mode;
@@ -331,6 +324,6 @@ public:
 
 };
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- End codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
-#endif // !MainController_hpp
+#endif

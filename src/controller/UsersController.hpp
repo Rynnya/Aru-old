@@ -1,31 +1,23 @@
 #ifndef UsersController_hpp
 #define UsersController_hpp
 
-#include "Globals.h"
-#include "dto/DTOs.hpp"
+#include "Globals.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
 
-#include "database/tables/UsersTable.h"
+#include "database/tables/UsersTable.hpp"
 
-/**
- * Sample Api Controller.
- */
 SQLPP_ALIAS_PROVIDER(score_t);
 SQLPP_ALIAS_PROVIDER(beatmap_t);
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- Begin codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
 class UsersController : public oatpp::web::server::api::ApiController {
 private:
 	typedef UsersController __ControllerType;
 public:
-	/**
-	 * Constructor with object mapper.
-	 * @param objectMapper - default object mapper used to serialize/deserialize DTOs.
-	 */
 	UsersController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
@@ -57,10 +49,10 @@ public:
 		{
 			if (!getMode(id, &mode))
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 		}
 		else
@@ -68,10 +60,10 @@ public:
 
 		if (relax == 1 && mode == "mania")
 		{
-			DefaultDTO::Wrapper def = DefaultDTO::createShared();
-			def->statusCode = 404;
-			def->message = "mania don't have relax mode";
-			return createDtoResponse(Status::CODE_404, def);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "mania don't have relax mode";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -80,7 +72,6 @@ public:
 		json response;
 
 		users_stats table{};
-		// Code identical but select state, because we using static tables
 		if (relax == 1)
 		{
 			users_stats_relax table{};
@@ -116,10 +107,10 @@ public:
 			auto result = (**db)(query);
 			if (result.empty())
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 
 			const auto& row = result.front();
@@ -180,10 +171,10 @@ public:
 			auto result = (**db)(query);
 			if (result.empty())
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 
 			const auto& row = result.front();
@@ -216,10 +207,10 @@ public:
 		{
 			if (!getMode(id, &mode))
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 		}
 		else
@@ -227,10 +218,10 @@ public:
 
 		if (relax == 1 && mode == "mania")
 		{
-			DefaultDTO::Wrapper def = DefaultDTO::createShared();
-			def->statusCode = 404;
-			def->message = "mania don't have relax mode";
-			return createDtoResponse(Status::CODE_404, def);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "mania don't have relax mode";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
@@ -250,10 +241,10 @@ public:
 
 			if (result.empty())
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 
 			const auto& row = result.front();
@@ -341,10 +332,10 @@ public:
 
 			if (result.empty())
 			{
-				DefaultDTO::Wrapper def = DefaultDTO::createShared();
-				def->statusCode = 404;
-				def->message = "player not found";
-				return createDtoResponse(Status::CODE_404, def);
+				json error;
+				error["statusCode"] = 404;
+				error["message"] = "player not found";
+				return createResponse(Status::CODE_404, error.dump().c_str());
 			}
 
 			const auto& row = result.front();
@@ -445,12 +436,7 @@ public:
 			response["badges"].push_back(badge.badge.value());
 
 		response["statusCode"] = 200;
-
-		auto w = createResponse(Status::CODE_200, response.dump().c_str());
-
-		CORS_SUPPORT(w);
-
-		return w;
+		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/users/userpage", userUserpage, QUERY(Int32, id))
@@ -461,10 +447,10 @@ public:
 		auto result = (**db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
 		if (result.empty())
 		{
-			DefaultDTO::Wrapper def = DefaultDTO::createShared();
-			def->statusCode = 404;
-			def->message = "player not found";
-			return createDtoResponse(Status::CODE_404, def);
+			json error;
+			error["statusCode"] = 404;
+			error["message"] = "player not found";
+			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
 		json response;
@@ -474,46 +460,43 @@ public:
 		response["userpage"] = row.userpage.value();
 		response["statusCode"] = 200;
 
-		auto w = createResponse(Status::CODE_200, response.dump().c_str());
-
-		CORS_SUPPORT(w);
-		return w;
+		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/users/scores/best", bestScores,
 		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
-		auto w = buildScores(id, mode, relax, page, length, scores_type::Best); CORS_SUPPORT(w); return w;
+		return buildScores(id, mode, relax, page, length, scores_type::Best);
 	};
 
 	ENDPOINT("GET", "/users/scores/recent", recentScores,
 		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
-		auto w = buildScores(id, mode, relax, page, length, scores_type::Recent); CORS_SUPPORT(w); return w;
+		return buildScores(id, mode, relax, page, length, scores_type::Recent);
 	};
 
 	ENDPOINT("GET", "/users/scores/first", firstScores,
 		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
-		auto w = buildScores(id, mode, relax, page, length, scores_type::First); CORS_SUPPORT(w); return w;
+		return buildScores(id, mode, relax, page, length, scores_type::First);
 	};
 
 	ENDPOINT("POST", "/users/settings/background", changeBackground, BODY_STRING(String, userInfo))
 	{
-		auto w = updateSettings(userInfo->c_str(), update_type::Background); CORS_SUPPORT(w); return w;
+		return updateSettings(userInfo->c_str(), update_type::Background);
 	};
 
 	ENDPOINT("POST", "/users/settings/userpage", changeUserpage, BODY_STRING(String, userInfo))
 	{
-		auto w = updateSettings(userInfo->c_str(), update_type::Userpage); CORS_SUPPORT(w); return w;
+		return updateSettings(userInfo->c_str(), update_type::Userpage);
 	};
 
 	ENDPOINT("POST", "/users/settings/status", changeStatus, BODY_STRING(String, userInfo))
 	{
-		auto w = updateSettings(userInfo->c_str(), update_type::Status); CORS_SUPPORT(w); return w;
+		return updateSettings(userInfo->c_str(), update_type::Status);
 	};
 };
 
-#include OATPP_CODEGEN_BEGIN(ApiController) //<-- End codegen
+#include OATPP_CODEGEN_BEGIN(ApiController)
 
-#endif // !UsersController_hpp
+#endif

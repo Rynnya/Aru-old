@@ -1,5 +1,5 @@
-#ifndef HIMITSU_CONFIG
-#define HIMITSU_CONFIG
+#ifndef HimitsuConfig_hpp
+#define HimitsuConfig_hpp
 
 namespace config
 {
@@ -22,4 +22,4 @@ namespace config
 	static std::string api_key     = ""; // Get key there: https://osu.ppy.sh/p/api/
 }
 
-#endif // !HIMITSU_CONFIG
+#endif

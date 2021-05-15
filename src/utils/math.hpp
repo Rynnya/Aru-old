@@ -1,7 +1,7 @@
-#ifndef HIMITSU_MATH
-#define HIMITSU_MATH
+#ifndef HimitsuMath_hpp
+#define HimitsuMath_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 namespace himitsu
 {

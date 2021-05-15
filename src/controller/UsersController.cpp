@@ -1,7 +1,7 @@
 #include "UsersController.hpp"
-#include "database/tables/OtherTable.h"
-#include "database/tables/BeatmapTable.h"
-#include "database/tables/ScoresTable.h"
+#include "database/tables/OtherTable.hpp"
+#include "database/tables/BeatmapTable.hpp"
+#include "database/tables/ScoresTable.hpp"
 
 std::shared_ptr<UsersController::OutgoingResponse> UsersController::updateSettings(
 	std::string request,
@@ -86,20 +86,20 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	std::string mode;
 	if (user_mode == -1 && !getMode(id, &mode))
 	{
-		DefaultDTO::Wrapper def = DefaultDTO::createShared();
-		def->statusCode = 404;
-		def->message = "player not found";
-		return this->createDtoResponse(Status::CODE_404, def);
+		json error;
+		error["statusCode"] = 404;
+		error["message"] = "player not found";
+		return createResponse(Status::CODE_404, error.dump().c_str());
 	}
 
-	length = SQLHelper::Limitize(1, length, 100); // make sure we won't fuck up urself
+	length = SQLHelper::Limitize(1, length, 100);
 
 	if (relax == 1 && mode == "mania")
 	{
-		DefaultDTO::Wrapper def = DefaultDTO::createShared();
-		def->statusCode = 404;
-		def->message = "mania don't have relax mode";
-		return this->createDtoResponse(Status::CODE_404, def);
+		json error;
+		error["statusCode"] = 404;
+		error["message"] = "mania don't have relax mode";
+		return createResponse(Status::CODE_404, error.dump().c_str());
 	}
 
 	auto db = himitsu::ConnectionPool::getInstance()->getConnection();

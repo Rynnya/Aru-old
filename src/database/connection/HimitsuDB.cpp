@@ -1,4 +1,4 @@
-#include "HimitsuDB.h"
+#include "HimitsuDB.hpp"
 #include "oatpp/core/macro/component.hpp"
 
 himitsu::ConnectionPool* himitsu::ConnectionPool::inst_;

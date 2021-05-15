@@ -1,7 +1,7 @@
-#ifndef HIMITSU_UTILS
-#define HIMITSU_UTILS
+#ifndef HimitsuUtils_hpp
+#define HimitsuUtils_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 namespace himitsu
 {

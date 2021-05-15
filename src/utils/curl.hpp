@@ -1,7 +1,7 @@
-#ifndef HIMITSU_CURL
-#define HIMITSU_CURL
+#ifndef HimitsuCurl_hpp
+#define HimitsuCurl_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 #include <curl/curl.h>
 #include <tuple>
 

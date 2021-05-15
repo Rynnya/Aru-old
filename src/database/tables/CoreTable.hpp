@@ -1,5 +1,5 @@
-#ifndef MainDB
-#define MainDB
+#ifndef CoreTable_hpp
+#define CoreTable_hpp
 
 #include <sqlpp11/sqlpp11.h>
 
@@ -43,6 +43,4 @@
         };                                                                          \
     }
 
-
-
-#endif // ! MainDB
+#endif

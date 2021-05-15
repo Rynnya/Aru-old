@@ -1,7 +1,7 @@
-#ifndef HIMITSU_SQL
-#define HIMITSU_SQL
+#ifndef HimitsuSQL_hpp
+#define HimitsuSQL_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 class SQLHelper
 {
@@ -25,4 +25,4 @@ public:
 	}
 };
 
-#endif // !HIMITSU_SQL
+#endif

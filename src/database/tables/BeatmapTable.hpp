@@ -1,7 +1,7 @@
-#ifndef BeatmapTable
-#define BeatmapTable
+#ifndef BeatmapTable_hpp
+#define BeatmapTable_hpp
 
-#include "CoreTable.h"
+#include "CoreTable.hpp"
 
 struct beatmap_objects
 {
@@ -78,4 +78,4 @@ database_table(beatmaps,
 	beatmap_objects::pp_95
 );
 
-#endif // !BeatmapTable
+#endif

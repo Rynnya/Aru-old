@@ -1,25 +1,21 @@
 #ifndef AppComponent_hpp
 #define AppComponent_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
+#include "oatpp/web/server/interceptor/AllowCorsGlobal.hpp"
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
 #include "oatpp/core/macro/component.hpp"
 
-/**
- *  Class which creates and holds Application components and registers components in oatpp::base::Environment
- *  Order of components initialization is from top to bottom
- */
+
 class AppComponent {
 public:
-	/**
-	*  Create Database config
-	*/
+	// Database config
 	OATPP_CREATE_COMPONENT(std::shared_ptr<mysql::connection_config>, config)([]
 	{
 		auto config = std::make_shared<mysql::connection_config>();
@@ -30,9 +26,8 @@ public:
 		config->debug = config::db_debug;
 		return config;
 	}());
-	/**
-	*  Create Redis instance
-	*/
+
+	// Redis
 	OATPP_CREATE_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis)([]
 	{
 		cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger());
@@ -46,34 +41,32 @@ public:
 		return std::make_shared<himitsu::redis>(client);
 	}());
 
-	/**
-	 *  Create ConnectionProvider component which listens on the port
-	 */
+	// ConnectionProvider component which listens on the port
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, serverConnectionProvider)([]
 	{
 		return oatpp::network::tcp::server::ConnectionProvider::createShared({ "0.0.0.0", 8000 });
 	}());
 
-	/**
-	 *  Create Router component
-	 */
+	// Router component
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, httpRouter)([]
 	{
 		return oatpp::web::server::HttpRouter::createShared();
 	}());
 
-	/**
-	 *  Create ConnectionHandler component which uses Router component to route requests
-	 */
+	// ConnectionHandler component which uses Router component to route requests
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([]
 	{
-		OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); // get Router component
-		return oatpp::web::server::HttpConnectionHandler::createShared(router);
+		OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
+		auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
+
+		/* Add CORS request and response interceptors */
+		connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
+		connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>());
+
+		return connectionHandler;
 	}());
 
-	/**
-	 *  Create ObjectMapper component to serialize/deserialize DTOs in Contoller's API
-	 */
+	// ObjectMapper component to serialize/deserialize DTOs in Contoller's API
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, apiObjectMapper)([]
 	{
 		return oatpp::parser::json::mapping::ObjectMapper::createShared();
@@ -81,4 +74,4 @@ public:
 
 };
 
-#endif /* AppComponent_hpp */
+#endif

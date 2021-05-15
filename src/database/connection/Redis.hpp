@@ -1,7 +1,7 @@
-#ifndef HIMITSU_REDIS
-#define HIMITSU_REDIS
+#ifndef HimitsuRedis_hpp
+#define HimitsuRedis_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 #include <cpp_redis/core/client.hpp>
 
 namespace himitsu

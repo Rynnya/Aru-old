@@ -1,7 +1,7 @@
-#ifndef HIMITSU_UTILS_OSU
-#define HIMITSU_UTILS_OSU
+#ifndef osuHimitsu_hpp
+#define osuHimitsu_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 #include <vector>
 
 namespace himitsu

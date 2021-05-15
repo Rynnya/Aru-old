@@ -1,7 +1,7 @@
-#ifndef HIMITSU_TIME
-#define HIMITSU_TIME
+#ifndef HimitsuTime_hpp
+#define HimitsuTime_hpp
 
-#include "Globals.h"
+#include "Globals.hpp"
 #include <chrono>
 #include <iomanip>
 
@@ -32,4 +32,4 @@ namespace himitsu
 	};
 }
 
-#endif // !HIMITSU_TIME
+#endif

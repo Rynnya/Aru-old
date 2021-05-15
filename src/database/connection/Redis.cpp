@@ -1,4 +1,4 @@
-#include "Redis.h"
+#include "Redis.hpp"
 
 himitsu::redis::redis(std::string address, size_t port, uint32_t attempts, std::string password)
     : address(std::move(address))
