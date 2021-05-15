@@ -20,7 +20,6 @@ struct users_objects
 	object_struct(play_style,        sqlpp::integer);
 };
 
-// Identical to users_stats_relax
 struct users_stats_objects
 {
 	object_struct(id,                    sqlpp::integer);
@@ -178,7 +177,6 @@ database_table(users_stats,
 	users_stats_objects::count_XH_mania
 );
 
-// identical to users_stats, but required to avoid errors...
 database_table(users_stats_relax,
 	users_stats_objects::id,
 	users_stats_objects::ranked_score_std,
@@ -225,22 +223,7 @@ database_table(users_stats_relax,
 	users_stats_objects::count_S_ctb,
 	users_stats_objects::count_SH_ctb,
 	users_stats_objects::count_X_ctb,
-	users_stats_objects::count_XH_ctb,
-	users_stats_objects::ranked_score_mania,
-	users_stats_objects::total_score_mania,
-	users_stats_objects::playcount_mania,
-	users_stats_objects::replays_watched_mania,
-	users_stats_objects::total_hits_mania,
-	users_stats_objects::max_combo_mania,
-	users_stats_objects::level_mania,
-	users_stats_objects::playtime_mania,
-	users_stats_objects::avg_accuracy_mania,
-	users_stats_objects::pp_mania,
-	users_stats_objects::count_A_mania,
-	users_stats_objects::count_S_mania,
-	users_stats_objects::count_SH_mania,
-	users_stats_objects::count_X_mania,
-	users_stats_objects::count_XH_mania
+	users_stats_objects::count_XH_ctb
 );
 
 #endif // !UserTable

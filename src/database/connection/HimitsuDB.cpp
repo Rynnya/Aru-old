@@ -1,47 +1,82 @@
 #include "HimitsuDB.h"
 #include "oatpp/core/macro/component.hpp"
 
-himitsu::Connection::Connection()
+himitsu::ConnectionPool* himitsu::ConnectionPool::inst_;
+
+himitsu::Connection::Connection(std::unique_ptr<sqlpp::mysql::connection> connection)
 {
-	OATPP_COMPONENT(std::shared_ptr<sqlpp::mysql::connection_config>, config);
-	conn = std::make_unique<sqlpp::mysql::connection>(config);
+	this->connection = std::move(connection);
 }
 
 himitsu::Connection::~Connection()
 {
-	ConnectionPool::releaseConnection();
+	if (end_of_life) return;
+	himitsu::ConnectionPool::getInstance()->returnConnection(std::move(this->connection));
+}
+
+void himitsu::Connection::destroyConnection()
+{
+	this->end_of_life = true;
+	this->connection.release();
 }
 
 sqlpp::mysql::connection& himitsu::Connection::operator*()
 {
-	return (*conn);
+	return (*connection);
 }
 
 sqlpp::mysql::connection* himitsu::Connection::operator->()
 {
-	return conn.get();
+	return connection.get();
 }
 
-void himitsu::ConnectionPool::releaseConnection()
+himitsu::ConnectionPool* himitsu::ConnectionPool::getInstance()
 {
-	std::lock_guard<std::mutex> _lock(_mtx);
-	connection_amount--;
+	return inst_;
 }
 
-himitsu::Connection himitsu::ConnectionPool::createConnection()
+himitsu::ConnectionPool::ConnectionPool(int size)
 {
-	std::lock_guard<std::mutex> _lock(_mtx);
+	OATPP_COMPONENT(std::shared_ptr<mysql::connection_config>, config);
+	for (int i = 0; i < size; i++)
+	{
+		auto mysql_conn = std::make_unique<sqlpp::mysql::connection>(config);
+		m_connections.push_back(std::make_shared<himitsu::Connection>(std::move(mysql_conn)));
+	}
+	this->size = size;
+	inst_ = this;
+}
 
+himitsu::ConnectionPool::~ConnectionPool()
+{
+	for (int i = 0; i < size; i++)
+	{
+		std::shared_ptr<Connection> sp = m_connections.front();
+		m_connections.pop_front();
+		sp->destroyConnection();
+	}
+}
+
+std::shared_ptr<himitsu::Connection> himitsu::ConnectionPool::getConnection()
+{
+	std::unique_lock lock(_mtx);
 	while (true)
 	{
-		if (connection_amount < 10)
+		if (m_connections.empty())
 		{
-			connection_amount++;
-			return himitsu::Connection();
+			lock.unlock();
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			continue;
 		}
 
-		_lock.~lock_guard();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		continue;
+		std::shared_ptr<Connection> sp = m_connections.front();
+		m_connections.pop_front();
+		return sp;
 	}
+}
+
+void himitsu::ConnectionPool::returnConnection(std::unique_ptr<sqlpp::mysql::connection> connection)
+{
+	std::unique_lock lock(_mtx);
+	m_connections.push_back(std::make_shared<himitsu::Connection>(std::move(connection)));
 }

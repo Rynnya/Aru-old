@@ -24,6 +24,9 @@ void run() {
 	mainController->addEndpointsToRouter(router);
 	userController->addEndpointsToRouter(router);
 
+	/* Initialize database pool */
+	himitsu::ConnectionPool pool(config::db_connection_amount);
+
 	/* Get connection handler component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler);
 

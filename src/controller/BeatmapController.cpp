@@ -3,7 +3,7 @@
 void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 {
 	beatmaps b_table{};
-	himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 	for (const int id : beatmaps_v)
 	{
 		auto [unused1, std_output]   = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::api_key + "a=1&m=0&b=" + std::to_string(id));
@@ -17,7 +17,7 @@ void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 		if (!jsonRoot.is_discarded())
 		{
 			if (!jsonRoot[0]["difficultyRating"].is_null())
-				(*db)(sqlpp::update(b_table)
+				(**db)(sqlpp::update(b_table)
 					.set(b_table.difficulty_std = jsonRoot[0]["difficultyRating"].get<float>())
 					.where(b_table.beatmap_id == id));
 		}
@@ -26,7 +26,7 @@ void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 		if (!jsonRoot.is_discarded())
 		{
 			if (!jsonRoot[0]["difficultyRating"].is_null())
-				(*db)(sqlpp::update(b_table)
+				(**db)(sqlpp::update(b_table)
 					.set(b_table.difficulty_taiko = jsonRoot[0]["difficultyRating"].get<float>())
 					.where(b_table.beatmap_id == id));
 		}
@@ -35,7 +35,7 @@ void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 		if (!jsonRoot.is_discarded())
 		{
 			if (!jsonRoot[0]["difficultyRating"].is_null())
-				(*db)(sqlpp::update(b_table)
+				(**db)(sqlpp::update(b_table)
 					.set(b_table.difficulty_ctb = jsonRoot[0]["difficultyRating"].get<float>())
 					.where(b_table.beatmap_id == id));
 		}
@@ -44,7 +44,7 @@ void BeatmapController::setDifficulties(std::vector<int> beatmaps_v)
 		if (!jsonRoot.is_discarded())
 		{
 			if (!jsonRoot[0]["difficultyRating"].is_null())
-				(*db)(sqlpp::update(b_table)
+				(**db)(sqlpp::update(b_table)
 					.set(b_table.difficulty_mania = jsonRoot[0]["difficultyRating"].get<float>())
 					.where(b_table.beatmap_id == id));
 		}

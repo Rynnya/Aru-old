@@ -1,6 +1,7 @@
 [submodule "libs/date"]
 	path = libs/date
 	url = https://github.com/howardhinnant/date
+	ignore = dirty
 [submodule "libs/sqlpp11"]
 	path = libs/sqlpp11
 	url = https://github.com/rbock/sqlpp11
@@ -24,3 +25,5 @@
 [submodule "libs/cpp_redis"]
 	path = libs/cpp_redis
 	url = https://github.com/cpp-redis/cpp_redis
+	ignore = dirty
+

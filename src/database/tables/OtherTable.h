@@ -6,7 +6,7 @@
 struct token_objects
 {
 	object_struct(id, sqlpp::integer);
-	object_struct(user, sqlpp::varchar);
+	object_struct(user, sqlpp::integer);
 	object_struct(privileges, sqlpp::integer);
 	object_struct(token, sqlpp::varchar);
 	object_struct(t_private, sqlpp::boolean);

@@ -50,12 +50,12 @@ public:
 		{
 			beatmaps b_table{};
 			std::vector<int> b_maps;
-			himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+			auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 			for (const auto& beatmap : jsonRoot)
 			{
 				int mode = beatmap["mode"];
 				int beatmap_id = beatmap["beatmap_id"];
-				(*db)(sqlpp::insert_into(b_table).set(
+				(**db)(sqlpp::insert_into(b_table).set(
 					b_table.beatmap_id = beatmap_id,
 					b_table.beatmapset_id = beatmap["beatmapset_id"].get<int>(),
 					b_table.beatmap_md5 = beatmap["file_md5"].get<std::string>(),
@@ -93,17 +93,17 @@ public:
 					switch (mode)
 					{
 						case 1:
-							(*db)(sqlpp::update(b_table)
+							(**db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_taiko = beatmap["difficulty_rating"].get<float>())
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 2:
-							(*db)(sqlpp::update(b_table)
+							(**db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_ctb = beatmap["difficulty_rating"].get<float>())
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 3:
-							(*db)(sqlpp::update(b_table)
+							(**db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_mania = beatmap["difficulty_rating"].get<float>())
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
@@ -128,8 +128,8 @@ public:
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
 	{
 		beatmaps b_table{};
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
-		auto result = (*db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto result = (**db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
 			b_table.creator, b_table.count_normal, b_table.count_slider, b_table.count_spinner, b_table.max_combo, b_table.ranked,
 			b_table.creating_date, b_table.difficulty_std, b_table.difficulty_taiko, b_table.difficulty_ctb, b_table.difficulty_mania,
 			b_table.bpm, b_table.hit_length, b_table.cs, b_table.ar, b_table.od, b_table.hp, b_table.mode
@@ -200,8 +200,8 @@ public:
 	ENDPOINT("GET", "/beatmap/{id}", beatmapDefault, PATH(Int32, id))
 	{
 		beatmaps b_table{};
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
-		auto result = (*db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto result = (**db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
 			b_table.creator, b_table.count_normal, b_table.count_slider, b_table.count_spinner, b_table.max_combo, b_table.ranked,
 			b_table.creating_date, b_table.difficulty_std, b_table.difficulty_taiko, b_table.difficulty_ctb, b_table.difficulty_mania,
 			b_table.bpm, b_table.hit_length, b_table.cs, b_table.ar, b_table.od, b_table.hp, b_table.mode
@@ -270,12 +270,24 @@ public:
 		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
 	{
 		beatmaps b_table{};
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
 		bool isRelax = himitsu::utils::intToBoolean(relax);
 		int play_mode = mode;
+		if (play_mode == 3 && isRelax)
+		{
+			DefaultDTO::Wrapper def = DefaultDTO::createShared();
+			def->statusCode = 404;
+			def->message = "mania don't have relax mode";
+			return this->createDtoResponse(Status::CODE_404, def);
+		}
+
 		std::string md5 = "";
-		auto res = (*db)(sqlpp::select(b_table.mode, b_table.beatmap_md5).from(b_table).where(b_table.beatmap_id == (*id)).limit(1u));
+		auto res = (**db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
+			.from(b_table)
+			.where(b_table.beatmap_id == (*id))
+			.limit(1u)
+		);
 		if (res.empty())
 		{
 			DefaultDTO::Wrapper repo = DefaultDTO::createShared();
@@ -295,7 +307,7 @@ public:
 			.from(s_table.join(u_table).on(s_table.userid == u_table.id))
 			.where(s_table.beatmap_md5 == md5 and s_table.is_relax == isRelax and s_table.play_mode == play_mode)
 			.order_by(s_table.pp.desc());
-		auto result = (*db)(query);
+		auto result = (**db)(query);
 
 		json response = json::array();
 		for (const auto& row : result)

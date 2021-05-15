@@ -35,44 +35,44 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::updateSettin
 			return createResponse(Status::CODE_204, "No data provided");
 		}
 
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		tokens token{};
 
-		auto check = db->prepare(sqlpp::select(token.id).from(token).where(token.token == sqlpp::parameter(sqlpp::text(), user_token)));
-		check.params.user_token = jsonRoot["token"].get<std::string>();
-		auto result = (*db)(check);
+		auto check = (*db)->prepare(sqlpp::select(token.user).from(token).where(token.token == sqlpp::parameter(token.token)));
+		check.params.token = jsonRoot["token"].get<std::string>();
+		auto result = (**db)(check);
 			
 		if (result.empty())
 		{
 			return createResponse(Status::CODE_401, "No valid Token provided");
 		}
 
-		// tokens always setted by server, so we don't need check it
 		const auto& res = result.front();
-		int userID = res.id;
+		int userID = res.user;
+		result.pop_front();
 
 		users user{};
 		switch (data_type)
 		{
 			case update_type::Background:
 			{
-				auto upd = db->prepare(sqlpp::update(user).set(user.background = sqlpp::parameter(sqlpp::text(), user_new_data)).where(user.id == userID));
-				upd.params.user_new_data = jsonRoot[par].get<std::string>();
-				(*db)(upd);
+				auto upd = (*db)->prepare(sqlpp::update(user).set(user.background = sqlpp::parameter(user.background)).where(user.id == userID));
+				upd.params.background = jsonRoot[par].get<std::string>();
+				(**db)(upd);
 				break;
 			}
 			case update_type::Userpage:
 			{
-				auto upd = db->prepare(sqlpp::update(user).set(user.userpage = sqlpp::parameter(sqlpp::text(), user_new_data)).where(user.id == userID));
-				upd.params.user_new_data = jsonRoot[par].get<std::string>();
-				(*db)(upd);
+				auto upd = (*db)->prepare(sqlpp::update(user).set(user.userpage = sqlpp::parameter(user.userpage)).where(user.id == userID));
+				upd.params.userpage = jsonRoot[par].get<std::string>();
+				(**db)(upd);
 				break;
 			}
 			case update_type::Status:
 			{
-				auto upd = db->prepare(sqlpp::update(user).set(user.status = sqlpp::parameter(sqlpp::text(), user_new_data)).where(user.id == userID));
-				upd.params.user_new_data = jsonRoot[par].get<std::string>();
-				(*db)(upd);
+				auto upd = (*db)->prepare(sqlpp::update(user).set(user.status = sqlpp::parameter(user.status)).where(user.id == userID));
+				upd.params.status = jsonRoot[par].get<std::string>();
+				(**db)(upd);
 				break;
 			}
 		}
@@ -98,11 +98,11 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	{
 		DefaultDTO::Wrapper def = DefaultDTO::createShared();
 		def->statusCode = 404;
-		def->message = "wtf are you doing?";
+		def->message = "mania don't have relax mode";
 		return this->createDtoResponse(Status::CODE_404, def);
 	}
 
-	himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
 	json response;
 	response["statusCode"] = 200;
@@ -112,7 +112,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	scores s_table{};
 	users u_table{};
-	auto query = sqlpp::dynamic_select(*db, s_table.id, s_table.score, s_table.full_combo, s_table.mods,
+	auto query = sqlpp::dynamic_select(**db, s_table.id, s_table.score, s_table.full_combo, s_table.mods,
 		s_table.count_300, s_table.count_100, s_table.count_50, s_table.count_gekis, s_table.count_katus, s_table.count_misses,
 		s_table.time, s_table.play_mode, s_table.accuracy, s_table.pp, s_table.completed,
 		s_table.max_combo.as(score_t),
@@ -152,7 +152,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(page, length, 100);
 	auto q = query.limit(limit.first).offset(limit.second);
-	auto result = (*db)(q);
+	auto result = (**db)(q);
 
 	if (result.empty())
 	{
@@ -233,9 +233,9 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 bool UsersController::getMode(Int32 id, std::string* ans) const
 {
-	himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 	users user{};
-	auto result = (*db)(sqlpp::select(user.favourite_mode).from(user).where(user.id == (*id)));
+	auto result = (**db)(sqlpp::select(user.favourite_mode).from(user).where(user.id == (*id)));
 
 	if (result.empty())
 		return false; // player doesn't exist

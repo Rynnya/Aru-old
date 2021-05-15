@@ -8,24 +8,33 @@ namespace himitsu
 	class Connection
 	{
 	public:
-		Connection();
+		Connection(std::unique_ptr<sqlpp::mysql::connection> connection);
 		~Connection();
+		void destroyConnection();
 		sqlpp::mysql::connection& operator*();
 		sqlpp::mysql::connection* operator->();
 	private:
-		std::unique_ptr<sqlpp::mysql::connection> conn = nullptr;
+		bool end_of_life = false;
+		std::unique_ptr<sqlpp::mysql::connection> connection = nullptr;
 	};
 
-	// TODO: Rewrite this mess to non-static, so releaseConnection cannot be used outside of ~Connection
 	class ConnectionPool
 	{
+		friend Connection;
 	public:
-		static void releaseConnection();
-		static himitsu::Connection createConnection();
+		static ConnectionPool* getInstance();
+		ConnectionPool(int size);
+		~ConnectionPool();
+		std::shared_ptr<himitsu::Connection> getConnection();
 	private:
-		inline static int connection_amount = 0;
-		inline static std::mutex _mtx = std::mutex();
+		static ConnectionPool* inst_;
+		void returnConnection(std::unique_ptr<sqlpp::mysql::connection> connection);
+		int size;
+		std::mutex _mtx;
+		std::list<std::shared_ptr<Connection>> m_connections;
 	};
+
+	
 }
 
 #endif // !HIMITSU_DB

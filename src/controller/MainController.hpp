@@ -82,7 +82,7 @@ public:
 		users_vec.pop_back(); // remove ',' after for_each
 
 		users u_table{};
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		json response;
 		response["users"] = json::array();
 		response["statusCode"] = 200;
@@ -90,7 +90,7 @@ public:
 		if (relax == 1)
 		{
 			users_stats_relax us_table{};
-			auto query = sqlpp::dynamic_select(*db)
+			auto query = sqlpp::dynamic_select(**db)
 				.dynamic_columns(u_table.id, u_table.username, u_table.country)
 				.from(u_table.join(us_table).on(u_table.id == us_table.id))
 				.dynamic_order_by().unconditionally();
@@ -123,18 +123,9 @@ public:
 					query.order_by.add(us_table.pp_ctb.desc());
 					break;
 				}
-				case 3:
-				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_mania));
-					query.selected_columns.add(without_table_check(us_table.playcount_mania));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_mania));
-					query.selected_columns.add(without_table_check(us_table.pp_mania));
-					query.order_by.add(us_table.pp_mania.desc());
-					break;
-				}
 			}
 
-			auto result = (*db)(query);
+			auto result = (**db)(query);
 
 			for (const auto& row : result)
 			{
@@ -156,7 +147,7 @@ public:
 		else
 		{
 			users_stats us_table{};
-			auto query = sqlpp::dynamic_select(*db)
+			auto query = sqlpp::dynamic_select(**db)
 				.dynamic_columns(u_table.id, u_table.username, u_table.country)
 				.from(u_table.join(us_table).on(u_table.id == us_table.id))
 				.dynamic_order_by().unconditionally();
@@ -200,7 +191,7 @@ public:
 				}
 			}
 
-			auto result = (*db)(query);
+			auto result = (**db)(query);
 
 			for (const auto& row : result)
 			{

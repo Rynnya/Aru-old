@@ -13,8 +13,6 @@
 /**
  * Sample Api Controller.
  */
-SQLPP_ALIAS_PROVIDER(user_token);
-SQLPP_ALIAS_PROVIDER(user_new_data);
 SQLPP_ALIAS_PROVIDER(score_t);
 SQLPP_ALIAS_PROVIDER(beatmap_t);
 
@@ -68,7 +66,15 @@ public:
 		else
 			mode = himitsu::osu::modeToString(user_mode);
 
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		if (relax == 1 && mode == "mania")
+		{
+			DefaultDTO::Wrapper def = DefaultDTO::createShared();
+			def->statusCode = 404;
+			def->message = "mania don't have relax mode";
+			return createDtoResponse(Status::CODE_404, def);
+		}
+
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
 		users user_data{};
 		json response;
@@ -78,7 +84,7 @@ public:
 		if (relax == 1)
 		{
 			users_stats_relax table{};
-			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
+			auto query = sqlpp::dynamic_select(**db).dynamic_columns(
 				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
 
@@ -105,16 +111,9 @@ public:
 					query.selected_columns.add(table.playcount_ctb);
 					break;
 				}
-				case 3:
-				{
-					query.selected_columns.add(table.pp_mania);
-					query.selected_columns.add(table.avg_accuracy_mania);
-					query.selected_columns.add(table.playcount_mania);
-					break;
-				}
 			}
 
-			auto result = (*db)(query);
+			auto result = (**db)(query);
 			if (result.empty())
 			{
 				DefaultDTO::Wrapper def = DefaultDTO::createShared();
@@ -142,7 +141,7 @@ public:
 		else
 		{
 			users_stats table{};
-			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
+			auto query = sqlpp::dynamic_select(**db).dynamic_columns(
 				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
 
@@ -178,7 +177,7 @@ public:
 				}
 			}
 
-			auto result = (*db)(query);
+			auto result = (**db)(query);
 			if (result.empty())
 			{
 				DefaultDTO::Wrapper def = DefaultDTO::createShared();
@@ -230,12 +229,12 @@ public:
 		{
 			DefaultDTO::Wrapper def = DefaultDTO::createShared();
 			def->statusCode = 404;
-			def->message = "wtf are you doing?";
+			def->message = "mania don't have relax mode";
 			return createDtoResponse(Status::CODE_404, def);
 		}
 
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
 		users user_data{};
 		json response;
@@ -243,7 +242,7 @@ public:
 		if (relax == 1)
 		{
 			users_stats_relax table{};
-			auto result = (*db)(sqlpp::select( // id inside users_stats_relax
+			auto result = (**db)(sqlpp::select( // id inside users_stats_relax
 				user_data.username, user_data.register_datetime, user_data.latest_activity,
 				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
 				sqlpp::all_of(table)
@@ -329,29 +328,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_ctb.value();
 					response["stats"]["count_XH"] = row.count_XH_ctb.value();
 					break;
-				case 3:
-					score = row.total_score_mania;
-					response["stats"]["ranked_score"] = row.ranked_score_mania.value();
-					response["stats"]["total_score"] = score;
-					response["stats"]["playcount"] = row.playcount_mania.value();
-					response["stats"]["total_hits"] = row.total_hits_mania.value();
-					response["stats"]["accuracy"] = row.avg_accuracy_mania.value();
-					response["stats"]["pp"] = row.pp_mania.value();
-					response["stats"]["playtime"] = row.playtime_mania.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
-					response["stats"]["count_A"] = row.count_A_mania.value();
-					response["stats"]["count_S"] = row.count_S_mania.value();
-					response["stats"]["count_SH"] = row.count_SH_mania.value();
-					response["stats"]["count_X"] = row.count_X_mania.value();
-					response["stats"]["count_XH"] = row.count_XH_mania.value();
-					break;
 			}
 		}
 		else
 		{
 			users_stats table{};
-			auto result = (*db)(sqlpp::select( // id inside users_stats
+			auto result = (**db)(sqlpp::select( // id inside users_stats
 				user_data.username, user_data.register_datetime, user_data.latest_activity,
 				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
 				sqlpp::all_of(table)
@@ -459,7 +441,7 @@ public:
 
 		user_badges badges{};
 		response["badges"] = json::array();
-		for (const auto& badge : (*db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
+		for (const auto& badge : (**db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
 			response["badges"].push_back(badge.badge.value());
 
 		response["statusCode"] = 200;
@@ -473,10 +455,10 @@ public:
 
 	ENDPOINT("GET", "/users/userpage", userUserpage, QUERY(Int32, id))
 	{
-		himitsu::Connection db = himitsu::ConnectionPool::createConnection();
+		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		users user_data{};
 
-		auto result = (*db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
+		auto result = (**db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
 		if (result.empty())
 		{
 			DefaultDTO::Wrapper def = DefaultDTO::createShared();

@@ -4,6 +4,7 @@
 namespace config
 {
 	// Database
+	static int         db_connection_amount = 10;
 	static int         db_port     = 3307; // Default port for MySQL/MariaDB
 	static std::string db_user     = "root";
 	static std::string db_password = "";
