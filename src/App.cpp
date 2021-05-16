@@ -1,6 +1,9 @@
+#include "./AppComponent.hpp"
+
 #include "./controller/MainController.hpp"
 #include "./controller/UsersController.hpp"
-#include "./AppComponent.hpp"
+#include "./controller/BeatmapController.hpp"
+
 
 #ifdef _WIN32
 #include <Winsock2.h>
@@ -18,11 +21,13 @@ void run() {
 	/* Get router component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 
-	/* Create MainController and add all of its endpoints to router */
+	/* Add all endpoints to router */
 	auto mainController = std::make_shared<MainController>();
 	auto userController = std::make_shared<UsersController>();
+	auto beatmapController = std::make_shared<BeatmapController>();
 	mainController->addEndpointsToRouter(router);
 	userController->addEndpointsToRouter(router);
+	beatmapController->addEndpointsToRouter(router);
 
 	/* Initialize database pool */
 	himitsu::ConnectionPool pool(config::db_connection_amount);
@@ -60,8 +65,6 @@ int main(int argc, const char * argv[]) {
 		return -1;
 	}
 #endif
-
-	std::locale::global(std::locale("en_US.UTF-8"));
 
 	oatpp::base::Environment::init();
 

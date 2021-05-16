@@ -26,21 +26,26 @@ public:
 public:
 
 	// Perform download from osu!API, requested by Bancho
-	ENDPOINT("GET", "/beatmaps/{id}/download", beatmapsDownload, PATH(Int32, id))
+	ENDPOINT("GET", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id))
 	{
-		if (!config::api_enabled)
+		if (!config::api_enabled || config::api_key == "")
 		{
-			return createResponse(Status::CODE_200, "OK");
+			return createResponse(Status::CODE_200, "API disabled");
 		}
 
 		std::string main_output = "";
 		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::api_key + "&s=" + std::to_string(id));
 		if (!success)
-			return createResponse(Status::CODE_200, "OK");
+			return createResponse(Status::CODE_200, "Cannot get data from osu!API");
 
 		json jsonRoot = json::parse(std_output, nullptr, false);
 		if (!jsonRoot.is_discarded())
 		{
+			if (!jsonRoot["error"].is_null())
+			{
+				config::api_enabled = false;
+				return createResponse(Status::CODE_401, "Wrong API key");
+			}
 			beatmaps b_table{};
 			std::vector<int> b_maps;
 			auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -109,8 +114,11 @@ public:
 				b_maps.push_back(beatmap_id);
 			}
 			
-			std::thread diffs(&BeatmapController::setDifficulties, *this, b_maps);
-			diffs.detach();
+			if (!b_maps.empty())
+			{
+				std::thread diffs(&BeatmapController::setDifficulties, *this, b_maps);
+				diffs.detach();
+			}
 
 			return createResponse(Status::CODE_200, "OK");
 		}

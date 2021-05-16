@@ -34,13 +34,13 @@ private:
 		Recent = 1,
 		First = 2
 	};
-	std::shared_ptr<UsersController::OutgoingResponse> updateSettings(std::string request, update_type data_type) const;
+	std::shared_ptr<UsersController::OutgoingResponse> updateSettings(Int32 id, std::string request, update_type data_type) const;
 	std::shared_ptr<UsersController::OutgoingResponse> buildScores(Int32 id, Int32 mode, Int32 relax, Int32 page, Int32 length, scores_type type) const;
 	// also checks if player exists. if not, returns false, otherwise returns true and mode as string in ans
 	bool getMode(Int32 id, std::string* ans) const;
 public:
 
-	ENDPOINT("GET", "/users", userInfo, QUERY(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
+	ENDPOINT("GET", "/users/{id}", userInfo, PATH(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
 	{
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
 
@@ -200,7 +200,7 @@ public:
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
-	ENDPOINT("GET", "/users/full", fullUserInfo, QUERY(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
+	ENDPOINT("GET", "/users/{id}/full", fullUserInfo, PATH(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
 	{
 		std::string mode;
 		if (user_mode == -1)
@@ -439,7 +439,7 @@ public:
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
-	ENDPOINT("GET", "/users/userpage", userUserpage, QUERY(Int32, id))
+	ENDPOINT("GET", "/users/{id}/userpage", userUserpage, PATH(Int32, id))
 	{
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		users user_data{};
@@ -463,37 +463,37 @@ public:
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
-	ENDPOINT("GET", "/users/scores/best", bestScores,
-		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
+	ENDPOINT("GET", "/users/{id}/scores/best", bestScores,
+		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		return buildScores(id, mode, relax, page, length, scores_type::Best);
 	};
 
-	ENDPOINT("GET", "/users/scores/recent", recentScores,
-		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
+	ENDPOINT("GET", "/users/{id}/scores/recent", recentScores,
+		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		return buildScores(id, mode, relax, page, length, scores_type::Recent);
 	};
 
-	ENDPOINT("GET", "/users/scores/first", firstScores,
-		QUERY(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
+	ENDPOINT("GET", "/users/{id}/scores/first", firstScores,
+		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		return buildScores(id, mode, relax, page, length, scores_type::First);
 	};
 
-	ENDPOINT("POST", "/users/settings/background", changeBackground, BODY_STRING(String, userInfo))
+	ENDPOINT("POST", "/users/{id}/settings/background", changeBackground, PATH(Int32, id), BODY_STRING(String, userInfo))
 	{
-		return updateSettings(userInfo->c_str(), update_type::Background);
+		return updateSettings(id, userInfo->c_str(), update_type::Background);
 	};
 
-	ENDPOINT("POST", "/users/settings/userpage", changeUserpage, BODY_STRING(String, userInfo))
+	ENDPOINT("POST", "/users/{id}/settings/userpage", changeUserpage, PATH(Int32, id), BODY_STRING(String, userInfo))
 	{
-		return updateSettings(userInfo->c_str(), update_type::Userpage);
+		return updateSettings(id, userInfo->c_str(), update_type::Userpage);
 	};
 
-	ENDPOINT("POST", "/users/settings/status", changeStatus, BODY_STRING(String, userInfo))
+	ENDPOINT("POST", "/users/{id}/settings/status", changeStatus, PATH(Int32, id), BODY_STRING(String, userInfo))
 	{
-		return updateSettings(userInfo->c_str(), update_type::Status);
+		return updateSettings(id, userInfo->c_str(), update_type::Status);
 	};
 };
 

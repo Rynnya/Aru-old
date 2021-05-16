@@ -4,6 +4,7 @@
 #include "database/tables/ScoresTable.hpp"
 
 std::shared_ptr<UsersController::OutgoingResponse> UsersController::updateSettings(
+	Int32 id,
 	std::string request,
 	update_type data_type
 ) const
@@ -38,7 +39,8 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::updateSettin
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		tokens token{};
 
-		auto check = (*db)->prepare(sqlpp::select(token.user).from(token).where(token.token == sqlpp::parameter(token.token)));
+		auto check = (*db)->prepare(sqlpp::select(token.user).from(token)
+			.where(token.token == sqlpp::parameter(token.token) and token.user == (*id)));
 		check.params.token = jsonRoot["token"].get<std::string>();
 		auto result = (**db)(check);
 			
@@ -151,7 +153,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	}
 
 	std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(page, length, 100);
-	auto q = query.limit(limit.first).offset(limit.second);
+	auto q = query.offset(limit.first).limit(limit.second);
 	auto result = (**db)(q);
 
 	if (result.empty())
