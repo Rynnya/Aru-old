@@ -92,6 +92,21 @@ struct user_badges_objects
 	object_struct(badge, sqlpp::varchar);
 };
 
+struct user_preferences_objects
+{
+	object_struct(id, sqlpp::integer);
+
+	object_struct(scoreboard_display_classic, sqlpp::boolean);
+	object_struct(scoreboard_display_relax,   sqlpp::boolean);
+	object_struct(score_overwrite_std,        sqlpp::boolean);
+	object_struct(score_overwrite_taiko,      sqlpp::boolean);
+	object_struct(score_overwrite_ctb,        sqlpp::boolean);
+	object_struct(score_overwrite_mania,      sqlpp::boolean);
+
+	object_struct(auto_last_classic, sqlpp::integer);
+	object_struct(auto_last_relax, sqlpp::integer);
+};
+
 database_table(users,
 	users_objects::id,
 	users_objects::username,
@@ -111,6 +126,18 @@ database_table(user_badges,
 	user_badges_objects::id,
 	user_badges_objects::user,
 	user_badges_objects::badge
+);
+
+database_table(users_preferences,
+	user_preferences_objects::id,
+	user_preferences_objects::scoreboard_display_classic,
+	user_preferences_objects::scoreboard_display_relax,
+	user_preferences_objects::auto_last_classic,
+	user_preferences_objects::auto_last_relax,
+	user_preferences_objects::score_overwrite_std,
+	user_preferences_objects::score_overwrite_taiko,
+	user_preferences_objects::score_overwrite_ctb,
+	user_preferences_objects::score_overwrite_mania
 );
 
 database_table(users_stats,

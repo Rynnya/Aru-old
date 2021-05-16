@@ -3,6 +3,8 @@
 
 #include "Globals.hpp"
 
+#include "tables/OtherTable.hpp"
+
 class SQLHelper
 {
 public:

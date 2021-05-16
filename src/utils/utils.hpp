@@ -15,9 +15,10 @@ namespace himitsu
 			return res;
 		}
 
-		static bool intToBoolean(int i)
+		static bool intToBoolean(int i, bool more = false)
 		{
 			if (i == 1) return true;
+			if (more && i >= 1) return true;
 			return false;
 		}
 	};

@@ -33,6 +33,7 @@ add_compile_options(
     $<$<CONFIG:Debug>:/MDd>
     $<$<CONFIG:Release>:/MD>
 )
+
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(libs/oatpp/)
@@ -47,7 +48,10 @@ include_directories(src)
 add_library(${project_name}-lib
 	src/controller/BeatmapController.cpp
 	src/controller/BeatmapController.hpp
+	src/controller/ErrorHandler.hpp
 	src/controller/MainController.hpp
+	src/controller/SettingsController.cpp
+	src/controller/SettingsController.hpp
 	src/controller/UsersController.cpp
 	src/controller/UsersController.hpp
 	src/database/connection/HimitsuDB.cpp
@@ -125,6 +129,7 @@ if (MSVC)
     tacopie
     PROPERTIES FOLDER libs
   )
+  add_definitions(/wd4244 /bigobj)
   # https://stackoverflow.com/a/54531576
   file(GLOB_RECURSE _source_list *.cpp* *.h* *.hpp*)
   foreach(_source IN ITEMS ${_source_list})

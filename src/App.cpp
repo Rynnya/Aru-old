@@ -1,13 +1,10 @@
 #include "./AppComponent.hpp"
 
-#include "./controller/MainController.hpp"
-#include "./controller/UsersController.hpp"
 #include "./controller/BeatmapController.hpp"
+#include "./controller/MainController.hpp"
+#include "./controller/SettingsController.hpp"
+#include "./controller/UsersController.hpp"
 
-
-#ifdef _WIN32
-#include <Winsock2.h>
-#endif
 
 #include "oatpp/network/Server.hpp"
 
@@ -22,12 +19,15 @@ void run() {
 	OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 
 	/* Add all endpoints to router */
+	auto beatmapController = std::make_shared<BeatmapController>();
+	auto settingsController = std::make_shared<SettingsController>();
 	auto mainController = std::make_shared<MainController>();
 	auto userController = std::make_shared<UsersController>();
-	auto beatmapController = std::make_shared<BeatmapController>();
+
+	beatmapController->addEndpointsToRouter(router);
+	settingsController->addEndpointsToRouter(router);
 	mainController->addEndpointsToRouter(router);
 	userController->addEndpointsToRouter(router);
-	beatmapController->addEndpointsToRouter(router);
 
 	/* Initialize database pool */
 	himitsu::ConnectionPool pool(config::db_connection_amount);
@@ -54,17 +54,8 @@ void run() {
 
 int main(int argc, const char * argv[]) {
 
-#ifdef _WIN32
-	// https://github.com/cpp-redis/cpp_redis/wiki/Examples
-	WSADATA data;
-
-	// Initialize Winsock
-	int iResult = WSAStartup(MAKEWORD(2, 2), &data);
-	if (iResult != 0) {
-		printf("WSAStartup failed: %d\n", iResult);
-		return -1;
-	}
-#endif
+	/* WinSock2.h don't make sense here, because OATPP use the same way to communicate */
+	/* Check https://github.com/oatpp/oatpp/blob/master/src/oatpp/core/base/Environment.cpp#L179 */
 
 	oatpp::base::Environment::init();
 
@@ -77,10 +68,6 @@ int main(int argc, const char * argv[]) {
 	std::cout << "objectsCreated = " << oatpp::base::Environment::getObjectsCreated() << "\n\n";
 
 	oatpp::base::Environment::destroy();
-
-#ifdef _WIN32
-	WSACleanup();
-#endif
 
 	return 0;
 }

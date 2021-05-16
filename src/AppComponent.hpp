@@ -2,6 +2,7 @@
 #define AppComponent_hpp
 
 #include "Globals.hpp"
+#include "controller/ErrorHandler.hpp"
 
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
@@ -59,6 +60,8 @@ public:
 		OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 		auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
 
+		/* Setup custom error page */
+		connectionHandler->setErrorHandler(JsonErrorHandler::createShared());
 		/* Add CORS request and response interceptors */
 		connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
 		connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>());

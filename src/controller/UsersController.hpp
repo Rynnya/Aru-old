@@ -22,19 +22,12 @@ public:
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
 private:
-	enum class update_type
-	{
-		Userpage = 0,
-		Background = 1,
-		Status = 2
-	};
 	enum class scores_type
 	{
 		Best = 0,
 		Recent = 1,
 		First = 2
 	};
-	std::shared_ptr<UsersController::OutgoingResponse> updateSettings(Int32 id, std::string request, update_type data_type) const;
 	std::shared_ptr<UsersController::OutgoingResponse> buildScores(Int32 id, Int32 mode, Int32 relax, Int32 page, Int32 length, scores_type type) const;
 	// also checks if player exists. if not, returns false, otherwise returns true and mode as string in ans
 	bool getMode(Int32 id, std::string* ans) const;
@@ -439,7 +432,7 @@ public:
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
-	ENDPOINT("GET", "/users/{id}/userpage", userUserpage, PATH(Int32, id))
+	ENDPOINT("GET", "/users/{id}/profile", userProfile, PATH(Int32, id))
 	{
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 		users user_data{};
@@ -481,22 +474,8 @@ public:
 		return buildScores(id, mode, relax, page, length, scores_type::First);
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/background", changeBackground, PATH(Int32, id), BODY_STRING(String, userInfo))
-	{
-		return updateSettings(id, userInfo->c_str(), update_type::Background);
-	};
-
-	ENDPOINT("POST", "/users/{id}/settings/userpage", changeUserpage, PATH(Int32, id), BODY_STRING(String, userInfo))
-	{
-		return updateSettings(id, userInfo->c_str(), update_type::Userpage);
-	};
-
-	ENDPOINT("POST", "/users/{id}/settings/status", changeStatus, PATH(Int32, id), BODY_STRING(String, userInfo))
-	{
-		return updateSettings(id, userInfo->c_str(), update_type::Status);
-	};
 };
 
-#include OATPP_CODEGEN_BEGIN(ApiController)
+#include OATPP_CODEGEN_END(ApiController)
 
 #endif

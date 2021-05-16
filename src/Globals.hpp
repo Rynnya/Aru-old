@@ -19,8 +19,8 @@
 #include "utils/curl.hpp"
 #include "utils/math.hpp"
 #include "utils/osu.hpp"
-#include "utils/utils.hpp"
 #include "utils/time.hpp"
+#include "utils/utils.hpp"
 
 namespace mysql = sqlpp::mysql;
 using json = nlohmann::json;

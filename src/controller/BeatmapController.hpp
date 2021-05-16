@@ -26,7 +26,7 @@ public:
 public:
 
 	// Perform download from osu!API, requested by Bancho
-	ENDPOINT("GET", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id))
+	ENDPOINT("POST", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id))
 	{
 		if (!config::api_enabled || config::api_key == "")
 		{
@@ -36,7 +36,7 @@ public:
 		std::string main_output = "";
 		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::api_key + "&s=" + std::to_string(id));
 		if (!success)
-			return createResponse(Status::CODE_200, "Cannot get data from osu!API");
+			return createResponse(Status::CODE_406, "Cannot get data from osu!API");
 
 		json jsonRoot = json::parse(std_output, nullptr, false);
 		if (!jsonRoot.is_discarded())
@@ -144,7 +144,9 @@ public:
 			return createResponse(Status::CODE_404, error.dump().c_str());
 		}
 
-		json response = json::array();
+		json response;
+		response["beatmaps"] = json::array();
+		response["statusCode"] = 200;
 		for (const auto& row : result)
 		{
 			json beatmap;
@@ -192,7 +194,7 @@ public:
 			beatmap["hp"] = row.hp.value();
 
 			beatmap["mode"] = row.mode.value();
-			response.push_back(beatmap);
+			response["beatmaps"].push_back(beatmap);
 		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -263,16 +265,18 @@ public:
 		beatmap["hp"] = row.hp.value();
 
 		beatmap["mode"] = row.mode.value();
+		beatmap["statusCode"] = 200;
 
 		return createResponse(Status::CODE_200, beatmap.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/beatmap/{id}/leaderboard", beatmapLeaderboard, 
-		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
+		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		beatmaps b_table{};
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
+		int _length = SQLHelper::Limitize(1, length, 100);
 		bool isRelax = himitsu::utils::intToBoolean(relax);
 		int play_mode = mode;
 		if (play_mode == 3 && isRelax)
@@ -303,28 +307,33 @@ public:
 		users u_table{};
 		scores s_table{};
 
-		auto query = sqlpp::select(s_table.userid, u_table.username, s_table.score, s_table.pp, s_table.accuracy,
-			s_table.count_300, s_table.count_100, s_table.count_50, s_table.count_misses, s_table.mods)
+		auto query = sqlpp::select(s_table.userid, u_table.username, u_table.country,  s_table.score, s_table.pp, s_table.accuracy,
+			s_table.count_300, s_table.count_100, s_table.count_50, s_table.count_misses, s_table.max_combo, s_table.mods)
 			.from(s_table.join(u_table).on(s_table.userid == u_table.id))
 			.where(s_table.beatmap_md5 == md5 and s_table.is_relax == isRelax and s_table.play_mode == play_mode)
 			.order_by(s_table.pp.desc());
-		auto result = (**db)(query);
+		std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(1, _length, 100);
+		auto result = (**db)(query.offset(limit.first).limit(limit.second));
 
-		json response = json::array();
+		json response;
+		response["scores"] = json::array();
+		response["statusCode"] = 200;
 		for (const auto& row : result)
 		{
 			json score;
 			score["user_id"]      = row.userid.value();
 			score["username"]     = row.username.value();
+			score["country"]      = row.country.value();
 			score["score"]        = row.score.value();
 			score["pp"]           = row.pp.value();
 			score["accuracy"]     = row.accuracy.value();
 			score["count_300"]    = row.count_300.value();
 			score["count_100"]    = row.count_100.value();
 			score["count_50"]     = row.count_50.value();
-			score["count_misses"] = row.count_misses.value();
+			score["count_miss"]   = row.count_misses.value();
+			score["max_combo"]    = row.max_combo.value();
 			score["mods"]         = row.mods.value();
-			response.push_back(score);
+			response["scores"].push_back(score);
 		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -332,6 +341,6 @@ public:
 
 };
 
-#include OATPP_CODEGEN_BEGIN(ApiController)
+#include OATPP_CODEGEN_END(ApiController)
 
 #endif
