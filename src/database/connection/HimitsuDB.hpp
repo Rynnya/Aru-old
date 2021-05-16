@@ -2,6 +2,7 @@
 #define HimitsuDB_hpp
 
 #include "Globals.hpp"
+#include <mutex>
 
 namespace himitsu
 {

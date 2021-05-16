@@ -4,12 +4,11 @@
 #define NOMINMAX // macros are evil
 
 #include <iostream>
-#include <nlohmann/json.hpp>
-#include <fmt/format.h>
+#include "nlohmann/json.hpp"
+#include "fmt/format.h"
 
-#include <sqlpp11/sqlpp11.h>
-#include <sqlpp11/mysql/mysql.h>
-#include <sqlpp11/connection_pool.h>
+#include "sqlpp11/sqlpp11.h"
+#include "sqlpp11/mysql/mysql.h"
 #include "database/SQL.hpp"
 #include "database/connection/HimitsuDB.hpp"
 #include "database/connection/Redis.hpp"

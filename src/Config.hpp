@@ -22,7 +22,7 @@ namespace config
 	static std::string api_key     = ""; // Get key there: https://osu.ppy.sh/p/api/
 
 	// Folders
-	static std::string avatar_folder = "/path/to/folder/ava{}.png"; // {} -> fmt::format(id) 
+	static std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id) 
 }
 
 #endif

@@ -48,7 +48,6 @@ include_directories(src)
 add_library(${project_name}-lib
 	src/controller/BeatmapController.cpp
 	src/controller/BeatmapController.hpp
-	src/controller/ErrorHandler.hpp
 	src/controller/MainController.hpp
 	src/controller/SettingsController.cpp
 	src/controller/SettingsController.hpp
@@ -64,6 +63,8 @@ add_library(${project_name}-lib
 	src/database/tables/ScoresTable.hpp
 	src/database/tables/UsersTable.hpp
 	src/database/SQL.hpp
+	src/handlers/AuthorizationHandler.hpp
+	src/handlers/ErrorHandler.hpp
 	src/utils/curl.hpp
 	src/utils/math.hpp
 	src/utils/osu.hpp

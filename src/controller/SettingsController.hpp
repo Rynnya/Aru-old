@@ -2,6 +2,7 @@
 #define SettingsController_hpp
 
 #include "Globals.hpp"
+#include "handlers/AuthorizationHandler.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
@@ -17,51 +18,53 @@ private:
 public:
 	SettingsController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
-	{}
+	{
+		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
+	}
 private:
 	std::shared_ptr<SettingsController::OutgoingResponse> updateBackground(Int32 id,std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateUserpage(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateStatus(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updatePlayStyle(Int32 id, int body) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateScoreboard(Int32 id, int pref, int auto_classic, int auto_relax) const;
-	bool checkToken(int id, String token);
 public:
-
+	// 
 	ENDPOINT("POST", "/users/{id}/settings/background", changeBackground, 
-		PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request), BODY_STRING(String, userInfo))
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 		return updateBackground(id, userInfo->c_str());
 	};
 
 	ENDPOINT("POST", "/users/{id}/settings/userpage", changeUserpage, 
-		PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request), BODY_STRING(String, userInfo))
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 		return updateUserpage(id, userInfo->c_str());
 	};
 
 	ENDPOINT("POST", "/users/{id}/settings/status", changeStatus,
-		PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request), BODY_STRING(String, userInfo))
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 		return updateStatus(id, userInfo->c_str());
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/avatar", changeAvatar, PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request))
+	ENDPOINT("POST", "/users/{id}/settings/avatar", changeAvatar,
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 		oatpp::data::stream::FileOutputStream fileOutputStream(fmt::format(config::avatar_folder, (*id)).c_str());
 		request->transferBodyToStream(&fileOutputStream);
 		return createResponse(Status::CODE_200, "OK");
 	};
 
 	ENDPOINT("POST", "/users/{id}/settings/playstyle", changePlayStyle, 
-		PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request), BODY_STRING(String, playstyle))
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, playstyle))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 
-		json body = json::parse(playstyle.get()->c_str(), nullptr, false);
+		json body = json::parse(playstyle->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
 			if (body["playstyle"].is_null() || !body["playstyle"].is_number_integer())
@@ -74,11 +77,11 @@ public:
 	};
 
 	ENDPOINT("POST", "/users/{id}/settings/scoreboard", changeScoreboard, 
-		PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request), BODY_STRING(String, scoreboard))
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, scoreboard))
 	{
-		OATPP_ASSERT_HTTP(checkToken((*id), request->getHeader("Authorization")), Status::CODE_401, "Unauthorized");
+		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
 
-		json body = json::parse(scoreboard.get()->c_str(), nullptr, false);
+		json body = json::parse(scoreboard->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
 			if (body["preferences"].is_null() || !body["preferences"].is_number_integer())

@@ -126,20 +126,3 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 
 	return createResponse(Status::CODE_200, "OK");
 }
-
-// Returns true if valid token, otherwise false
-bool SettingsController::checkToken(int id, String token)
-{
-	if (!token)
-		return false;
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
-	tokens token_table{};
-	auto query = (*db)->prepare(sqlpp::select(token_table.user)
-		.from(token_table)
-		.where(token_table.user == id and token_table.token == sqlpp::parameter(token_table.token)));
-	query.params.token = token.get()->c_str();
-	auto result = (**db)(query);
-	if (result.empty())
-		return false;
-	return true;
-}

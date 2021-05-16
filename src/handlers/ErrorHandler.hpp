@@ -4,7 +4,7 @@
 #include "Globals.hpp"
 #include "oatpp/core/base/Countable.hpp"
 #include "oatpp/web/server/handler/ErrorHandler.hpp"
-#include <oatpp/web/protocol/http/outgoing/BufferBody.hpp>
+#include "oatpp/web/protocol/http/outgoing/BufferBody.hpp"
 
 class JsonErrorHandler : public oatpp::base::Countable, public oatpp::web::server::handler::ErrorHandler {
 public:
@@ -18,7 +18,7 @@ public:
         handleError(const oatpp::web::protocol::http::Status& status, const oatpp::String& message, const Headers& headers) override
     {
         json answer;
-        auto additions = message.get()->c_str();
+        auto additions = message->c_str();
         answer["statusCode"] = status.code;
         answer["message"] = additions;
         OATPP_LOGE("Error", additions);

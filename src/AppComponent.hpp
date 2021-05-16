@@ -2,7 +2,7 @@
 #define AppComponent_hpp
 
 #include "Globals.hpp"
-#include "controller/ErrorHandler.hpp"
+#include "handlers/ErrorHandler.hpp"
 
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"

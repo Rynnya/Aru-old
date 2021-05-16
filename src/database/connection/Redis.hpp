@@ -2,7 +2,7 @@
 #define HimitsuRedis_hpp
 
 #include "Globals.hpp"
-#include <cpp_redis/core/client.hpp>
+#include "cpp_redis/core/client.hpp"
 
 namespace himitsu
 {

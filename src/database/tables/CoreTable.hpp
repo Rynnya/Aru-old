@@ -1,7 +1,7 @@
 #ifndef CoreTable_hpp
 #define CoreTable_hpp
 
-#include <sqlpp11/sqlpp11.h>
+#include "sqlpp11/sqlpp11.h"
 
 #define object_detailed_struct(name, var, type)                                     \
     struct var {                                                                    \
