@@ -42,10 +42,9 @@ public:
 		{
 			if (!getMode(id, &mode))
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 		}
 		else
@@ -53,10 +52,9 @@ public:
 
 		if (relax == 1 && mode == "mania")
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "mania don't have relax mode";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+			);
 		}
 
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -100,10 +98,9 @@ public:
 			auto result = (**db)(query);
 			if (result.empty())
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 
 			const auto& row = result.front();
@@ -111,16 +108,16 @@ public:
 			std::string country = row.country;
 			country = himitsu::utils::str_tolower(country);
 
-			response["result"]["id"] = row.id.value();
-			response["result"]["username"] = row.username.value();
-			response["result"]["country"] = row.country.value();
-			response["result"]["status"] = row.status.value();
-			response["result"]["default_mode"] = row.favourite_mode.value();
-			response["result"]["default_relax"] = row.favourite_relax.value();
-			response["result"]["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-			response["result"]["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-			response["result"]["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-			response["result"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
+			response["id"] = row.id.value();
+			response["username"] = row.username.value();
+			response["country"] = row.country.value();
+			response["status"] = row.status.value();
+			response["default_mode"] = row.favourite_mode.value();
+			response["default_relax"] = row.favourite_relax.value();
+			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
+			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
+			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
+			response["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
 		}
 		else
 		{
@@ -164,10 +161,9 @@ public:
 			auto result = (**db)(query);
 			if (result.empty())
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 
 			const auto& row = result.front();
@@ -175,20 +171,19 @@ public:
 			std::string country = row.country;
 			country = himitsu::utils::str_tolower(country);
 
-			response["result"]["id"] = row.id.value();
-			response["result"]["username"] = row.username.value();
-			response["result"]["country"] = row.country.value();
-			response["result"]["status"] = row.status.value();
-			response["result"]["default_mode"] = row.favourite_mode.value();
-			response["result"]["default_relax"] = row.favourite_relax.value();
-			response["result"]["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-			response["result"]["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-			response["result"]["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-			response["result"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
+			response["id"] = row.id.value();
+			response["username"] = row.username.value();
+			response["country"] = row.country.value();
+			response["status"] = row.status.value();
+			response["default_mode"] = row.favourite_mode.value();
+			response["default_relax"] = row.favourite_relax.value();
+			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
+			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
+			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
+			response["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
 		}
 
-		response["result"]["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
-		response["statusCode"] = 200;
+		response["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
@@ -200,10 +195,9 @@ public:
 		{
 			if (!getMode(id, &mode))
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 		}
 		else
@@ -211,10 +205,9 @@ public:
 
 		if (relax == 1 && mode == "mania")
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "mania don't have relax mode";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+			);
 		}
 
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
@@ -234,10 +227,9 @@ public:
 
 			if (result.empty())
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 
 			const auto& row = result.front();
@@ -325,10 +317,9 @@ public:
 
 			if (result.empty())
 			{
-				json error;
-				error["statusCode"] = 404;
-				error["message"] = "player not found";
-				return createResponse(Status::CODE_404, error.dump().c_str());
+				return createResponse(Status::CODE_404,
+					himitsu::createError(Status::CODE_404, "player not found").c_str()
+				);
 			}
 
 			const auto& row = result.front();
@@ -428,7 +419,6 @@ public:
 		for (const auto& badge : (**db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
 			response["badges"].push_back(badge.badge.value());
 
-		response["statusCode"] = 200;
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
@@ -440,10 +430,9 @@ public:
 		auto result = (**db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
 		if (result.empty())
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "player not found";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "player not found").c_str()
+			);
 		}
 
 		json response;
@@ -451,7 +440,6 @@ public:
 
 		response["background"] = row.background.value();
 		response["userpage"] = row.userpage.value();
-		response["statusCode"] = 200;
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};

@@ -8,26 +8,23 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	std::string mode;
 	if (user_mode == -1 && !getMode(id, &mode))
 	{
-		json error;
-		error["statusCode"] = 404;
-		error["message"] = "player not found";
-		return createResponse(Status::CODE_404, error.dump().c_str());
+		return createResponse(Status::CODE_404, 
+			himitsu::createError(Status::CODE_404, "player not found").c_str()
+		);
 	}
 
 	length = SQLHelper::Limitize(1, length, 100);
 
 	if (relax == 1 && mode == "mania")
 	{
-		json error;
-		error["statusCode"] = 404;
-		error["message"] = "mania don't have relax mode";
-		return createResponse(Status::CODE_404, error.dump().c_str());
+		return createResponse(Status::CODE_404,
+			himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+		);
 	}
 
 	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 
-	json response;
-	response["statusCode"] = 200;
+	json response = json::array();
 
 	beatmaps b_table{};
 	bool isRelax = himitsu::utils::intToBoolean(relax);
@@ -78,10 +75,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	if (result.empty())
 	{
-		json resp;
-		resp["statusCode"] = 200;
-		resp["scores"] = json::array();
-		return this->createResponse(Status::CODE_200, resp.dump().c_str());
+		return this->createResponse(Status::CODE_200, json::array().dump().c_str());
 	}
 
 	for (const auto& row : result)
@@ -147,7 +141,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 		score["beatmap"] = beatmap;
 
-		response["scores"].push_back(score);
+		response.push_back(score);
 	}
 
 	return createResponse(Status::CODE_200, response.dump().c_str());

@@ -8,6 +8,8 @@
 #include "oatpp/core/macro/component.hpp"
 #include "database/tables/UsersTable.hpp"
 
+#include "cpp_redis/misc/error.hpp"
+
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
 class MainController : public oatpp::web::server::api::ApiController {
@@ -22,7 +24,6 @@ public:
 	ENDPOINT("GET", "/ping", Ping)
 	{
 		json response;
-		response["statusCode"] = 200;
 		response["message"] = himitsu::memes[rand() % himitsu::memes.size()].c_str();
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
@@ -51,23 +52,18 @@ public:
 			});
 			m_redis->get()->sync_commit();
 		}
-		catch (...)
+		catch (const cpp_redis::redis_error& ex)
 		{
 			range.~vector();
-			json error;
-			error["statusCode"] = 500;
-			error["message"] = "something bad happend :c";
-			return createResponse(Status::CODE_500, error.dump().c_str());
+			return createResponse(Status::CODE_500,
+				himitsu::createError(Status::CODE_500, ex.what()).c_str()
+			);
 		};
 
 		if (range.empty())
 		{
 			range.~vector();
-			json response;
-			response["statusCode"] = 200;
-			response["users"] = json::array();
-
-			return createResponse(Status::CODE_200, response.dump().c_str());
+			return createResponse(Status::CODE_200, json::array().dump().c_str());
 		}
 
 		std::string users_vec;
@@ -76,9 +72,7 @@ public:
 
 		users u_table{};
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
-		json response;
-		response["users"] = json::array();
-		response["statusCode"] = 200;
+		json response = json::array();
 
 		if (relax == 1)
 		{
@@ -134,7 +128,7 @@ public:
 				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
 				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), std::to_string(id));
 
-				response["users"].push_back(user);
+				response.push_back(user);
 			}
 		}
 		else
@@ -200,7 +194,7 @@ public:
 				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
 				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), std::to_string(id));
 
-				response["users"].push_back(user);
+				response.push_back(user);
 			}
 		}
 

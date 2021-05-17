@@ -3,6 +3,7 @@
 
 #include "Globals.hpp"
 #include "handlers/ErrorHandler.hpp"
+#include "handlers/HeaderHandler.hpp"
 
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
@@ -64,7 +65,12 @@ public:
 		connectionHandler->setErrorHandler(JsonErrorHandler::createShared());
 		/* Add CORS request and response interceptors */
 		connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
-		connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>());
+		connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>(
+			"*",
+			"GET, POST, OPTIONS, PUT, DELETE, PATCH"
+		));
+		/* Set Content-Type header */
+		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());
 
 		return connectionHandler;
 	}());

@@ -30,13 +30,17 @@ public:
 	{
 		if (!config::api_enabled || config::api_key == "")
 		{
-			return createResponse(Status::CODE_200, "API disabled");
+			return createResponse(Status::CODE_410,
+				himitsu::createError(Status::CODE_410, "API disabled").c_str()
+			);
 		}
 
 		std::string main_output = "";
 		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::api_key + "&s=" + std::to_string(id));
 		if (!success)
-			return createResponse(Status::CODE_406, "Cannot get data from osu!API");
+			return createResponse(Status::CODE_400,
+				himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str()
+			);
 
 		json jsonRoot = json::parse(std_output, nullptr, false);
 		if (!jsonRoot.is_discarded())
@@ -44,7 +48,9 @@ public:
 			if (!jsonRoot["error"].is_null())
 			{
 				config::api_enabled = false;
-				return createResponse(Status::CODE_401, "Wrong API key");
+				return createResponse(Status::CODE_401,
+					himitsu::createError(Status::CODE_401, "Wrong API key").c_str()
+				);
 			}
 			beatmaps b_table{};
 			std::vector<int> b_maps;
@@ -120,10 +126,14 @@ public:
 				diffs.detach();
 			}
 
-			return createResponse(Status::CODE_200, "OK");
+			auto response = createResponse(Status::CODE_200, "OK");
+			response->putHeader("Content-Type", "text/plain");
+			return response;
 		}
 
-		return createResponse(Status::CODE_200, "OK");
+		return createResponse(Status::CODE_400,
+			himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str()
+		);
 	};
 
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
@@ -138,15 +148,12 @@ public:
 
 		if (result.empty())
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "cannot find beatmap set";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "cannot find beatmap set").c_str()
+			);
 		}
 
-		json response;
-		response["beatmaps"] = json::array();
-		response["statusCode"] = 200;
+		json response = json::array();
 		for (const auto& row : result)
 		{
 			json beatmap;
@@ -194,7 +201,7 @@ public:
 			beatmap["hp"] = row.hp.value();
 
 			beatmap["mode"] = row.mode.value();
-			response["beatmaps"].push_back(beatmap);
+			response.push_back(beatmap);
 		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -212,10 +219,9 @@ public:
 
 		if (result.empty())
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "cannot find beatmap set";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "cannot find beatmap").c_str()
+			);
 		}
 
 		const auto& row = result.front();
@@ -265,7 +271,6 @@ public:
 		beatmap["hp"] = row.hp.value();
 
 		beatmap["mode"] = row.mode.value();
-		beatmap["statusCode"] = 200;
 
 		return createResponse(Status::CODE_200, beatmap.dump().c_str());
 	};
@@ -281,10 +286,9 @@ public:
 		int play_mode = mode;
 		if (play_mode == 3 && isRelax)
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "mania don't have relax mode";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+			);
 		}
 
 		std::string md5 = "";
@@ -295,10 +299,9 @@ public:
 		);
 		if (res.empty())
 		{
-			json error;
-			error["statusCode"] = 404;
-			error["message"] = "cannot find beatmap";
-			return createResponse(Status::CODE_404, error.dump().c_str());
+			return createResponse(Status::CODE_404,
+				himitsu::createError(Status::CODE_404, "cannot find beatmap").c_str()
+			);
 		}
 		const auto& r = res.front();
 		if (play_mode == -1) play_mode = r.mode;
@@ -315,9 +318,7 @@ public:
 		std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(1, _length, 100);
 		auto result = (**db)(query.offset(limit.first).limit(limit.second));
 
-		json response;
-		response["scores"] = json::array();
-		response["statusCode"] = 200;
+		json response = json::array();
 		for (const auto& row : result)
 		{
 			json score;
@@ -333,7 +334,7 @@ public:
 			score["count_miss"]   = row.count_misses.value();
 			score["max_combo"]    = row.max_combo.value();
 			score["mods"]         = row.mods.value();
-			response["scores"].push_back(score);
+			response.push_back(score);
 		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());

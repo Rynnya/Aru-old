@@ -29,74 +29,108 @@ private:
 	std::shared_ptr<SettingsController::OutgoingResponse> updateScoreboard(Int32 id, int pref, int auto_classic, int auto_relax) const;
 public:
 	// 
-	ENDPOINT("POST", "/users/{id}/settings/background", changeBackground, 
+	ENDPOINT("PUT", "/users/{id}/settings/background", changeBackground, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
 		return updateBackground(id, userInfo->c_str());
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/userpage", changeUserpage, 
+	ENDPOINT("PUT", "/users/{id}/settings/userpage", changeUserpage, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
 		return updateUserpage(id, userInfo->c_str());
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/status", changeStatus,
+	ENDPOINT("PUT", "/users/{id}/settings/status", changeStatus,
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
 		return updateStatus(id, userInfo->c_str());
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/avatar", changeAvatar,
+	ENDPOINT("PUT", "/users/{id}/settings/avatar", changeAvatar,
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
 		oatpp::data::stream::FileOutputStream fileOutputStream(fmt::format(config::avatar_folder, (*id)).c_str());
 		request->transferBodyToStream(&fileOutputStream);
 		return createResponse(Status::CODE_200, "OK");
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/playstyle", changePlayStyle, 
+	ENDPOINT("PUT", "/users/{id}/settings/playstyle", changePlayStyle, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, playstyle))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(playstyle->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
 			if (body["playstyle"].is_null() || !body["playstyle"].is_number_integer())
-				return createResponse(Status::CODE_204, "No data provided");
+				return createResponse(Status::CODE_400,
+					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+				);
 
 			return updatePlayStyle(id, body["playstyle"]);
 		}
 
-		return createResponse(Status::CODE_400, "Bad request");
+		return createResponse(Status::CODE_400,
+			himitsu::createError(Status::CODE_400, "Bad request").c_str()
+		);
 	};
 
-	ENDPOINT("POST", "/users/{id}/settings/scoreboard", changeScoreboard, 
+	ENDPOINT("PUT", "/users/{id}/settings/scoreboard", changeScoreboard, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, scoreboard))
 	{
-		OATPP_ASSERT_HTTP(authObject->valid && authObject->userID == id, Status::CODE_401, "Unauthorized");
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(scoreboard->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
 			if (body["preferences"].is_null() || !body["preferences"].is_number_integer())
-				return createResponse(Status::CODE_204, "No data provided");
+				return createResponse(Status::CODE_400,
+					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+				);
 
 			if (body["auto_classic"].is_null() || !body["auto_classic"].is_number_integer())
-				return createResponse(Status::CODE_204, "No data provided");
+				return createResponse(Status::CODE_400,
+					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+				);
 
 			if (body["auto_relax"].is_null() || !body["auto_relax"].is_number_integer())
-				return createResponse(Status::CODE_204, "No data provided");
+				return createResponse(Status::CODE_400,
+					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+				);
 
 			return updateScoreboard(id, body["preferences"], body["auto_classic"], body["auto_relax"]);
 		}
 
-		return createResponse(Status::CODE_400, "Bad request");
+		return createResponse(Status::CODE_400,
+			himitsu::createError(Status::CODE_400, "Bad request").c_str()
+		);
 	};
 
 };

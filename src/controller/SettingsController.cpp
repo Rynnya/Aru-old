@@ -14,7 +14,9 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	{
 		if (jsonRoot["background"].is_null())
 		{
-			return createResponse(Status::CODE_204, "No data provided");
+			return createResponse(Status::CODE_400, 
+				himitsu::createError(Status::CODE_400, "No data provided").c_str()
+			);
 		}
 
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -24,10 +26,14 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		upd.params.background = jsonRoot["background"].get<std::string>();
 		(**db)(upd);
 
-		return createResponse(Status::CODE_200, "OK");
+		auto response = createResponse(Status::CODE_200, "OK");
+		response->putHeader("Content-Type", "text/plain");
+		return response;
 	}
 
-	return createResponse(Status::CODE_204, "No data provided");
+	return createResponse(Status::CODE_400,
+		himitsu::createError(Status::CODE_400, "No data provided").c_str()
+	);
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateUserpage(
@@ -41,7 +47,9 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	{
 		if (jsonRoot["userpage"].is_null())
 		{
-			return createResponse(Status::CODE_204, "No data provided");
+			return createResponse(Status::CODE_400,
+				himitsu::createError(Status::CODE_400, "No data provided").c_str()
+			);
 		}
 
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -51,10 +59,14 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		upd.params.background = jsonRoot["userpage"].get<std::string>();
 		(**db)(upd);
 
-		return createResponse(Status::CODE_200, "OK");
+		auto response = createResponse(Status::CODE_200, "OK");
+		response->putHeader("Content-Type", "text/plain");
+		return response;
 	}
 
-	return createResponse(Status::CODE_204, "No data provided");
+	return createResponse(Status::CODE_400,
+		himitsu::createError(Status::CODE_400, "No data provided").c_str()
+	);
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateStatus(
@@ -68,7 +80,9 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	{
 		if (jsonRoot["status"].is_null())
 		{
-			return createResponse(Status::CODE_204, "No data provided");
+			return createResponse(Status::CODE_400,
+				himitsu::createError(Status::CODE_400, "No data provided").c_str()
+			);
 		}
 
 		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
@@ -78,25 +92,36 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		upd.params.background = jsonRoot["status"].get<std::string>();
 		(**db)(upd);
 
-		return createResponse(Status::CODE_200, "OK");
+		auto response = createResponse(Status::CODE_200, "OK");
+		response->putHeader("Content-Type", "text/plain");
+		return response;
 	}
 
-	return createResponse(Status::CODE_204, "No data provided");
+	return createResponse(Status::CODE_400,
+		himitsu::createError(Status::CODE_400, "No data provided").c_str()
+	);
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updatePlayStyle(Int32 id, int body) const
 {
 	if (body > 16)
-		return createResponse(Status::CODE_400, "PlayStyle cannot be more than 15");
+		return createResponse(Status::CODE_400,
+			himitsu::createError(Status::CODE_400, "PlayStyle cannot be more than 15").c_str()
+		);
 
 	if (body < 0)
-		return createResponse(Status::CODE_400, "PlayStyle cannot be lower than 0");
+		return createResponse(Status::CODE_400,
+			himitsu::createError(Status::CODE_400, "PlayStyle cannot be lower than 0").c_str()
+		);
 
 	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
 	users u_table{};
 
 	(**db)(sqlpp::update(u_table).set(u_table.play_style = body).where(u_table.id == (*id)));
-	return createResponse(Status::CODE_200, "OK");
+	
+	auto response = createResponse(Status::CODE_200, "OK");
+	response->putHeader("Content-Type", "text/plain");
+	return response;
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateScoreboard(
@@ -124,5 +149,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		u_pref.score_overwrite_mania = utils::intToBoolean(pref & 32, true)
 	).where(u_pref.id == (*id)));
 
-	return createResponse(Status::CODE_200, "OK");
+	auto response = createResponse(Status::CODE_200, "OK");
+	response->putHeader("Content-Type", "text/plain");
+	return response;
 }

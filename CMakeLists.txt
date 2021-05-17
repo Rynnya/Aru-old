@@ -65,6 +65,7 @@ add_library(${project_name}-lib
 	src/database/SQL.hpp
 	src/handlers/AuthorizationHandler.hpp
 	src/handlers/ErrorHandler.hpp
+	src/handlers/HeaderHandler.hpp
 	src/utils/curl.hpp
 	src/utils/math.hpp
 	src/utils/osu.hpp

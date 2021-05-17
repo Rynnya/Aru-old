@@ -21,7 +21,20 @@
 #include "utils/time.hpp"
 #include "utils/utils.hpp"
 
+#include "oatpp/web/protocol/http/Http.hpp"
+
 namespace mysql = sqlpp::mysql;
 using json = nlohmann::json;
+
+namespace himitsu
+{
+	inline std::string createError(const oatpp::web::protocol::http::Status& status, std::string message)
+	{
+		json response;
+		response["error"]["code"] = status.code;
+		response["error"]["message"] = message;
+		return response.dump();
+	}
+}
 
 #endif
