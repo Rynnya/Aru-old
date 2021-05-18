@@ -93,7 +93,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		score["count_geki"] = row.count_gekis.value();
 		score["count_katu"] = row.count_katus.value();
 		score["count_miss"] = row.count_misses.value();
-		score["time"] = himitsu::time::getDate(row.time);
+		score["time"] = himitsu::time_convert::getDate(row.time);
 		score["play_mode"] = row.play_mode.value();
 		score["accuracy"] = row.accuracy.value();
 		score["pp"] = row.pp.value();

@@ -23,6 +23,13 @@ namespace config
 
 	// Folders
 	static std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id) 
+
+	// Forbidden Nicknames // Before add nickname there - make it safe (Replace spaces with '_', toLower)
+	static std::vector<std::string> forbidden_nicknames = { "peppy", "rrtyui", "cookiezi", "azer", "loctav", "banchobot", "happystick", "doomsday", "sharingan33", "andrea", "cptnxn",
+		"reimu-desu", "hvick225", "_index", "my_aim_sucks", "kynan", "rafis", "sayonara-bye", "thelewa", "wubwoofwolf", "millhioref", "tom94", "tillerino", "clsw",
+		"spectator", "exgon", "axarious", "angelsim", "recia", "nara", "emperorpenguin83", "bikko", "xilver", "vettel", "kuu01", "_yu68", "tasuke912", "dusk",
+		"ttobas", "velperk", "jakads", "jhlee0133", "abcdullah", "yuko-", "entozer", "hdhr", "ekoro", "snowwhite", "osuplayer111", "musty", "nero", "elysion",
+		"ztrot", "koreapenguin", "fort", "asphyxia", "niko", "shigetora", "whitecat", "fokabot", "himitsu", "nebula", "howl", "nyo", "angelwar", "mm00" };
 }
 
 #endif

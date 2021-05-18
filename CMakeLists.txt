@@ -46,6 +46,7 @@ add_subdirectory(libs/json)
 include_directories(src)
 
 add_library(${project_name}-lib
+	src/controller/AuthController.hpp
 	src/controller/BeatmapController.cpp
 	src/controller/BeatmapController.hpp
 	src/controller/MainController.hpp
@@ -66,8 +67,10 @@ add_library(${project_name}-lib
 	src/handlers/AuthorizationHandler.hpp
 	src/handlers/ErrorHandler.hpp
 	src/handlers/HeaderHandler.hpp
+	src/utils/bcrypt.hpp
 	src/utils/curl.hpp
 	src/utils/math.hpp
+	src/utils/md5.hpp
 	src/utils/osu.hpp
 	src/utils/time.hpp
 	src/utils/utils.hpp

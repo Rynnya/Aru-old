@@ -1,5 +1,6 @@
 #include "./AppComponent.hpp"
 
+#include "./controller/AuthController.hpp"
 #include "./controller/BeatmapController.hpp"
 #include "./controller/MainController.hpp"
 #include "./controller/SettingsController.hpp"
@@ -19,11 +20,13 @@ void run() {
 	OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 
 	/* Add all endpoints to router */
+	auto authController = std::make_shared<AuthController>();
 	auto beatmapController = std::make_shared<BeatmapController>();
 	auto settingsController = std::make_shared<SettingsController>();
 	auto mainController = std::make_shared<MainController>();
 	auto userController = std::make_shared<UsersController>();
 
+	authController->addEndpointsToRouter(router);
 	beatmapController->addEndpointsToRouter(router);
 	settingsController->addEndpointsToRouter(router);
 	mainController->addEndpointsToRouter(router);

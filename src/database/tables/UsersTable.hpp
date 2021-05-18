@@ -7,10 +7,14 @@ struct users_objects
 {
 	object_struct(id,                sqlpp::integer);
 	object_struct(username,          sqlpp::varchar);
+	object_struct(username_safe,     sqlpp::varchar);
 	object_struct(username_aka,      sqlpp::varchar);
 	object_struct(register_datetime, sqlpp::bigint);
 	object_struct(latest_activity,   sqlpp::bigint);
 	object_struct(country,           sqlpp::varchar);
+	object_struct(password_md5,      sqlpp::varchar);
+	object_struct(email,             sqlpp::varchar);
+	object_struct(privileges,        sqlpp::bigint);
 	object_struct(userpage,          sqlpp::varchar);
 	object_struct(background,        sqlpp::varchar);
 	object_struct(status,            sqlpp::varchar);
@@ -110,9 +114,14 @@ struct user_preferences_objects
 database_table(users,
 	users_objects::id,
 	users_objects::username,
+	users_objects::username_aka,
+	users_objects::username_safe,
 	users_objects::register_datetime,
 	users_objects::latest_activity,
 	users_objects::country,
+	users_objects::password_md5,
+	users_objects::email,
+	users_objects::privileges,
 	users_objects::userpage,
 	users_objects::background,
 	users_objects::status,

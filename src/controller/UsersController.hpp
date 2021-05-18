@@ -239,8 +239,8 @@ public:
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
-			response["register_time"] = himitsu::time::getDate(row.register_datetime);
-			response["latest_activity"] = himitsu::time::getDate(row.latest_activity);
+			response["register_time"] = himitsu::time_convert::getDate(row.register_datetime);
+			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
 			response["play_style"] = row.play_style.value();
@@ -329,8 +329,8 @@ public:
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
-			response["register_time"] = himitsu::time::getDate(row.register_datetime);
-			response["latest_activity"] = himitsu::time::getDate(row.latest_activity);
+			response["register_time"] = himitsu::time_convert::getDate(row.register_datetime);
+			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
 			response["play_style"] = row.play_style.value();

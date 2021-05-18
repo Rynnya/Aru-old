@@ -90,7 +90,7 @@ public:
 					b_table.count_spinner = beatmap["count_spinner"].get<int>(),
 					b_table.ranked = beatmap["approved"] <= 0 ? 0 : beatmap["approved"].get<int>() + 1,
 					b_table.latest_update = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),
-					b_table.creating_date = himitsu::time::getTimestamp(beatmap["submit_date"].get<std::string>())
+					b_table.creating_date = himitsu::time_convert::getTimestamp(beatmap["submit_date"].get<std::string>())
 				));
 				if (mode != 0) // Non-convertable
 				{

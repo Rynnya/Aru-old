@@ -22,13 +22,25 @@ public:
 		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
 	}
 private:
-	std::shared_ptr<SettingsController::OutgoingResponse> updateBackground(Int32 id,std::string request) const;
+	std::shared_ptr<SettingsController::OutgoingResponse> getSettings(Int32 id) const;
+	std::shared_ptr<SettingsController::OutgoingResponse> updateBackground(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateUserpage(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateStatus(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updatePlayStyle(Int32 id, int body) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateScoreboard(Int32 id, int pref, int auto_classic, int auto_relax) const;
 public:
-	// 
+
+	ENDPOINT("GET", "/users/{id}/settings", getUserSettings,
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))
+	{
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
+		return getSettings(id);
+	};
+
 	ENDPOINT("PUT", "/users/{id}/settings/background", changeBackground, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
@@ -88,7 +100,7 @@ public:
 		{
 			if (body["playstyle"].is_null() || !body["playstyle"].is_number_integer())
 				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+					himitsu::createError(Status::CODE_400, "No data provided: playstyle").c_str()
 				);
 
 			return updatePlayStyle(id, body["playstyle"]);
@@ -112,17 +124,17 @@ public:
 		{
 			if (body["preferences"].is_null() || !body["preferences"].is_number_integer())
 				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+					himitsu::createError(Status::CODE_400, "No data provided: preferences").c_str()
 				);
 
 			if (body["auto_classic"].is_null() || !body["auto_classic"].is_number_integer())
 				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+					himitsu::createError(Status::CODE_400, "No data provided: auto_classic").c_str()
 				);
 
 			if (body["auto_relax"].is_null() || !body["auto_relax"].is_number_integer())
 				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided").c_str()
+					himitsu::createError(Status::CODE_400, "No data provided: auto_relax").c_str()
 				);
 
 			return updateScoreboard(id, body["preferences"], body["auto_classic"], body["auto_relax"]);
