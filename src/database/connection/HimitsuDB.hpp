@@ -3,6 +3,7 @@
 
 #include "Globals.hpp"
 #include <mutex>
+#include <list>
 
 namespace himitsu
 {

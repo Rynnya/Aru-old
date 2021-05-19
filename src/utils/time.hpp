@@ -26,12 +26,16 @@ namespace himitsu
 		static std::string getDate(long long timestamp) {
 			std::chrono::time_point<std::chrono::system_clock> date = std::chrono::time_point<std::chrono::system_clock>{} + std::chrono::seconds(timestamp);
 			time_t     now = std::chrono::system_clock::to_time_t(date);
-			struct tm  tstruct;
-			char       buf[80];
+			struct tm tstruct;
+#if _MSC_VER && !__INTEL_COMPILER
 			gmtime_s(&tstruct, &now);
-			strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tstruct);
+#else
+			gmtime_r(&now, &tstruct);
+#endif
+			std::ostringstream oss;
+			oss << std::put_time(&tstruct, "%Y-%m-%dT%H:%M:%SZ");
 
-			return buf;
+			return oss.str();
 		}
 	};
 }
