@@ -1,5 +1,5 @@
-#ifndef AuthController_hpp
-#define AuthController_hpp
+#ifndef controller_AuthController_hpp_included
+#define controller_AuthController_hpp_included
 
 #include "Globals.hpp"
 #include "handlers/AuthorizationHandler.hpp"
@@ -43,6 +43,7 @@ public:
 
 			json ok;
 			ok["id"] = (*authObject->userID);
+			ok["token"] = authObject->token->c_str();
 			auto response = createResponse(Status::CODE_200, ok.dump().c_str());
 			response->putHeader("set-cookie",
 				fmt::format(
@@ -57,11 +58,11 @@ public:
 		json body = json::parse(userInfo->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
-			if (body["login"].is_null() || body["password"].is_null())
+			if (body["username"].is_null() || body["password"].is_null())
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
 			std::string password = body["password"];
-			std::string username = himitsu::utils::trim(himitsu::utils::str_tolower(body["login"]));
+			std::string username = himitsu::utils::trim(himitsu::utils::str_tolower(body["username"]));
 			std::replace(username.begin(), username.end(), ' ', '_');
 
 			if (username == "nebula")
@@ -76,22 +77,36 @@ public:
 
 			const auto& row = result.front();
 			int userID = row.id;
-			result.pop_front();
 
 			if (bcrypt::verify(md5::createMD5(password), row.password_md5.value()))
 			{
 				tokens t{};
-				std::string token = md5::createMD5(himitsu::utils::genRandomString(25));
-				(**db)(sqlpp::insert_into(t).set(
-					t.user = userID,
-					t.token = token,
-					t.t_private = true,
-					t.privileges = 0,
-					t.last_updated = himitsu::time_convert::getEpochNow()
-				));
+				std::string token;
+
+				while (true)
+				{
+					token = md5::createMD5(himitsu::utils::genRandomString(25));
+					auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+					if (result.empty())
+					{
+						(**db)(sqlpp::insert_into(t).set(
+							t.user = userID,
+							t.token = token,
+							t.t_private = true,
+							t.privileges = 0,
+							t.last_updated = himitsu::time_convert::getEpochNow()
+						));
+						break;
+					}
+
+					// This token exist, create next one!
+					result.pop_front();
+				}
+
 
 				json response;
 				response["id"] = userID;
+				response["token"] = token;
 				auto wait = createResponse(Status::CODE_200, response.dump().c_str());
 				wait->putHeader("set-cookie",
 					fmt::format(
@@ -116,10 +131,10 @@ public:
 		json body = json::parse(userInfo->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
-			if (body["login"].is_null() || body["password"].is_null() || body["email"].is_null())
+			if (body["username"].is_null() || body["password"].is_null() || body["email"].is_null())
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
-			std::string username = body["login"];
+			std::string username = body["username"];
 			std::string username_safe = himitsu::utils::trim(himitsu::utils::str_tolower(username));
 			std::replace(username_safe.begin(), username_safe.end(), ' ', '_');
 
@@ -143,32 +158,32 @@ public:
 							"This nickname are forbidden. If you are real owner of this nickname, please contact us.").c_str()
 					);
 
-			users t_table{};
+			users u_table{};
 			std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-			auto result1 = (**db)(sqlpp::select(t_table.id).from(t_table).where(t_table.username_safe == username_safe || t_table.username == username).limit(1u));
+			auto result1 = (**db)(sqlpp::select(u_table.id).from(u_table).where(u_table.username_safe == username_safe || u_table.username == username).limit(1u));
 
 			if (!result1.empty())
 				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "This nickname already taken!").c_str());
 			result1.pop_front();
 
 			std::string email = body["email"];
-			auto result2 = (**db)(sqlpp::select(t_table.email).from(t_table).where(t_table.email == email).limit(1u));
+			auto result2 = (**db)(sqlpp::select(u_table.email).from(u_table).where(u_table.email == email).limit(1u));
 			if (!result2.empty())
 				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "This email already taken!").c_str());
 			result2.pop_front();
 
 			std::string password = bcrypt::hash(md5::createMD5(body["password"]));
-			(**db)(sqlpp::insert_into(t_table).set(
-				t_table.username = username,
-				t_table.username_safe = username_safe,
-				t_table.country = "XX",
-				t_table.email = email,
-				t_table.password_md5 = password,
-				t_table.register_datetime = himitsu::time_convert::getEpochNow(),
-				t_table.privileges = 3
+			(**db)(sqlpp::insert_into(u_table).set(
+				u_table.username = username,
+				u_table.username_safe = username_safe,
+				u_table.country = "XX",
+				u_table.email = email,
+				u_table.password_md5 = password,
+				u_table.register_datetime = himitsu::time_convert::getEpochNow(),
+				u_table.privileges = 3
 			));
 
-			auto result = (**db)(sqlpp::select(t_table.id).from(t_table).where(t_table.email == email).limit(1u));
+			auto result = (**db)(sqlpp::select(u_table.id).from(u_table).where(u_table.email == email).limit(1u));
 			int user_id = result.front().id;
 			result.pop_front();
 
@@ -180,18 +195,32 @@ public:
 			(**db)(sqlpp::insert_into(us_st_r).set(us_st_r.id = user_id));
 			(**db)(sqlpp::insert_into(us_prf).set(us_prf.id = user_id));
 
-			tokens tok{};
-			std::string token = md5::createMD5(himitsu::utils::genRandomString(25));
-			(**db)(sqlpp::insert_into(tok).set(
-				tok.user = user_id,
-				tok.token = token,
-				tok.t_private = true,
-				tok.privileges = 0,
-				tok.last_updated = himitsu::time_convert::getEpochNow()
-			));
+			tokens t{};
+			std::string token;
+
+			while (true)
+			{
+				token = md5::createMD5(himitsu::utils::genRandomString(25));
+				auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+				if (result.empty())
+				{
+					(**db)(sqlpp::insert_into(t).set(
+						t.user = user_id,
+						t.token = token,
+						t.t_private = true,
+						t.privileges = 0,
+						t.last_updated = himitsu::time_convert::getEpochNow()
+					));
+					break;
+				}
+
+				// This token exist, create next one!
+				result.pop_front();
+			}
 
 			json response;
 			response["id"] = user_id;
+			response["token"] = token;
 			auto wait = createResponse(Status::CODE_200, response.dump().c_str());
 			wait->putHeader("set-cookie",
 				fmt::format(
@@ -203,9 +232,102 @@ public:
 			return wait;
 		}
 
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Bad request").c_str()
-		);
+		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+	}
+
+	ENDPOINT("GET", "/tokens/{id}", getTokens, PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))
+	{
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
+		tokens t{};
+		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto result = (**db)(sqlpp::select(t.token, t.privileges).from(t).where(t.user == (*id) and t.t_private == false));
+
+		json response = json::array();
+		for (const auto& row : result)
+		{
+			json token;
+			token["token"]      = row.token.value();
+			token["privileges"] = row.privileges.value();
+			response.push_back(token);
+		}
+
+		return createResponse(Status::CODE_200, response.dump().c_str());
+	}
+
+	ENDPOINT("POST", "/tokens/{id}", createToken, PATH(Int32, id), 
+		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
+	{
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
+		json body = json::parse(userInfo->c_str(), nullptr, false);
+		int privileges = 0;
+		if (!body.is_discarded())
+			if (body["privileges"].is_number_integer())
+				privileges = body["privileges"];
+
+		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
+
+		if (privileges > 0)
+		{
+			users u{};
+			auto check_privileges = (**db)(sqlpp::select(u.privileges).from(u).where(u.id == (*id)).limit(1u));
+
+			const auto& row = check_privileges.front();
+			if (privileges > row.privileges)
+				privileges = row.privileges;
+		}
+
+		tokens t{};
+		std::string token;
+
+		while (true)
+		{
+			token = md5::createMD5(himitsu::utils::genRandomString(25));
+			auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+			if (result.empty())
+			{
+				(**db)(sqlpp::insert_into(t).set(
+					t.user = (*id),
+					t.token = token,
+					t.t_private = false,
+					t.privileges = privileges,
+					t.last_updated = himitsu::time_convert::getEpochNow()
+				));
+				break;
+			}
+
+			// This token exist, create next one!
+			result.pop_front();
+		}
+
+		json response;
+		response["token"] = token;
+		response["privileges"] = privileges;
+		return createResponse(Status::CODE_201, response.dump().c_str());
+	}
+
+	ENDPOINT("DELETE", "/tokens/{id}", deleteToken, PATH(Int32, id), 
+		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))
+	{
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+		if (!(authObject->userID == id))
+			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
+		tokens t{};
+		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
+		(**db)(sqlpp::remove_from(t).where(t.token == authObject->token->c_str()));
+
+		json response;
+		response["message"] = "Bye!";
+		return createResponse(Status::CODE_200, response.dump().c_str());
 	}
 
 };

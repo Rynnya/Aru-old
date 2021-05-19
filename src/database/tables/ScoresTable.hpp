@@ -1,5 +1,5 @@
-#ifndef ScoresTable_hpp
-#define ScoresTable_hpp
+#ifndef database_tables_ScoresTable_hpp_included
+#define database_tables_ScoresTable_hpp_included
 
 #include "CoreTable.hpp"
 

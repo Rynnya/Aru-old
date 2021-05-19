@@ -1,5 +1,5 @@
-#ifndef HimitsuUtils_hpp
-#define HimitsuUtils_hpp
+#ifndef utils_utils_hpp_included
+#define utils_utils_hpp_included
 
 #include "Globals.hpp"
 #include <random>

@@ -1,5 +1,5 @@
-#ifndef UsersController_hpp
-#define UsersController_hpp
+#ifndef controller_UsersController_hpp_included
+#define controller_UsersController_hpp_included
 
 #include "Globals.hpp"
 

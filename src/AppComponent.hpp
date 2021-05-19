@@ -1,5 +1,5 @@
-#ifndef AppComponent_hpp
-#define AppComponent_hpp
+#ifndef AppComponent_hpp_included
+#define AppComponent_hpp_included
 
 #include "Globals.hpp"
 #include "handlers/ErrorHandler.hpp"

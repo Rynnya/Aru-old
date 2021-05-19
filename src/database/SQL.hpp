@@ -1,5 +1,5 @@
-#ifndef HimitsuSQL_hpp
-#define HimitsuSQL_hpp
+#ifndef database_SQL_hpp_included
+#define database_SQL_hpp_included
 
 #include "Globals.hpp"
 

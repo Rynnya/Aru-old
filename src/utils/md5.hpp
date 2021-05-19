@@ -5,8 +5,8 @@
  * The implementation of MD5 has no copyright claimed, for more details to see above link.
  */
 
-#ifndef _MD5_H
-#define _MD5_H
+#ifndef utils_md5_hpp_included
+#define utils_md5_hpp_included
 
 #include <string>
 

@@ -1,5 +1,5 @@
-#ifndef HimitsuGlobals_hpp
-#define HimitsuGlobals_hpp
+#ifndef Globals_hpp_included
+#define Globals_hpp_included
 
 #define NOMINMAX // macros are evil
 

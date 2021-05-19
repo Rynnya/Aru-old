@@ -1,5 +1,5 @@
-#ifndef HimitsuMath_hpp
-#define HimitsuMath_hpp
+#ifndef utils_math_hpp_included
+#define utils_math_hpp_included
 
 #include "Globals.hpp"
 

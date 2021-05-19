@@ -1,5 +1,5 @@
-#ifndef OtherTable_hpp
-#define OtherTable_hpp
+#ifndef database_tables_OtherTable_hpp_included
+#define database_tables_OtherTable_hpp_included
 
 #include "CoreTable.hpp"
 

@@ -1,5 +1,5 @@
-#ifndef BeatmapTable_hpp
-#define BeatmapTable_hpp
+#ifndef database_tables_BeatmapTable_hpp_included
+#define database_tables_BeatmapTable_hpp_included
 
 #include "CoreTable.hpp"
 

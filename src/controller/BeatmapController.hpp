@@ -1,5 +1,5 @@
-#ifndef BeatmapController_hpp
-#define BeatmapController_hpp
+#ifndef controller_BeatmapController_hpp_included
+#define controller_BeatmapController_hpp_included
 
 #include "Globals.hpp"
 
@@ -26,12 +26,20 @@ public:
 public:
 
 	// Perform download from osu!API, requested by Bancho
-	ENDPOINT("POST", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id))
+	ENDPOINT("POST", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
-		if (!config::api_enabled || config::api_key == "")
+		if (!config::api_enabled || config::api_key == "" || config::api_access_key == "")
 		{
 			return createResponse(Status::CODE_410,
-				himitsu::createError(Status::CODE_410, "API disabled").c_str()
+				himitsu::createError(Status::CODE_410, "API Download disabled").c_str()
+			);
+		}
+
+		oatpp::String access = request->getHeader("Token");
+		if (!access || access->c_str() != config::api_access_key)
+		{
+			return createResponse(Status::CODE_401,
+				himitsu::createError(Status::CODE_401, "Wrong Token key").c_str()
 			);
 		}
 
@@ -45,23 +53,44 @@ public:
 		json jsonRoot = json::parse(std_output, nullptr, false);
 		if (!jsonRoot.is_discarded())
 		{
-			if (!jsonRoot["error"].is_null())
+			if (!jsonRoot.is_array() && !jsonRoot["error"].is_null())
 			{
 				config::api_enabled = false;
 				return createResponse(Status::CODE_401,
 					himitsu::createError(Status::CODE_401, "Wrong API key").c_str()
 				);
 			}
+
 			beatmaps b_table{};
 			std::vector<int> b_maps;
 			auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+
+			auto result = (**db)(sqlpp::select(count(b_table.beatmap_id)).from(b_table).where(b_table.beatmapset_id == (*id)));
+			int count = result.front().count;
+			result.pop_front();
+
+			if (jsonRoot.size() == count)
+			{
+				auto response = createResponse(Status::CODE_200, "OK");
+				response->putHeader("Content-Type", "text/plain");
+				return response;
+			}
+
 			for (const auto& beatmap : jsonRoot)
 			{
-				int mode = beatmap["mode"];
-				int beatmap_id = beatmap["beatmap_id"];
+				int mode = std::stoi(beatmap["mode"].get<std::string>());
+				int beatmap_id = std::stoi(beatmap["beatmap_id"].get<std::string>());
+
+				auto exist = (**db)(sqlpp::select(b_table.id).from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
+				if (!exist.empty())
+				{
+					exist.pop_front();
+					continue;
+				}
+
 				(**db)(sqlpp::insert_into(b_table).set(
 					b_table.beatmap_id = beatmap_id,
-					b_table.beatmapset_id = beatmap["beatmapset_id"].get<int>(),
+					b_table.beatmapset_id = std::stoi(beatmap["beatmapset_id"].get<std::string>()),
 					b_table.beatmap_md5 = beatmap["file_md5"].get<std::string>(),
 					b_table.artist = beatmap["artist"].get<std::string>(),
 					b_table.title = beatmap["title"].get<std::string>(),
@@ -73,22 +102,22 @@ public:
 						beatmap["creator"].get<std::string>(),
 						beatmap["version"].get<std::string>()
 					),
-					b_table.cs = beatmap["diff_size"].get<float>(),
-					b_table.ar = beatmap["diff_approach"].get<float>(),
-					b_table.od = beatmap["diff_overall"].get<float>(),
-					b_table.hp = beatmap["diff_drain"].get<float>(),
+					b_table.cs = std::stof(beatmap["diff_size"].get<std::string>()),
+					b_table.ar = std::stof(beatmap["diff_approach"].get<std::string>()),
+					b_table.od = std::stof(beatmap["diff_overall"].get<std::string>()),
+					b_table.hp = std::stof(beatmap["diff_drain"].get<std::string>()),
 					b_table.mode = mode,
 					b_table.difficulty_std = 0,
 					b_table.difficulty_taiko = 0,
 					b_table.difficulty_ctb = 0,
 					b_table.difficulty_mania = 0,
-					b_table.max_combo = beatmap["max_combo"].is_null() ? 0 : beatmap["max_combo"].get<int>(),
-					b_table.hit_length = beatmap["hit_length"].get<int>(),
-					b_table.bpm = beatmap["bpm"].get<int>(),
-					b_table.count_normal = beatmap["count_normal"].get<int>(),
-					b_table.count_slider = beatmap["count_slider"].get<int>(),
-					b_table.count_spinner = beatmap["count_spinner"].get<int>(),
-					b_table.ranked = beatmap["approved"] <= 0 ? 0 : beatmap["approved"].get<int>() + 1,
+					b_table.max_combo = beatmap["max_combo"].is_null() ? 0 : std::stoi(beatmap["max_combo"].get<std::string>()),
+					b_table.hit_length = std::stoi(beatmap["hit_length"].get<std::string>()),
+					b_table.bpm = std::stoi(beatmap["bpm"].get<std::string>()),
+					b_table.count_normal = std::stoi(beatmap["count_normal"].get<std::string>()),
+					b_table.count_slider = std::stoi(beatmap["count_slider"].get<std::string>()),
+					b_table.count_spinner = std::stoi(beatmap["count_spinner"].get<std::string>()),
+					b_table.ranked = std::stoi(beatmap["approved"].get<std::string>()) <= 0 ? 0 : std::stoi(beatmap["approved"].get<std::string>()) + 1,
 					b_table.latest_update = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),
 					b_table.creating_date = himitsu::time_convert::getTimestamp(beatmap["submit_date"].get<std::string>())
 				));
@@ -98,17 +127,17 @@ public:
 					{
 						case 1:
 							(**db)(sqlpp::update(b_table)
-								.set(b_table.difficulty_taiko = beatmap["difficulty_rating"].get<float>())
+								.set(b_table.difficulty_taiko = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 2:
 							(**db)(sqlpp::update(b_table)
-								.set(b_table.difficulty_ctb = beatmap["difficulty_rating"].get<float>())
+								.set(b_table.difficulty_ctb = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 3:
 							(**db)(sqlpp::update(b_table)
-								.set(b_table.difficulty_mania = beatmap["difficulty_rating"].get<float>())
+								.set(b_table.difficulty_mania = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						default: // how?
@@ -120,7 +149,7 @@ public:
 				b_maps.push_back(beatmap_id);
 			}
 			
-			if (!b_maps.empty())
+			if (!b_maps.empty() && !config::api_currently_running)
 			{
 				std::thread diffs(&BeatmapController::setDifficulties, *this, b_maps);
 				diffs.detach();

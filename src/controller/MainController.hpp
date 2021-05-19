@@ -1,5 +1,5 @@
-#ifndef MainController_hpp
-#define MainController_hpp
+#ifndef controller_MainController_hpp_included
+#define controller_MainController_hpp_included
 
 #include "Globals.hpp"
 
@@ -43,22 +43,12 @@ public:
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
 		std::vector<cpp_redis::reply> range;
 
-		try
+		m_redis->get()->zrevrange(key, page * length, page * length + length + 1, false, [&](cpp_redis::reply& reply)
 		{
-			m_redis->get()->zrevrange(key, page * length, page * length + length + 1, false, [&](cpp_redis::reply& reply)
-			{
-				if (reply)
-					range = reply.as_array();
-			});
-			m_redis->get()->sync_commit();
-		}
-		catch (const cpp_redis::redis_error& ex)
-		{
-			range.~vector();
-			return createResponse(Status::CODE_500,
-				himitsu::createError(Status::CODE_500, ex.what()).c_str()
-			);
-		};
+			if (reply)
+				range = reply.as_array();
+		});
+		m_redis->get()->sync_commit();
 
 		if (range.empty())
 		{

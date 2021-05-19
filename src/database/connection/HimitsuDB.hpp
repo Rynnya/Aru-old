@@ -1,5 +1,5 @@
-#ifndef HimitsuDB_hpp
-#define HimitsuDB_hpp
+#ifndef database_connection_HimitsuDB_hpp_included
+#define database_connection_HimitsuDB_hpp_included
 
 #include "Globals.hpp"
 #include <mutex>

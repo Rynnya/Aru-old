@@ -1,5 +1,5 @@
-#ifndef HimitsuErrorHandler_hpp
-#define HimitsuErrorHandler_hpp
+#ifndef handlers_ErrorHandler_hpp_included
+#define handlers_ErrorHandler_hpp_included
 
 #include "Globals.hpp"
 #include "oatpp/core/base/Countable.hpp"

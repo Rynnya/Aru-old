@@ -50,8 +50,8 @@
  * - Fix broken array (Line 950)
  */
 
-#ifndef _bcrypt_hash_hpp
-#define _bcrypt_hash_hpp
+#ifndef utils_bcrypt_hpp_included
+#define utils_bcrypt_hpp_included
 
 #include <array>
 #include <limits>

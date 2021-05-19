@@ -1,5 +1,5 @@
-#ifndef HimitsuAuthorizationHandler_hpp
-#define HimitsuAuthorizationHandler_hpp
+#ifndef handlers_AuthorizationHandler_hpp_included
+#define handlers_AuthorizationHandler_hpp_included
 
 #include "Globals.hpp"
 #include "oatpp/web/server/handler/AuthorizationHandler.hpp"

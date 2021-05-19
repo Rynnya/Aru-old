@@ -1,5 +1,5 @@
-#ifndef HimitsuTime_hpp
-#define HimitsuTime_hpp
+#ifndef utils_time_hpp_included
+#define utils_time_hpp_included
 
 #include "Globals.hpp"
 #include <chrono>

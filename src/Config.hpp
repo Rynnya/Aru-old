@@ -1,15 +1,17 @@
-#ifndef HimitsuConfig_hpp
-#define HimitsuConfig_hpp
+#ifndef Config_hpp_included
+#define Config_hpp_included
 
 namespace config
 {
+	// TODO LATER: Need more compiler-time efficient option
+
 	// Database
 	static int         db_connection_amount = 10;
-	static int         db_port     = 3307; // Default port for MySQL/MariaDB
+	static int         db_port     = 3307;  // Default port for MySQL/MariaDB
 	static std::string db_user     = "root";
 	static std::string db_password = "";
 	static std::string db_database = "himitsu";
-	static bool        db_debug    = false; // Set True if you need debug output in sqlpp
+	static bool        db_debug    = true; // Set True if you need debug output in sqlpp
 
 	// Redis
 	static std::string redis_address               = "127.0.0.1";
@@ -18,8 +20,10 @@ namespace config
 	static std::string redis_password              = "";
 
 	// osu!API
-	static bool        api_enabled = true; // Set False if you don't want to download full beatmap set when LETS request it
-	static std::string api_key     = ""; // Get key there: https://osu.ppy.sh/p/api/
+	static bool        api_enabled           = true;  // Set False if you don't want to download full beatmap set when Bancho request it
+	static std::string api_key               = "";    // Get key there: https://osu.ppy.sh/p/api/
+	static std::string api_access_key        = "";    // Use this key to authorize Bancho
+	static bool        api_currently_running = false; // Leave this as False
 
 	// Folders
 	static std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id) 

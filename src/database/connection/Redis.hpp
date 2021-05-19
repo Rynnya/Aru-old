@@ -1,5 +1,5 @@
-#ifndef HimitsuRedis_hpp
-#define HimitsuRedis_hpp
+#ifndef database_connection_Redis_hpp_included
+#define database_connection_Redis_hpp_included
 
 #include "Globals.hpp"
 #include "cpp_redis/core/client.hpp"

@@ -1,5 +1,5 @@
-#ifndef CoreTable_hpp
-#define CoreTable_hpp
+#ifndef database_tables_CoreTable_hpp_included
+#define database_tables_CoreTable_hpp_included
 
 #include "sqlpp11/sqlpp11.h"
 

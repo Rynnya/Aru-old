@@ -1,5 +1,5 @@
-#ifndef SettingsController_hpp
-#define SettingsController_hpp
+#ifndef controller_SettingsController_hpp_included
+#define controller_SettingsController_hpp_included
 
 #include "Globals.hpp"
 #include "handlers/AuthorizationHandler.hpp"
@@ -81,6 +81,12 @@ public:
 			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
 		if (!(authObject->userID == id))
 			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+
+		if (config::avatar_folder == "/path/to/file/{}.png")
+		{
+			OATPP_LOGW("Pay attention", "Avatars currently disabled, please change example directory.");
+			return createResponse(Status::CODE_422, himitsu::createError(Status::CODE_422, "Sorry, but avatars currently not available to change!").c_str());
+		}
 
 		oatpp::data::stream::FileOutputStream fileOutputStream(fmt::format(config::avatar_folder, (*id)).c_str());
 		request->transferBodyToStream(&fileOutputStream);

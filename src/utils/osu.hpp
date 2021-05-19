@@ -1,5 +1,5 @@
-#ifndef osuHimitsu_hpp
-#define osuHimitsu_hpp
+#ifndef utils_osu_hpp_included
+#define utils_osu_hpp_included
 
 #include "Globals.hpp"
 #include <vector>

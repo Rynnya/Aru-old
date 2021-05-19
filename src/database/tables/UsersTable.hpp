@@ -1,5 +1,5 @@
-#ifndef UserTable_hpp
-#define UserTable_hpp
+#ifndef database_tables_UsersTable_hpp_included
+#define database_tables_UsersTable_hpp_included
 
 #include "CoreTable.hpp"
 

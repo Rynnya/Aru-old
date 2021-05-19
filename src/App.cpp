@@ -6,7 +6,6 @@
 #include "./controller/SettingsController.hpp"
 #include "./controller/UsersController.hpp"
 
-
 #include "oatpp/network/Server.hpp"
 
 #include <iostream>

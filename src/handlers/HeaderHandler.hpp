@@ -1,5 +1,5 @@
-#ifndef HimitsuHeaderHandler_hpp
-#define HimitsuHeaderHandler_hpp
+#ifndef handlers_HeaderHandler_hpp_included
+#define handlers_HeaderHandler_hpp_included
 
 #include "oatpp/web/server/interceptor/ResponseInterceptor.hpp"
 #include "oatpp/web/server/interceptor/RequestInterceptor.hpp"

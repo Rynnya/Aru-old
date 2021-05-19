@@ -1,5 +1,5 @@
-#ifndef HimitsuCurl_hpp
-#define HimitsuCurl_hpp
+#ifndef utils_curl_hpp_included
+#define utils_curl_hpp_included
 
 #include "Globals.hpp"
 #include <curl/curl.h>
