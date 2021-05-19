@@ -11,11 +11,11 @@ Still WIP, some paths are not verified.
 # Installation on Linux
 First of all, download all libraries.
 ```
-$ apt get install libmysqld-dev libmysqlclient-dev libcurl-dev
+$ apt-get install libmysqld-dev libmysqlclient-dev libcurl-dev
 ```
 If you use MariaDB, then you need download others.
 ```
-$ apt get install libmariadb-dev libmariadbclient-dev libcurl-dev
+$ apt-get install libmariadb-dev libmariadbclient-dev libcurl-dev
 ```
 Afterwards, initialize and download submodules.
 ```
@@ -28,8 +28,8 @@ $ cmake .
 
 If CURL or MYSQL_LIBRARY not found, then set manually.
 ```
--DCURL_INCLUDE_DIRS="path/to/curl/curl.h" -DCURL_LIBRARIES="/path/to/curl/libcurl.lib"
--DMYSQL_LIBRARY="path/to/mysql/lib/libmysql.lib" -DMYSQL_INCLUDE_DIR="/path/to/mysql/include/mysql"
+-DCURL_INCLUDE_DIRS="path/to/curl" -DCURL_LIBRARIES="/path/to/curl/libcurl.lib"
+-DMYSQL_LIBRARY="path/to/mysql/lib/libmysql.lib" -DMYSQL_INCLUDE_DIR="/path/to/mysql/include"
 ```
 Also, if you use MariaDB, this might be helpful.
 ```
@@ -62,3 +62,7 @@ When everything is written, compile the program.
 ```
 cmake --build . --config Release
 ```
+
+# Troubleshooting
+In GCC compiler for some reasons <date/date.h> cannot be found in sqlpp11<br>
+To fix it, copy include folder from /libs/date/include to /usr/local/include
