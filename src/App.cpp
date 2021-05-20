@@ -44,7 +44,7 @@ void run() {
 	oatpp::network::Server server(connectionProvider, connectionHandler);
 
 	/* Priny info about server port */
-	OATPP_LOGI("MyApp", "Server running on port %s", connectionProvider->getProperty("port").getData());
+	OATPP_LOGI("API ", "Server running on port %s", connectionProvider->getProperty("port").getData());
 
 	/* Initialize pseudorandom */
 	srand(time(0));

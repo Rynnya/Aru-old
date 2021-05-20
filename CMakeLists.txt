@@ -122,13 +122,15 @@ target_link_libraries(${project_name}-lib PUBLIC
 	sqlpp-mysql
 	cpp_redis
 	nlohmann_json
-	curl
 )
 
-if (USE_MARIADB)
-	target_link_libraries(${project_name}-lib PUBLIC mariadb)
-else()
-	target_link_libraries(${project_name}-lib PUBLIC mysql)
+if (NOT MSVC)
+	target_link_libraries(${project_name}-lib PUBLIC curl)
+	if (USE_MARIADB)
+		target_link_libraries(${project_name}-lib PUBLIC mariadb)
+	else()
+		target_link_libraries(${project_name}-lib PUBLIC mysql)
+	endif()
 endif()
 
 target_link_libraries(${project_name}-exe ${project_name}-lib)
