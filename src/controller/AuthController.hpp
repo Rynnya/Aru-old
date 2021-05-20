@@ -62,7 +62,8 @@ public:
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
 			std::string password = body["password"];
-			std::string username = himitsu::utils::trim(himitsu::utils::str_tolower(body["username"]));
+			std::string temp = himitsu::utils::str_tolower(body["username"]);
+			std::string username = himitsu::utils::trim(temp);
 			std::replace(username.begin(), username.end(), ' ', '_');
 
 			if (username == "nebula")
@@ -135,7 +136,8 @@ public:
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
 			std::string username = body["username"];
-			std::string username_safe = himitsu::utils::trim(himitsu::utils::str_tolower(username));
+			std::string temp = himitsu::utils::str_tolower(username);
+			std::string username_safe = himitsu::utils::trim(temp);
 			std::replace(username_safe.begin(), username_safe.end(), ' ', '_');
 
 			std::regex user_regex("^[A-Za-z0-9 _[\\]-]{2,15}$");

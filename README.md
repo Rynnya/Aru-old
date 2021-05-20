@@ -62,7 +62,3 @@ When everything is written, compile the program.
 ```
 cmake --build . --config Release
 ```
-
-# Troubleshooting
-In GCC compiler for some reasons <date/date.h> cannot be found in sqlpp11<br>
-To fix it, copy include folder from /libs/date/include to /usr/local/include

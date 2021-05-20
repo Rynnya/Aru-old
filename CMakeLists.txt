@@ -34,6 +34,14 @@ if (MSVC)
 		$<$<CONFIG:Debug>:/MDd>
 		$<$<CONFIG:Release>:/MD>
 	)
+else()
+	# This will work? Idk, please check and report if you have some results!
+	add_compile_options(-O2 -lcurl)
+	if (USE_MARIADB)
+		add_compile_options(-lmariadb)
+	else()
+		add_compile_options(-lmysql)
+	endif()
 endif()
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
@@ -89,7 +97,7 @@ target_include_directories(${project_name}-lib PRIVATE
 	${CMAKE_SOURCE_DIR}/libs/sqlpp11/include
 	${CMAKE_SOURCE_DIR}/libs/sqlpp11-connector-mysql/include
 	${CMAKE_SOURCE_DIR}/libs/cpp_redis/includes
-	${CMAKE_SOURCE_DIR}/libs/json/include
+	${CMAKE_SOURCE_DIR}/libs/date/include
 )
 target_include_directories(${project_name}-exe PRIVATE
 	${CMAKE_SOURCE_DIR}/libs/oatpp/src
@@ -97,16 +105,7 @@ target_include_directories(${project_name}-exe PRIVATE
 	${CMAKE_SOURCE_DIR}/libs/sqlpp11/include
 	${CMAKE_SOURCE_DIR}/libs/sqlpp11-connector-mysql/include
 	${CMAKE_SOURCE_DIR}/libs/cpp_redis/includes
-	${CMAKE_SOURCE_DIR}/libs/json/include
-)
-
-target_include_directories(${project_name}-lib PUBLIC src)
-target_link_libraries(${project_name}-lib PUBLIC
-	oatpp
-	fmt
-	sqlpp-mysql
-	cpp_redis
-	nlohmann_json
+	${CMAKE_SOURCE_DIR}/libs/date/include
 )
 
 find_package(CURL)
@@ -115,6 +114,22 @@ if (CURL_FOUND)
 else (CURL_FOUND)
 	message(FATAL_ERROR "Could not find the CURL library and development files.")
 endif (CURL_FOUND)
+
+target_include_directories(${project_name}-lib PUBLIC src)
+target_link_libraries(${project_name}-lib PUBLIC
+	oatpp
+	fmt
+	sqlpp-mysql
+	cpp_redis
+	nlohmann_json
+	curl
+)
+
+if (USE_MARIADB)
+	target_link_libraries(${project_name}-lib PUBLIC mariadb)
+else()
+	target_link_libraries(${project_name}-lib PUBLIC mysql)
+endif()
 
 target_link_libraries(${project_name}-exe ${project_name}-lib)
 add_dependencies(${project_name}-exe ${project_name}-lib)
