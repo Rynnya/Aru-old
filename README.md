@@ -26,11 +26,6 @@ Create CMake files.
 $ cmake . 
 ```
 
-If CURL or MYSQL_LIBRARY not found, then set manually.
-```
--DCURL_INCLUDE_DIRS="path/to/curl" -DCURL_LIBRARIES="/path/to/curl/libcurl.lib"
--DMYSQL_LIBRARY="path/to/mysql/lib/libmysql.lib" -DMYSQL_INCLUDE_DIR="/path/to/mysql/include"
-```
 Also, if you use MariaDB, this might be helpful.
 ```
 -DUSE_MARIADB=1
