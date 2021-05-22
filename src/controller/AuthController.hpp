@@ -35,7 +35,6 @@ public:
 	{
 		if (authObject->valid)
 		{
-			fmt::print("{}: sign with token {}\n", (*authObject->userID), authObject->token->c_str());
 			tokens t{};
 			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 			(*db)(sqlpp::update(t).set(
