@@ -7,20 +7,12 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 {
 	std::string mode;
 	if (user_mode == -1 && !getMode(id, &mode))
-	{
-		return createResponse(Status::CODE_404, 
-			himitsu::createError(Status::CODE_404, "Player not found").c_str()
-		);
-	}
+		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 	length = SQLHelper::Limitize(1, length, 100);
 
 	if (relax == 1 && mode == "mania")
-	{
-		return createResponse(Status::CODE_404,
-			himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
-		);
-	}
+		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 

@@ -26,7 +26,7 @@ private:
 	std::shared_ptr<SettingsController::OutgoingResponse> updateBackground(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateUserpage(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateStatus(Int32 id, std::string request) const;
-	std::shared_ptr<SettingsController::OutgoingResponse> updatePlayStyle(Int32 id, int body) const;
+	std::shared_ptr<SettingsController::OutgoingResponse> updatePref(Int32 id, int fav_mode, bool fav_relax, int playstyle) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateScoreboard(Int32 id, int pref, int auto_classic, int auto_relax) const;
 public:
 
@@ -93,29 +93,29 @@ public:
 		return createResponse(Status::CODE_200, "OK");
 	};
 
-	ENDPOINT("PUT", "/users/{id}/settings/playstyle", changePlayStyle, 
-		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, playstyle))
+	ENDPOINT("PUT", "/users/{id}/settings/pref", changeFavouriteMode,
+		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, fav_modes))
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
 		if (!(authObject->userID == id))
 			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
-		json body = json::parse(playstyle->c_str(), nullptr, false);
+		json body = json::parse(fav_modes->c_str(), nullptr, false);
 		if (!body.is_discarded())
 		{
+			if (body["favourite_mode"].is_null() || !body["favourite_mode"].is_number_integer())
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: favourite_mode").c_str());
+			if (body["favourite_relax"].is_null() || !body["favourite_relax"].is_number_integer())
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: favourite_relax").c_str());
 			if (body["playstyle"].is_null() || !body["playstyle"].is_number_integer())
-				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided: playstyle").c_str()
-				);
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: playstyle").c_str());
 
-			return updatePlayStyle(id, body["playstyle"]);
+			return updatePref(id, body["favourite_mode"], himitsu::utils::intToBoolean(body["favourite_relax"]), body["playstyle"]);
 		}
 
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Bad request").c_str()
-		);
-	};
+		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+	}
 
 	ENDPOINT("PUT", "/users/{id}/settings/scoreboard", changeScoreboard, 
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, scoreboard))
@@ -129,26 +129,18 @@ public:
 		if (!body.is_discarded())
 		{
 			if (body["preferences"].is_null() || !body["preferences"].is_number_integer())
-				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided: preferences").c_str()
-				);
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: preferences").c_str());
 
 			if (body["auto_classic"].is_null() || !body["auto_classic"].is_number_integer())
-				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided: auto_classic").c_str()
-				);
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: auto_classic").c_str());
 
 			if (body["auto_relax"].is_null() || !body["auto_relax"].is_number_integer())
-				return createResponse(Status::CODE_400,
-					himitsu::createError(Status::CODE_400, "No data provided: auto_relax").c_str()
-				);
+				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided: auto_relax").c_str());
 
 			return updateScoreboard(id, body["preferences"], body["auto_classic"], body["auto_relax"]);
 		}
 
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Bad request").c_str()
-		);
+		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 	};
 
 };

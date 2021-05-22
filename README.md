@@ -2,7 +2,7 @@
 
 API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Himitsu [site](https://github.com/makatymba2001/-WIP-himitsu-web)
 
-Still WIP, some paths are not verified.
+Still WIP, but every path verified.
 
 # Requirements
 - C++ compiler
@@ -26,9 +26,9 @@ Create CMake files.
 $ cmake . 
 ```
 
-Also, if you use MariaDB, this might be helpful.
+Also, if you use MariaDB, you need use this:
 ```
--DUSE_MARIADB=1
+$ cmake . -DUSE_MARIADB=1
 ```
 
 # Installation on Windows
@@ -40,7 +40,7 @@ Setup variables to CMake.
 ```
 -DMYSQL_LIBRARY="path/to/mysql/lib/libmysql.lib" -DMYSQL_INCLUDE_DIR="/path/to/mysql/include/mysql"
 ```
-If you use MariaDB, set this. Second line might be helpful, but not necessary.
+If you use MariaDB, set this. Second requires if you use MariaDB.
 ```
 -DMYSQL_LIBRARY="path/to/mysql/lib/libmariadb.lib" -DMYSQL_INCLUDE_DIR="/path/to/mysql/include/mysql"
 -DUSE_MARIADB=1

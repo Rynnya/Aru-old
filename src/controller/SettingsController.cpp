@@ -10,36 +10,33 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSet
 	users_preferences pref{};
 
 	auto result = (*db)(sqlpp::select(
-		user.id, user.favourite_mode, user.favourite_relax, user.play_style,
+		user.id, user.favourite_mode, user.favourite_relax, user.play_style, user.is_relax,
 		pref.scoreboard_display_classic, pref.scoreboard_display_relax,
 		pref.auto_last_classic, pref.auto_last_relax,
 		pref.score_overwrite_std, pref.score_overwrite_taiko, pref.score_overwrite_ctb, pref.score_overwrite_mania
 	).from(user.join(pref).on(user.id == pref.id)).where(user.id == (*id)).limit(1u));
 
 	if (result.empty())
-	{
-		return createResponse(Status::CODE_500,
-			himitsu::createError(Status::CODE_500, "How this happend? We forgot to remove token?").c_str()
-		);
-	}
+		return createResponse(Status::CODE_500, himitsu::createError(Status::CODE_500, "How this happend? We forgot to remove token?").c_str());
 
 	const auto& row = result.front();
 	json response;
 	response["id"]            = row.id.value();
+	response["submode"]       = (int)row.is_relax;
 	response["default_mode"]  = row.favourite_mode.value();
-	response["default_relax"] = row.favourite_relax.value();
-	response["play_style"]    = row.play_style.value();
+	response["default_relax"] = (int)row.favourite_relax;
+	response["playstyle"]     = row.play_style.value();
 
-	response["scoreboard_display_vanilla"] = row.scoreboard_display_classic.value();
-	response["scoreboard_display_relax"]   = row.scoreboard_display_relax.value();
+	response["scoreboard_display_vanilla"] = (int)row.scoreboard_display_classic;
+	response["scoreboard_display_relax"]   = (int)row.scoreboard_display_relax;
 	response["auto_last_vanilla"]          = row.auto_last_classic.value();
 	response["auto_last_relax"]            = row.auto_last_relax.value();
 
 	json score;
-	score["std"]   = row.score_overwrite_std.value();
-	score["taiko"] = row.score_overwrite_taiko.value();
-	score["ctb"]   = row.score_overwrite_ctb.value();
-	score["mania"] = row.score_overwrite_mania.value();
+	score["std"]   = (int)row.score_overwrite_std;
+	score["taiko"] = (int)row.score_overwrite_taiko;
+	score["ctb"]   = (int)row.score_overwrite_ctb;
+	score["mania"] = (int)row.score_overwrite_mania;
 	response["overwrite"] = score;
 
 	return createResponse(Status::CODE_200, response.dump().c_str());
@@ -55,11 +52,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["background"].is_null())
-		{
-			return createResponse(Status::CODE_400, 
-				himitsu::createError(Status::CODE_400, "No data provided").c_str()
-			);
-		}
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
@@ -73,9 +66,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		return response;
 	}
 
-	return createResponse(Status::CODE_400,
-		himitsu::createError(Status::CODE_400, "No data provided").c_str()
-	);
+	return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateUserpage(
@@ -88,11 +79,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["userpage"].is_null())
-		{
-			return createResponse(Status::CODE_400,
-				himitsu::createError(Status::CODE_400, "No data provided").c_str()
-			);
-		}
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
@@ -106,9 +93,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		return response;
 	}
 
-	return createResponse(Status::CODE_400,
-		himitsu::createError(Status::CODE_400, "No data provided").c_str()
-	);
+	return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateStatus(
@@ -121,11 +106,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["status"].is_null())
-		{
-			return createResponse(Status::CODE_400,
-				himitsu::createError(Status::CODE_400, "No data provided").c_str()
-			);
-		}
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
@@ -139,28 +120,25 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		return response;
 	}
 
-	return createResponse(Status::CODE_400,
-		himitsu::createError(Status::CODE_400, "No data provided").c_str()
-	);
+	return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 }
 
-std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updatePlayStyle(Int32 id, int body) const
+std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updatePref(Int32 id, int fav_mode, bool fav_relax, int playstyle) const
 {
-	if (body > 16)
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Playstyle cannot be more than 15").c_str()
-		);
-
-	if (body < 0)
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Playstyle cannot be lower than 0").c_str()
-		);
+	if (fav_mode == 3 && fav_relax)
+		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
+	if (fav_mode > 3 || fav_mode < 0) fav_mode = 0;
+	if (playstyle > 15 || playstyle < 0) playstyle = 0;
 
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users u_table{};
 
-	(*db)(sqlpp::update(u_table).set(u_table.play_style = body).where(u_table.id == (*id)));
-	
+	(*db)(sqlpp::update(u_table).set(
+		u_table.favourite_mode = fav_mode, 
+		u_table.favourite_relax = fav_relax, 
+		u_table.play_style = playstyle
+	).where(u_table.id == (*id)));
+
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
 	return response;
@@ -178,6 +156,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users_preferences u_pref{};
+	users u{};
 
 	using namespace himitsu;
 	(*db)(sqlpp::update(u_pref).set(
@@ -190,6 +169,8 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		u_pref.score_overwrite_ctb        = utils::intToBoolean(pref & 16, true),
 		u_pref.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
 	).where(u_pref.id == (*id)));
+
+	(*db)(sqlpp::update(u).set(u.is_relax = utils::intToBoolean(pref & 64, true)).where(u.id == (*id)));
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");

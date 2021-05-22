@@ -41,21 +41,13 @@ public:
 		if (user_mode == -1)
 		{
 			if (!getMode(id, &mode))
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404,	himitsu::createError(Status::CODE_404, "Player not found").c_str());
 		}
 		else
 			mode = himitsu::osu::modeToString(user_mode);
 
 		if (relax == 1 && mode == "mania")
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
@@ -97,11 +89,7 @@ public:
 
 			auto result = (*db)(query);
 			if (result.empty())
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 			const auto& row = result.front();
 
@@ -113,7 +101,7 @@ public:
 			response["country"] = row.country.value();
 			response["status"] = row.status.value();
 			response["default_mode"] = row.favourite_mode.value();
-			response["default_relax"] = row.favourite_relax.value();
+			response["default_relax"] = (int)row.favourite_relax;
 			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
 			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
 			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
@@ -160,11 +148,7 @@ public:
 
 			auto result = (*db)(query);
 			if (result.empty())
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 			const auto& row = result.front();
 
@@ -176,7 +160,7 @@ public:
 			response["country"] = row.country.value();
 			response["status"] = row.status.value();
 			response["default_mode"] = row.favourite_mode.value();
-			response["default_relax"] = row.favourite_relax.value();
+			response["default_relax"] = (int)row.favourite_relax;
 			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
 			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
 			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
@@ -194,21 +178,13 @@ public:
 		if (user_mode == -1)
 		{
 			if (!getMode(id, &mode))
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 		}
 		else
 			mode = himitsu::osu::modeToString(user_mode);
 
 		if (relax == 1 && mode == "mania")
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
@@ -226,11 +202,7 @@ public:
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u));
 
 			if (result.empty())
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 			const auto& row = result.front();
 
@@ -243,9 +215,9 @@ public:
 			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
-			response["play_style"] = row.play_style.value();
+			response["playstyle"] = row.play_style.value();
 			response["default_mode"] = row.favourite_mode.value();
-			response["default_relax"] = row.favourite_relax.value();
+			response["default_relax"] = (int)row.favourite_relax;
 
 			response["stats"]["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
 			response["stats"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
@@ -316,11 +288,7 @@ public:
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u));
 
 			if (result.empty())
-			{
-				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "Player not found").c_str()
-				);
-			}
+				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 			const auto& row = result.front();
 
@@ -333,9 +301,9 @@ public:
 			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
-			response["play_style"] = row.play_style.value();
+			response["playstyle"] = row.play_style.value();
 			response["default_mode"] = row.favourite_mode.value();
-			response["default_relax"] = row.favourite_relax.value();
+			response["default_relax"] = (int)row.favourite_relax;
 
 			response["stats"]["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
 			response["stats"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
@@ -429,11 +397,7 @@ public:
 
 		auto result = (*db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
 		if (result.empty())
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Player not found").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
 		json response;
 		const auto& row = result.front();

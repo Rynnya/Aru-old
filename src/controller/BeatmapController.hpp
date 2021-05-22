@@ -29,26 +29,16 @@ public:
 	ENDPOINT("POST", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
 		if (!config::osu_api::enabled || config::osu_api::osu_key == "" || config::osu_api::bancho_key == "")
-		{
-			return createResponse(Status::CODE_410,
-				himitsu::createError(Status::CODE_410, "API download disabled").c_str()
-			);
-		}
+			return createResponse(Status::CODE_410, himitsu::createError(Status::CODE_410, "API download disabled").c_str());
 
 		oatpp::String access = request->getHeader("Token");
 		if (!access || access->c_str() != config::osu_api::bancho_key)
-		{
-			return createResponse(Status::CODE_401,
-				himitsu::createError(Status::CODE_401, "Wrong token key").c_str()
-			);
-		}
+			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong token key").c_str());
 
 		std::string main_output = "";
 		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::osu_api::osu_key + "&s=" + fmt::to_string(id));
 		if (!success)
-			return createResponse(Status::CODE_400,
-				himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str()
-			);
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str());
 
 		json jsonRoot = json::parse(std_output, nullptr, false);
 		if (!jsonRoot.is_discarded())
@@ -56,9 +46,7 @@ public:
 			if (!jsonRoot.is_array() && !jsonRoot["error"].is_null())
 			{
 				config::osu_api::enabled = false;
-				return createResponse(Status::CODE_401,
-					himitsu::createError(Status::CODE_401, "Wrong API key").c_str()
-				);
+				return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong API key").c_str());
 			}
 
 			beatmaps b_table{};
@@ -117,7 +105,7 @@ public:
 					b_table.count_normal = std::stoi(beatmap["count_normal"].get<std::string>()),
 					b_table.count_slider = std::stoi(beatmap["count_slider"].get<std::string>()),
 					b_table.count_spinner = std::stoi(beatmap["count_spinner"].get<std::string>()),
-					b_table.ranked = std::stoi(beatmap["approved"].get<std::string>()) <= 0 ? 0 : std::stoi(beatmap["approved"].get<std::string>()) + 1,
+					b_table.ranked = (!beatmap["approved"].is_null() && std::stoi(beatmap["approved"].get<std::string>()) <= 0) ? 0 : std::stoi(beatmap["approved"].get<std::string>()) + 1,
 					b_table.latest_update = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(),
 					b_table.creating_date = himitsu::time_convert::getTimestamp(beatmap["submit_date"].get<std::string>())
 				));
@@ -160,9 +148,7 @@ public:
 			return response;
 		}
 
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str()
-		);
+		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str());
 	};
 
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
@@ -176,11 +162,7 @@ public:
 		).from(b_table).where(b_table.beatmapset_id == (*id)));
 
 		if (result.empty())
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Cannot find beatmap set").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap set").c_str());
 
 		json response = json::array();
 		for (const auto& row : result)
@@ -247,11 +229,7 @@ public:
 		).from(b_table).where(b_table.beatmap_id == (*id)).limit(1u));
 
 		if (result.empty())
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str());
 
 		const auto& row = result.front();
 		json beatmap;
@@ -314,11 +292,7 @@ public:
 		bool isRelax = himitsu::utils::intToBoolean(relax);
 		int play_mode = mode;
 		if (play_mode == 3 && isRelax)
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		std::string md5 = "";
 		auto res = (*db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
@@ -327,11 +301,8 @@ public:
 			.limit(1u)
 		);
 		if (res.empty())
-		{
-			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str()
-			);
-		}
+			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str());
+
 		const auto& r = res.front();
 		if (play_mode == -1) play_mode = r.mode;
 		md5 = r.beatmap_md5;

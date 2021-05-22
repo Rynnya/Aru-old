@@ -2,6 +2,7 @@
 #define database_connection_HimitsuDB_hpp_included
 
 #include "Globals.hpp"
+#include <thread>
 #include <mutex>
 #include <list>
 

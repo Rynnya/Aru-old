@@ -93,7 +93,7 @@ public:
 						(*db)(sqlpp::insert_into(t).set(
 							t.user = userID,
 							t.token = token,
-							t.t_private = true,
+							t._private = true,
 							t.privileges = 0,
 							t.last_updated = himitsu::time_convert::getEpochNow()
 						));
@@ -122,9 +122,7 @@ public:
 			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong login").c_str());
 		}
 
-		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "Bad request").c_str()
-		);
+		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 	}
 
 	ENDPOINT("POST", "/register", registerUser, BODY_STRING(String, userInfo))
@@ -204,7 +202,7 @@ public:
 					(*db)(sqlpp::insert_into(t).set(
 						t.user = user_id,
 						t.token = token,
-						t.t_private = true,
+						t._private = true,
 						t.privileges = 0,
 						t.last_updated = himitsu::time_convert::getEpochNow()
 					));
@@ -241,7 +239,7 @@ public:
 
 		tokens t{};
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-		auto result = (*db)(sqlpp::select(t.token, t.privileges).from(t).where(t.user == (*id) and t.t_private == false));
+		auto result = (*db)(sqlpp::select(t.token, t.privileges).from(t).where(t.user == (*id) and t._private == false));
 
 		json response = json::array();
 		for (const auto& row : result)
@@ -293,7 +291,7 @@ public:
 				(*db)(sqlpp::insert_into(t).set(
 					t.user = (*id),
 					t.token = token,
-					t.t_private = false,
+					t._private = false,
 					t.privileges = privileges,
 					t.last_updated = himitsu::time_convert::getEpochNow()
 				));

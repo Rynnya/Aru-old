@@ -39,7 +39,6 @@ if (MSVC)
 		$<$<CONFIG:Release>:/MD>
 	)
 else()
-	# This will work? Idk, please check and report if you have some results!
 	add_compile_options(-O2 -lcurl)
 	if (USE_MARIADB)
 		add_compile_options(-lmariadb)

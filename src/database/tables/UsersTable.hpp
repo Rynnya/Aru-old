@@ -19,8 +19,9 @@ struct users_objects
 	object_struct(background,        sqlpp::varchar);
 	object_struct(status,            sqlpp::varchar);
 	object_struct(is_public,         sqlpp::boolean);
+	object_struct(is_relax,          sqlpp::boolean);
 	object_struct(favourite_mode,    sqlpp::integer);
-	object_struct(favourite_relax,   sqlpp::integer);
+	object_struct(favourite_relax,   sqlpp::boolean);
 	object_struct(play_style,        sqlpp::integer);
 };
 
@@ -128,7 +129,8 @@ database_table(users,
 	users_objects::favourite_mode,
 	users_objects::favourite_relax,
 	users_objects::play_style,
-	users_objects::is_public
+	users_objects::is_public,
+	users_objects::is_relax
 );
 
 database_table(user_badges,
