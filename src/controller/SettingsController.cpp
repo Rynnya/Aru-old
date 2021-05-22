@@ -5,11 +5,11 @@
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSettings(Int32 id) const
 {
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users user{};
 	users_preferences pref{};
 
-	auto result = (**db)(sqlpp::select(
+	auto result = (*db)(sqlpp::select(
 		user.id, user.favourite_mode, user.favourite_relax, user.play_style,
 		pref.scoreboard_display_classic, pref.scoreboard_display_relax,
 		pref.auto_last_classic, pref.auto_last_relax,
@@ -61,12 +61,12 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			);
 		}
 
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
 
-		auto upd = (*db)->prepare(sqlpp::update(user).set(user.background = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(user).set(user.background = sqlpp::parameter(user.background)).where(user.id == userID));
 		upd.params.background = jsonRoot["background"].get<std::string>();
-		(**db)(upd);
+		(*db)(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -94,12 +94,12 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			);
 		}
 
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
 
-		auto upd = (*db)->prepare(sqlpp::update(user).set(user.userpage = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(user).set(user.userpage = sqlpp::parameter(user.background)).where(user.id == userID));
 		upd.params.background = jsonRoot["userpage"].get<std::string>();
-		(**db)(upd);
+		(*db)(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -127,12 +127,12 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			);
 		}
 
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user{};
 
-		auto upd = (*db)->prepare(sqlpp::update(user).set(user.status = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(user).set(user.status = sqlpp::parameter(user.background)).where(user.id == userID));
 		upd.params.background = jsonRoot["status"].get<std::string>();
-		(**db)(upd);
+		(*db)(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -148,18 +148,18 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 {
 	if (body > 16)
 		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "PlayStyle cannot be more than 15").c_str()
+			himitsu::createError(Status::CODE_400, "Playstyle cannot be more than 15").c_str()
 		);
 
 	if (body < 0)
 		return createResponse(Status::CODE_400,
-			himitsu::createError(Status::CODE_400, "PlayStyle cannot be lower than 0").c_str()
+			himitsu::createError(Status::CODE_400, "Playstyle cannot be lower than 0").c_str()
 		);
 
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users u_table{};
 
-	(**db)(sqlpp::update(u_table).set(u_table.play_style = body).where(u_table.id == (*id)));
+	(*db)(sqlpp::update(u_table).set(u_table.play_style = body).where(u_table.id == (*id)));
 	
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
@@ -176,19 +176,19 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (auto_classic > 2 || auto_classic < 0) auto_classic = 0;
 	if (auto_relax > 2 || auto_relax < 0) auto_relax = 0;
 
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users_preferences u_pref{};
 
 	using namespace himitsu;
-	(**db)(sqlpp::update(u_pref).set(
+	(*db)(sqlpp::update(u_pref).set(
 		u_pref.scoreboard_display_classic = utils::intToBoolean(pref & 1, true),
-		u_pref.scoreboard_display_relax = utils::intToBoolean(pref & 2, true),
-		u_pref.auto_last_classic = auto_classic,
-		u_pref.auto_last_relax = auto_relax,
-		u_pref.score_overwrite_std = utils::intToBoolean(pref & 4, true),
-		u_pref.score_overwrite_taiko = utils::intToBoolean(pref & 8, true),
-		u_pref.score_overwrite_ctb = utils::intToBoolean(pref & 16, true),
-		u_pref.score_overwrite_mania = utils::intToBoolean(pref & 32, true)
+		u_pref.scoreboard_display_relax   = utils::intToBoolean(pref & 2, true),
+		u_pref.auto_last_classic          = auto_classic,
+		u_pref.auto_last_relax            = auto_relax,
+		u_pref.score_overwrite_std        = utils::intToBoolean(pref & 4, true),
+		u_pref.score_overwrite_taiko      = utils::intToBoolean(pref & 8, true),
+		u_pref.score_overwrite_ctb        = utils::intToBoolean(pref & 16, true),
+		u_pref.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
 	).where(u_pref.id == (*id)));
 
 	auto response = createResponse(Status::CODE_200, "OK");

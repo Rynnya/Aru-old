@@ -39,13 +39,13 @@ public:
     {
         if (token)
         {
-            auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+            auto db(himitsu::ConnectionPool::getInstance()->getConnection());
             tokens token_table{};
-            auto query = (*db)->prepare(sqlpp::select(token_table.user, token_table.privileges, token_table.token)
+            auto query = db->prepare(sqlpp::select(token_table.user, token_table.privileges, token_table.token)
                 .from(token_table)
                 .where(token_table.token == sqlpp::parameter(token_table.token)));
             query.params.token = token->c_str();
-            auto result = (**db)(query);
+            auto result = (*db)(query);
 
             if (result.empty())
                 return std::make_shared<TokenObject>(false, "", 0, 0);

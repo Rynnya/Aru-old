@@ -9,7 +9,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	if (user_mode == -1 && !getMode(id, &mode))
 	{
 		return createResponse(Status::CODE_404, 
-			himitsu::createError(Status::CODE_404, "player not found").c_str()
+			himitsu::createError(Status::CODE_404, "Player not found").c_str()
 		);
 	}
 
@@ -18,11 +18,11 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	if (relax == 1 && mode == "mania")
 	{
 		return createResponse(Status::CODE_404,
-			himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+			himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
 		);
 	}
 
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 	json response = json::array();
 
@@ -31,7 +31,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	scores s_table{};
 	users u_table{};
-	auto query = sqlpp::dynamic_select(**db, s_table.id, s_table.score, s_table.full_combo, s_table.mods,
+	auto query = sqlpp::dynamic_select(*db, s_table.id, s_table.score, s_table.full_combo, s_table.mods,
 		s_table.count_300, s_table.count_100, s_table.count_50, s_table.count_gekis, s_table.count_katus, s_table.count_misses,
 		s_table.time, s_table.play_mode, s_table.accuracy, s_table.pp, s_table.completed,
 		s_table.max_combo.as(score_t),
@@ -71,7 +71,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(page, length, 100);
 	auto q = query.offset(limit.first).limit(limit.second);
-	auto result = (**db)(q);
+	auto result = (*db)(q);
 
 	if (result.empty())
 	{
@@ -94,7 +94,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		score["count_katu"] = row.count_katus.value();
 		score["count_miss"] = row.count_misses.value();
 		score["time"] = himitsu::time_convert::getDate(row.time);
-		score["play_mode"] = row.play_mode.value();
+		score["mode"] = row.play_mode.value();
 		score["accuracy"] = row.accuracy.value();
 		score["pp"] = row.pp.value();
 		score["completed"] = row.completed.value();
@@ -149,9 +149,9 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 bool UsersController::getMode(Int32 id, std::string* ans) const
 {
-	auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 	users user{};
-	auto result = (**db)(sqlpp::select(user.favourite_mode).from(user).where(user.id == (*id)));
+	auto result = (*db)(sqlpp::select(user.favourite_mode).from(user).where(user.id == (*id)));
 
 	if (result.empty())
 		return false; // player doesn't exist

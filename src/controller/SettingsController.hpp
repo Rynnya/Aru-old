@@ -82,9 +82,9 @@ public:
 		if (!(authObject->userID == id))
 			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
-		if (config::avatar_folder == "/path/to/file/{}.png")
+		if (config::avatar_folder == "/path/to/folder/{}.png")
 		{
-			OATPP_LOGW("Pay attention", "Avatars currently disabled, please change example directory.");
+			fmt::print("Warning! Avatars currently disabled, please change example directory.\n");
 			return createResponse(Status::CODE_422, himitsu::createError(Status::CODE_422, "Sorry, but avatars currently not available to change!").c_str());
 		}
 

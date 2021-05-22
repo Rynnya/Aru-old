@@ -61,13 +61,13 @@ public:
 		users_vec.pop_back(); // remove ',' after for_each
 
 		users u_table{};
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		json response = json::array();
 
 		if (relax == 1)
 		{
 			users_stats_relax us_table{};
-			auto query = sqlpp::dynamic_select(**db)
+			auto query = sqlpp::dynamic_select(*db)
 				.dynamic_columns(u_table.id, u_table.username, u_table.country)
 				.from(u_table.join(us_table).on(u_table.id == us_table.id))
 				.dynamic_order_by().unconditionally();
@@ -102,7 +102,7 @@ public:
 				}
 			}
 
-			auto result = (**db)(query);
+			auto result = (*db)(query);
 
 			for (const auto& row : result)
 			{
@@ -116,7 +116,7 @@ public:
 				user["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
 				user["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
 				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), std::to_string(id));
+				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), fmt::to_string(id));
 
 				response.push_back(user);
 			}
@@ -124,7 +124,7 @@ public:
 		else
 		{
 			users_stats us_table{};
-			auto query = sqlpp::dynamic_select(**db)
+			auto query = sqlpp::dynamic_select(*db)
 				.dynamic_columns(u_table.id, u_table.username, u_table.country)
 				.from(u_table.join(us_table).on(u_table.id == us_table.id))
 				.dynamic_order_by().unconditionally();
@@ -168,7 +168,7 @@ public:
 				}
 			}
 
-			auto result = (**db)(query);
+			auto result = (*db)(query);
 
 			for (const auto& row : result)
 			{
@@ -182,7 +182,7 @@ public:
 				user["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
 				user["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
 				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), std::to_string(id));
+				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), fmt::to_string(id));
 
 				response.push_back(user);
 			}

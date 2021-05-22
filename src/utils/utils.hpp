@@ -47,10 +47,18 @@ namespace himitsu
 			return tmp_s;
 		}
 
-		static std::string str_tolower(std::string str)
+		static void str_tolower(std::string& str)
 		{
-			std::string res;
-			for (unsigned char c : str) { res += std::tolower(c); }
+			for (size_t i = 0; i < str.size(); i++)
+			{
+				str[i] = std::tolower(str[i]);
+			}
+		}
+
+		static std::string str_tolower(const std::string& str)
+		{
+			std::string res = str;
+			str_tolower(res);
 			return res;
 		}
 

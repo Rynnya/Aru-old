@@ -35,9 +35,10 @@ public:
 	{
 		if (authObject->valid)
 		{
+			fmt::print("{}: sign with token {}\n", (*authObject->userID), authObject->token->c_str());
 			tokens t{};
-			std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-			(**db)(sqlpp::update(t).set(
+			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			(*db)(sqlpp::update(t).set(
 				t.last_updated = himitsu::time_convert::getEpochNow()
 			).where(t.token == authObject->token->c_str()));
 
@@ -61,17 +62,17 @@ public:
 			if (body["username"].is_null() || body["password"].is_null())
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
-			std::string password = body["password"];
-			std::string temp = himitsu::utils::str_tolower(body["username"]);
-			std::string username = himitsu::utils::trim(temp);
+			const std::string& password = body["password"];
+			std::string username = himitsu::utils::str_tolower(body["username"]);
+			himitsu::utils::trim(username);
 			std::replace(username.begin(), username.end(), ' ', '_');
 
 			if (username == "nebula")
 				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "No.").c_str());
 
 			users user_t{};
-			std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-			auto result = (**db)(sqlpp::select(user_t.id, user_t.password_md5).from(user_t).where(user_t.username_safe == username).limit(1u));
+			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			auto result = (*db)(sqlpp::select(user_t.id, user_t.password_md5).from(user_t).where(user_t.username_safe == username).limit(1u));
 
 			if (result.empty())
 				return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong login").c_str());
@@ -87,10 +88,10 @@ public:
 				while (true)
 				{
 					token = md5::createMD5(himitsu::utils::genRandomString(25));
-					auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+					auto result = (*db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
 					if (result.empty())
 					{
-						(**db)(sqlpp::insert_into(t).set(
+						(*db)(sqlpp::insert_into(t).set(
 							t.user = userID,
 							t.token = token,
 							t.t_private = true,
@@ -136,46 +137,41 @@ public:
 				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
 
 			std::string username = body["username"];
-			std::string temp = himitsu::utils::str_tolower(username);
-			std::string username_safe = himitsu::utils::trim(temp);
+			himitsu::utils::trim(username);
+			std::string username_safe = username;
+			himitsu::utils::str_tolower(username_safe);
 			std::replace(username_safe.begin(), username_safe.end(), ' ', '_');
 
-			std::regex user_regex("^[A-Za-z0-9 _[\\]-]{2,15}$");
+			static std::regex user_regex("^[A-Za-z0-9 _[\\]-]{2,15}$");
 			if (!std::regex_search(username, user_regex))
 				return createResponse(Status::CODE_403, 
-					himitsu::createError(Status::CODE_403, 
-						"This nickname contains forbidden symbols. Allowed symbols: a-Z 0-9 _[]-").c_str()
-				);
+					himitsu::createError(521, "This nickname contains forbidden symbols. Allowed symbols: a-Z 0-9 _[]-").c_str());
 
 			if (username.find('_') != std::string::npos && username.find(' ') != std::string::npos)
 				return createResponse(Status::CODE_403,
-					himitsu::createError(Status::CODE_403,
-						"Nickname should not contain spaces and underscores at the same time.").c_str()
-				);
+					himitsu::createError(522, "Nickname should not contain spaces and underscores at the same time.").c_str());
 
-			for (auto nick : config::forbidden_nicknames)
+			for (std::string& nick : config::forbidden_nicknames)
 				if (nick == username_safe)
 					return createResponse(Status::CODE_403, 
-						himitsu::createError(Status::CODE_403, 
-							"This nickname are forbidden. If you are real owner of this nickname, please contact us.").c_str()
-					);
+						himitsu::createError(523, "This nickname are forbidden. If you are real owner of this nickname, please contact us.").c_str());
 
 			users u_table{};
-			std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-			auto result1 = (**db)(sqlpp::select(u_table.id).from(u_table).where(u_table.username_safe == username_safe || u_table.username == username).limit(1u));
+			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			auto result1 = (*db)(sqlpp::select(u_table.id).from(u_table).where(u_table.username_safe == username_safe || u_table.username == username).limit(1u));
 
 			if (!result1.empty())
-				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "This nickname already taken!").c_str());
+				return createResponse(Status::CODE_403, himitsu::createError(524, "This nickname already taken!").c_str());
 			result1.pop_front();
 
-			std::string email = body["email"];
-			auto result2 = (**db)(sqlpp::select(u_table.email).from(u_table).where(u_table.email == email).limit(1u));
+			const std::string& email = body["email"];
+			auto result2 = (*db)(sqlpp::select(u_table.email).from(u_table).where(u_table.email == email).limit(1u));
 			if (!result2.empty())
-				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "This email already taken!").c_str());
+				return createResponse(Status::CODE_403, himitsu::createError(525, "This email already taken!").c_str());
 			result2.pop_front();
 
 			std::string password = bcrypt::hash(md5::createMD5(body["password"]));
-			(**db)(sqlpp::insert_into(u_table).set(
+			(*db)(sqlpp::insert_into(u_table).set(
 				u_table.username = username,
 				u_table.username_safe = username_safe,
 				u_table.country = "XX",
@@ -185,7 +181,7 @@ public:
 				u_table.privileges = 3
 			));
 
-			auto result = (**db)(sqlpp::select(u_table.id).from(u_table).where(u_table.email == email).limit(1u));
+			auto result = (*db)(sqlpp::select(u_table.id).from(u_table).where(u_table.email == email).limit(1u));
 			int user_id = result.front().id;
 			result.pop_front();
 
@@ -193,9 +189,9 @@ public:
 			users_stats_relax us_st_r{};
 			users_preferences us_prf{};
 
-			(**db)(sqlpp::insert_into(us_st).set(us_st.id = user_id));
-			(**db)(sqlpp::insert_into(us_st_r).set(us_st_r.id = user_id));
-			(**db)(sqlpp::insert_into(us_prf).set(us_prf.id = user_id));
+			(*db)(sqlpp::insert_into(us_st).set(us_st.id = user_id));
+			(*db)(sqlpp::insert_into(us_st_r).set(us_st_r.id = user_id));
+			(*db)(sqlpp::insert_into(us_prf).set(us_prf.id = user_id));
 
 			tokens t{};
 			std::string token;
@@ -203,10 +199,10 @@ public:
 			while (true)
 			{
 				token = md5::createMD5(himitsu::utils::genRandomString(25));
-				auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+				auto result = (*db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
 				if (result.empty())
 				{
-					(**db)(sqlpp::insert_into(t).set(
+					(*db)(sqlpp::insert_into(t).set(
 						t.user = user_id,
 						t.token = token,
 						t.t_private = true,
@@ -223,7 +219,7 @@ public:
 			json response;
 			response["id"] = user_id;
 			response["token"] = token;
-			auto wait = createResponse(Status::CODE_200, response.dump().c_str());
+			auto wait = createResponse(Status::CODE_201, response.dump().c_str());
 			wait->putHeader("set-cookie",
 				fmt::format(
 					"hat={}; Path=/; Domain=himitsu.ml; Max-Age={}; Secure",
@@ -245,8 +241,8 @@ public:
 			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
 		tokens t{};
-		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-		auto result = (**db)(sqlpp::select(t.token, t.privileges).from(t).where(t.user == (*id) and t.t_private == false));
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto result = (*db)(sqlpp::select(t.token, t.privileges).from(t).where(t.user == (*id) and t.t_private == false));
 
 		json response = json::array();
 		for (const auto& row : result)
@@ -274,12 +270,12 @@ public:
 			if (body["privileges"].is_number_integer())
 				privileges = body["privileges"];
 
-		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 		if (privileges > 0)
 		{
 			users u{};
-			auto check_privileges = (**db)(sqlpp::select(u.privileges).from(u).where(u.id == (*id)).limit(1u));
+			auto check_privileges = (*db)(sqlpp::select(u.privileges).from(u).where(u.id == (*id)).limit(1u));
 
 			const auto& row = check_privileges.front();
 			if (privileges > row.privileges)
@@ -292,10 +288,10 @@ public:
 		while (true)
 		{
 			token = md5::createMD5(himitsu::utils::genRandomString(25));
-			auto result = (**db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
+			auto result = (*db)(sqlpp::select(t.id).from(t).where(t.token == token).limit(1u));
 			if (result.empty())
 			{
-				(**db)(sqlpp::insert_into(t).set(
+				(*db)(sqlpp::insert_into(t).set(
 					t.user = (*id),
 					t.token = token,
 					t.t_private = false,
@@ -324,8 +320,8 @@ public:
 			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
 
 		tokens t{};
-		std::shared_ptr<himitsu::Connection> db = himitsu::ConnectionPool::getInstance()->getConnection();
-		(**db)(sqlpp::remove_from(t).where(t.token == authObject->token->c_str()));
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		(*db)(sqlpp::remove_from(t).where(t.token == authObject->token->c_str()));
 
 		json response;
 		response["message"] = "Bye!";

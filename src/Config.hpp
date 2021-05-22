@@ -1,39 +1,46 @@
 #ifndef Config_hpp_included
 #define Config_hpp_included
 
+#include "Globals.hpp"
+#include <sstream> 
+#include <fstream>
+
+// Config table, to change default values see Config.cpp
 namespace config
 {
-	// TODO LATER: Need more compiler-time efficient option
+	namespace database
+	{
+		extern int connection_amount;
+		extern int port;
+		extern std::string username;
+		extern std::string password;
+		extern std::string database;
+		extern bool debug;
+	}
 
-	// Database
-	static int         db_connection_amount = 10;
-	static int         db_port     = 3307;  // Default port for MySQL/MariaDB
-	static std::string db_user     = "root";
-	static std::string db_password = "";
-	static std::string db_database = "himitsu";
-	static bool        db_debug    = true; // Set True if you need debug output in sqlpp
+	namespace redis
+	{
+		extern std::string address;
+		extern size_t port;
+		extern uint32_t reconnection_attempts;
+		extern std::string password;
+	}
 
-	// Redis
-	static std::string redis_address               = "127.0.0.1";
-	static size_t      redis_port                  = 6379;
-	static uint32_t    redis_reconnection_attempts = 3;
-	static std::string redis_password              = "";
+	namespace osu_api
+	{
+		extern bool enabled;
+		extern std::string osu_key;
+		extern std::string bancho_key;
+		extern int cooldown;
+		extern bool currently_running;
+	}
 
-	// osu!API
-	static bool        api_enabled           = true;  // Set False if you don't want to download full beatmap set when Bancho request it
-	static std::string api_key               = "";    // Get key there: https://osu.ppy.sh/p/api/
-	static std::string api_access_key        = "";    // Use this key to authorize Bancho
-	static bool        api_currently_running = false; // Leave this as False
+	extern std::string avatar_folder;
 
-	// Folders
-	static std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id) 
+	extern std::vector<std::string> forbidden_nicknames;
 
-	// Forbidden Nicknames // Before add nickname there - make it safe (Replace spaces with '_', toLower)
-	static std::vector<std::string> forbidden_nicknames = { "peppy", "rrtyui", "cookiezi", "azer", "loctav", "banchobot", "happystick", "doomsday", "sharingan33", "andrea", "cptnxn",
-		"reimu-desu", "hvick225", "_index", "my_aim_sucks", "kynan", "rafis", "sayonara-bye", "thelewa", "wubwoofwolf", "millhioref", "tom94", "tillerino", "clsw",
-		"spectator", "exgon", "axarious", "angelsim", "recia", "nara", "emperorpenguin83", "bikko", "xilver", "vettel", "kuu01", "_yu68", "tasuke912", "dusk",
-		"ttobas", "velperk", "jakads", "jhlee0133", "abcdullah", "yuko-", "entozer", "hdhr", "ekoro", "snowwhite", "osuplayer111", "musty", "nero", "elysion",
-		"ztrot", "koreapenguin", "fort", "asphyxia", "niko", "shigetora", "whitecat", "fokabot", "himitsu", "nebula", "howl", "nyo", "angelwar", "mm00" };
+	void parse();
+
 }
 
 #endif

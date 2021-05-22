@@ -8,6 +8,10 @@ option(USE_MARIADB "Use MariaDB instead of MySQL" OFF)
 set(OATPP_BUILD_TESTS OFF CACHE BOOL "Create test target for oat++")
 set(BUILD_TESTING OFF CACHE BOOL "Build tests")
 set(ENABLE_TESTS OFF CACHE BOOL "Build unit tests")
+set(OATPP_DISABLE_ENV_OBJECT_COUNTERS ON CACHE BOOL "Do not count oatpp objects")
+if (CMAKE_BUILD_TYPE MATCHES DEBUG)
+	set(OATPP_DISABLE_ENV_OBJECT_COUNTERS OFF CACHE BOOL "Do not count oatpp objects")
+endif()
 
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/libs/oatpp/CMakeLists.txt)
 	message(FATAL_ERROR "oatpp is missing in folder /libs/oatpp. Have you initialized the submodules / downloaded the extra libraries?")
@@ -85,6 +89,7 @@ add_library(${project_name}-lib
 	src/utils/time.hpp
 	src/utils/utils.hpp
 	src/AppComponent.hpp
+	src/Config.cpp
 	src/Config.hpp
 	src/Globals.hpp
 )
@@ -155,7 +160,7 @@ if (MSVC)
 	)
 	add_definitions(/wd4244 /bigobj)
 	# https://stackoverflow.com/a/54531576
-	file(GLOB_RECURSE _source_list *.cpp* *.h* *.hpp*)
+	file(GLOB_RECURSE _source_list *.c* *.cpp* *.h* *.hpp*)
 	foreach(_source IN ITEMS ${_source_list})
 		get_filename_component(_source_path "${_source}" PATH)
 		string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")

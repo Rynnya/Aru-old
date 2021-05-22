@@ -43,7 +43,7 @@ public:
 			if (!getMode(id, &mode))
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 		}
@@ -53,11 +53,11 @@ public:
 		if (relax == 1 && mode == "mania")
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
 			);
 		}
 
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 		users user_data{};
 		json response;
@@ -66,7 +66,7 @@ public:
 		if (relax == 1)
 		{
 			users_stats_relax table{};
-			auto query = sqlpp::dynamic_select(**db).dynamic_columns(
+			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
 				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
 
@@ -95,18 +95,18 @@ public:
 				}
 			}
 
-			auto result = (**db)(query);
+			auto result = (*db)(query);
 			if (result.empty())
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 
 			const auto& row = result.front();
 
 			std::string country = row.country;
-			country = himitsu::utils::str_tolower(country);
+			himitsu::utils::str_tolower(country);
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
@@ -122,7 +122,7 @@ public:
 		else
 		{
 			users_stats table{};
-			auto query = sqlpp::dynamic_select(**db).dynamic_columns(
+			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
 				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
 			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
 
@@ -158,18 +158,18 @@ public:
 				}
 			}
 
-			auto result = (**db)(query);
+			auto result = (*db)(query);
 			if (result.empty())
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 
 			const auto& row = result.front();
 
 			std::string country = row.country;
-			country = himitsu::utils::str_tolower(country);
+			himitsu::utils::str_tolower(country);
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
@@ -196,7 +196,7 @@ public:
 			if (!getMode(id, &mode))
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 		}
@@ -206,12 +206,12 @@ public:
 		if (relax == 1 && mode == "mania")
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
 			);
 		}
 
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 		users user_data{};
 		json response;
@@ -219,7 +219,7 @@ public:
 		if (relax == 1)
 		{
 			users_stats_relax table{};
-			auto result = (**db)(sqlpp::select( // id inside users_stats_relax
+			auto result = (*db)(sqlpp::select( // id inside users_stats_relax
 				user_data.username, user_data.register_datetime, user_data.latest_activity,
 				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
 				sqlpp::all_of(table)
@@ -228,14 +228,14 @@ public:
 			if (result.empty())
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 
 			const auto& row = result.front();
 
 			std::string country = row.country;
-			country = himitsu::utils::str_tolower(country);
+			himitsu::utils::str_tolower(country);
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
@@ -309,7 +309,7 @@ public:
 		else
 		{
 			users_stats table{};
-			auto result = (**db)(sqlpp::select( // id inside users_stats
+			auto result = (*db)(sqlpp::select( // id inside users_stats
 				user_data.username, user_data.register_datetime, user_data.latest_activity,
 				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
 				sqlpp::all_of(table)
@@ -318,14 +318,14 @@ public:
 			if (result.empty())
 			{
 				return createResponse(Status::CODE_404,
-					himitsu::createError(Status::CODE_404, "player not found").c_str()
+					himitsu::createError(Status::CODE_404, "Player not found").c_str()
 				);
 			}
 
 			const auto& row = result.front();
 
 			std::string country = row.country;
-			country = himitsu::utils::str_tolower(country);
+			himitsu::utils::str_tolower(country);
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
@@ -416,7 +416,7 @@ public:
 
 		user_badges badges{};
 		response["badges"] = json::array();
-		for (const auto& badge : (**db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
+		for (const auto& badge : (*db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
 			response["badges"].push_back(badge.badge.value());
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -424,14 +424,14 @@ public:
 
 	ENDPOINT("GET", "/users/{id}/profile", userProfile, PATH(Int32, id))
 	{
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		users user_data{};
 
-		auto result = (**db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
+		auto result = (*db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
 		if (result.empty())
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "player not found").c_str()
+				himitsu::createError(Status::CODE_404, "Player not found").c_str()
 			);
 		}
 

@@ -1,3 +1,6 @@
+# Config
+config.json
+
 # CMake user-specific
 ALL_BUILD*
 INSTALL*

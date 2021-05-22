@@ -28,23 +28,23 @@ public:
 	// Perform download from osu!API, requested by Bancho
 	ENDPOINT("POST", "/beatmapset/{id}/download", beatmapsDownload, PATH(Int32, id), REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
-		if (!config::api_enabled || config::api_key == "" || config::api_access_key == "")
+		if (!config::osu_api::enabled || config::osu_api::osu_key == "" || config::osu_api::bancho_key == "")
 		{
 			return createResponse(Status::CODE_410,
-				himitsu::createError(Status::CODE_410, "API Download disabled").c_str()
+				himitsu::createError(Status::CODE_410, "API download disabled").c_str()
 			);
 		}
 
 		oatpp::String access = request->getHeader("Token");
-		if (!access || access->c_str() != config::api_access_key)
+		if (!access || access->c_str() != config::osu_api::bancho_key)
 		{
 			return createResponse(Status::CODE_401,
-				himitsu::createError(Status::CODE_401, "Wrong Token key").c_str()
+				himitsu::createError(Status::CODE_401, "Wrong token key").c_str()
 			);
 		}
 
 		std::string main_output = "";
-		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::api_key + "&s=" + std::to_string(id));
+		auto [success, std_output] = himitsu::curl::get("https://old.ppy.sh/api/get_beatmaps?k=" + config::osu_api::osu_key + "&s=" + fmt::to_string(id));
 		if (!success)
 			return createResponse(Status::CODE_400,
 				himitsu::createError(Status::CODE_400, "Cannot get data from osu!API").c_str()
@@ -55,7 +55,7 @@ public:
 		{
 			if (!jsonRoot.is_array() && !jsonRoot["error"].is_null())
 			{
-				config::api_enabled = false;
+				config::osu_api::enabled = false;
 				return createResponse(Status::CODE_401,
 					himitsu::createError(Status::CODE_401, "Wrong API key").c_str()
 				);
@@ -63,9 +63,9 @@ public:
 
 			beatmaps b_table{};
 			std::vector<int> b_maps;
-			auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
-			auto result = (**db)(sqlpp::select(count(b_table.beatmap_id)).from(b_table).where(b_table.beatmapset_id == (*id)));
+			auto result = (*db)(sqlpp::select(count(b_table.beatmap_id)).from(b_table).where(b_table.beatmapset_id == (*id)));
 			int count = result.front().count;
 			result.pop_front();
 
@@ -81,14 +81,14 @@ public:
 				int mode = std::stoi(beatmap["mode"].get<std::string>());
 				int beatmap_id = std::stoi(beatmap["beatmap_id"].get<std::string>());
 
-				auto exist = (**db)(sqlpp::select(b_table.id).from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
+				auto exist = (*db)(sqlpp::select(b_table.id).from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
 				if (!exist.empty())
 				{
 					exist.pop_front();
 					continue;
 				}
 
-				(**db)(sqlpp::insert_into(b_table).set(
+				(*db)(sqlpp::insert_into(b_table).set(
 					b_table.beatmap_id = beatmap_id,
 					b_table.beatmapset_id = std::stoi(beatmap["beatmapset_id"].get<std::string>()),
 					b_table.beatmap_md5 = beatmap["file_md5"].get<std::string>(),
@@ -126,17 +126,17 @@ public:
 					switch (mode)
 					{
 						case 1:
-							(**db)(sqlpp::update(b_table)
+							(*db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_taiko = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 2:
-							(**db)(sqlpp::update(b_table)
+							(*db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_ctb = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
 						case 3:
-							(**db)(sqlpp::update(b_table)
+							(*db)(sqlpp::update(b_table)
 								.set(b_table.difficulty_mania = std::stof(beatmap["difficultyrating"].get<std::string>()))
 								.where(b_table.beatmap_id == beatmap_id));
 							break;
@@ -149,7 +149,7 @@ public:
 				b_maps.push_back(beatmap_id);
 			}
 			
-			if (!b_maps.empty() && !config::api_currently_running)
+			if (!b_maps.empty() && !config::osu_api::currently_running)
 			{
 				std::thread diffs(&BeatmapController::setDifficulties, *this, b_maps);
 				diffs.detach();
@@ -168,8 +168,8 @@ public:
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
 	{
 		beatmaps b_table{};
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
-		auto result = (**db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto result = (*db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
 			b_table.creator, b_table.count_normal, b_table.count_slider, b_table.count_spinner, b_table.max_combo, b_table.ranked,
 			b_table.creating_date, b_table.difficulty_std, b_table.difficulty_taiko, b_table.difficulty_ctb, b_table.difficulty_mania,
 			b_table.bpm, b_table.hit_length, b_table.cs, b_table.ar, b_table.od, b_table.hp, b_table.mode
@@ -178,7 +178,7 @@ public:
 		if (result.empty())
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "cannot find beatmap set").c_str()
+				himitsu::createError(Status::CODE_404, "Cannot find beatmap set").c_str()
 			);
 		}
 
@@ -239,8 +239,8 @@ public:
 	ENDPOINT("GET", "/beatmap/{id}", beatmapDefault, PATH(Int32, id))
 	{
 		beatmaps b_table{};
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
-		auto result = (**db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto result = (*db)(sqlpp::select(b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
 			b_table.creator, b_table.count_normal, b_table.count_slider, b_table.count_spinner, b_table.max_combo, b_table.ranked,
 			b_table.creating_date, b_table.difficulty_std, b_table.difficulty_taiko, b_table.difficulty_ctb, b_table.difficulty_mania,
 			b_table.bpm, b_table.hit_length, b_table.cs, b_table.ar, b_table.od, b_table.hp, b_table.mode
@@ -249,7 +249,7 @@ public:
 		if (result.empty())
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "cannot find beatmap").c_str()
+				himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str()
 			);
 		}
 
@@ -308,7 +308,7 @@ public:
 		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		beatmaps b_table{};
-		auto db = himitsu::ConnectionPool::getInstance()->getConnection();
+		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 		int _length = SQLHelper::Limitize(1, length, 100);
 		bool isRelax = himitsu::utils::intToBoolean(relax);
@@ -316,12 +316,12 @@ public:
 		if (play_mode == 3 && isRelax)
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "mania don't have relax mode").c_str()
+				himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str()
 			);
 		}
 
 		std::string md5 = "";
-		auto res = (**db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
+		auto res = (*db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
 			.from(b_table)
 			.where(b_table.beatmap_id == (*id))
 			.limit(1u)
@@ -329,7 +329,7 @@ public:
 		if (res.empty())
 		{
 			return createResponse(Status::CODE_404,
-				himitsu::createError(Status::CODE_404, "cannot find beatmap").c_str()
+				himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str()
 			);
 		}
 		const auto& r = res.front();
@@ -345,7 +345,7 @@ public:
 			.where(s_table.beatmap_md5 == md5 and s_table.is_relax == isRelax and s_table.play_mode == play_mode)
 			.order_by(s_table.pp.desc());
 		std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(1, _length, 100);
-		auto result = (**db)(query.offset(limit.first).limit(limit.second));
+		auto result = (*db)(query.offset(limit.first).limit(limit.second));
 
 		json response = json::array();
 		for (const auto& row : result)

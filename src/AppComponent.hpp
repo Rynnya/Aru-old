@@ -18,14 +18,14 @@
 class AppComponent {
 public:
 	// Database config
-	OATPP_CREATE_COMPONENT(std::shared_ptr<mysql::connection_config>, config)([]
+	OATPP_CREATE_COMPONENT(std::shared_ptr<sqlpp::mysql::connection_config>, config)([]
 	{
-		auto config = std::make_shared<mysql::connection_config>();
-		config->port = config::db_port;
-		config->user = config::db_user;
-		config->password = config::db_password;
-		config->database = config::db_database;
-		config->debug = config::db_debug;
+		auto config = std::make_shared<sqlpp::mysql::connection_config>();
+		config->port = config::database::port;
+		config->user = config::database::username;
+		config->password = config::database::password;
+		config->database = config::database::database;
+		config->debug = config::database::debug;
 		return config;
 	}());
 
@@ -34,10 +34,10 @@ public:
 	{
 		cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger());
 		himitsu::redis client(
-			config::redis_address,
-			config::redis_port,
-			config::redis_reconnection_attempts,
-			config::redis_password
+			config::redis::address,
+			config::redis::port,
+			config::redis::reconnection_attempts,
+			config::redis::password
 		);
 		client.connect();
 		return std::make_shared<himitsu::redis>(client);

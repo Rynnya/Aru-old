@@ -13,6 +13,8 @@
 #include "database/connection/HimitsuDB.hpp"
 #include "database/connection/Redis.hpp"
 
+using json = nlohmann::json;
+
 #include "Config.hpp"
 
 #include "utils/curl.hpp"
@@ -24,7 +26,6 @@
 #include "oatpp/web/protocol/http/Http.hpp"
 
 namespace mysql = sqlpp::mysql;
-using json = nlohmann::json;
 
 namespace himitsu
 {
@@ -32,6 +33,14 @@ namespace himitsu
 	{
 		json response;
 		response["error"]["code"] = status.code;
+		response["error"]["message"] = message;
+		return response.dump();
+	}
+
+	inline std::string createError(int status, std::string message)
+	{
+		json response;
+		response["error"]["code"] = status;
 		response["error"]["message"] = message;
 		return response.dump();
 	}
