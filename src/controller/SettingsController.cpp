@@ -6,15 +6,16 @@
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSettings(Int32 id) const
 {
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-	users user{};
-	users_preferences pref{};
+	const tables::users users_table{};
+	const tables::users_preferences users_preferences_table{};
 
 	auto result = (*db)(sqlpp::select(
-		user.id, user.favourite_mode, user.favourite_relax, user.play_style, user.is_relax,
-		pref.scoreboard_display_classic, pref.scoreboard_display_relax,
-		pref.auto_last_classic, pref.auto_last_relax,
-		pref.score_overwrite_std, pref.score_overwrite_taiko, pref.score_overwrite_ctb, pref.score_overwrite_mania
-	).from(user.join(pref).on(user.id == pref.id)).where(user.id == (*id)).limit(1u));
+		users_table.id, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style, users_table.is_relax,
+		users_preferences_table.scoreboard_display_classic, users_preferences_table.scoreboard_display_relax,
+		users_preferences_table.auto_last_classic, users_preferences_table.auto_last_relax,
+		users_preferences_table.score_overwrite_std, users_preferences_table.score_overwrite_taiko,
+		users_preferences_table.score_overwrite_ctb, users_preferences_table.score_overwrite_mania
+	).from(users_table.join(users_preferences_table).on(users_table.id == users_preferences_table.id)).where(users_table.id == (*id)).limit(1u));
 
 	if (result.empty())
 		return createResponse(Status::CODE_500, himitsu::createError(Status::CODE_500, "How this happend? We forgot to remove token?").c_str());
@@ -55,9 +56,10 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-		users user{};
+		const tables::users users_table{};
 
-		auto upd = db->prepare(sqlpp::update(user).set(user.background = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(users_table)
+			.set(users_table.background = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["background"].get<std::string>();
 		(*db)(upd);
 
@@ -82,9 +84,10 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-		users user{};
+		const tables::users users_table{};
 
-		auto upd = db->prepare(sqlpp::update(user).set(user.userpage = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(users_table)
+			.set(users_table.userpage = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["userpage"].get<std::string>();
 		(*db)(upd);
 
@@ -109,9 +112,10 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "No data provided").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-		users user{};
+		const tables::users users_table{};
 
-		auto upd = db->prepare(sqlpp::update(user).set(user.status = sqlpp::parameter(user.background)).where(user.id == userID));
+		auto upd = db->prepare(sqlpp::update(users_table)
+			.set(users_table.status = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["status"].get<std::string>();
 		(*db)(upd);
 
@@ -131,13 +135,13 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (playstyle > 15 || playstyle < 0) playstyle = 0;
 
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-	users u_table{};
+	const tables::users users_table{};
 
-	(*db)(sqlpp::update(u_table).set(
-		u_table.favourite_mode = fav_mode, 
-		u_table.favourite_relax = fav_relax, 
-		u_table.play_style = playstyle
-	).where(u_table.id == (*id)));
+	(*db)(sqlpp::update(users_table).set(
+		users_table.favourite_mode = fav_mode,
+		users_table.favourite_relax = fav_relax,
+		users_table.play_style = playstyle
+	).where(users_table.id == (*id)));
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
@@ -155,22 +159,22 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (auto_relax > 2 || auto_relax < 0) auto_relax = 0;
 
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-	users_preferences u_pref{};
-	users u{};
+	const tables::users_preferences users_preferences_table{};
+	const tables::users users_table{};
 
 	using namespace himitsu;
-	(*db)(sqlpp::update(u_pref).set(
-		u_pref.scoreboard_display_classic = utils::intToBoolean(pref & 1, true),
-		u_pref.scoreboard_display_relax   = utils::intToBoolean(pref & 2, true),
-		u_pref.auto_last_classic          = auto_classic,
-		u_pref.auto_last_relax            = auto_relax,
-		u_pref.score_overwrite_std        = utils::intToBoolean(pref & 4, true),
-		u_pref.score_overwrite_taiko      = utils::intToBoolean(pref & 8, true),
-		u_pref.score_overwrite_ctb        = utils::intToBoolean(pref & 16, true),
-		u_pref.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
-	).where(u_pref.id == (*id)));
+	(*db)(sqlpp::update(users_preferences_table).set(
+		users_preferences_table.scoreboard_display_classic = utils::intToBoolean(pref & 1, true),
+		users_preferences_table.scoreboard_display_relax   = utils::intToBoolean(pref & 2, true),
+		users_preferences_table.auto_last_classic          = auto_classic,
+		users_preferences_table.auto_last_relax            = auto_relax,
+		users_preferences_table.score_overwrite_std        = utils::intToBoolean(pref & 4, true),
+		users_preferences_table.score_overwrite_taiko      = utils::intToBoolean(pref & 8, true),
+		users_preferences_table.score_overwrite_ctb        = utils::intToBoolean(pref & 16, true),
+		users_preferences_table.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
+	).where(users_preferences_table.id == (*id)));
 
-	(*db)(sqlpp::update(u).set(u.is_relax = utils::intToBoolean(pref & 64, true)).where(u.id == (*id)));
+	(*db)(sqlpp::update(users_table).set(users_table.is_relax = utils::intToBoolean(pref & 64, true)).where(users_table.id == (*id)));
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");

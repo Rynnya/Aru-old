@@ -21,6 +21,7 @@ public:
 	OATPP_CREATE_COMPONENT(std::shared_ptr<sqlpp::mysql::connection_config>, config)([]
 	{
 		auto config = std::make_shared<sqlpp::mysql::connection_config>();
+		config->host = config::database::host;
 		config->port = config::database::port;
 		config->user = config::database::username;
 		config->password = config::database::password;
@@ -70,6 +71,7 @@ public:
 			"GET, POST, OPTIONS, PUT, DELETE, PATCH"
 		));
 		/* Set Content-Type header */
+		connectionHandler->addRequestInterceptor(std::make_shared<RequestData>());
 		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());
 
 		return connectionHandler;

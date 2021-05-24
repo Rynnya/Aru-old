@@ -18,45 +18,46 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	json response = json::array();
 
-	beatmaps b_table{};
+	const tables::beatmaps beatmaps_table{};
 	bool isRelax = himitsu::utils::intToBoolean(relax);
 
-	scores s_table{};
-	users u_table{};
-	auto query = sqlpp::dynamic_select(*db, s_table.id, s_table.score, s_table.full_combo, s_table.mods,
-		s_table.count_300, s_table.count_100, s_table.count_50, s_table.count_gekis, s_table.count_katus, s_table.count_misses,
-		s_table.time, s_table.play_mode, s_table.accuracy, s_table.pp, s_table.completed,
-		s_table.max_combo.as(score_t),
+	const tables::scores scores_table{};
+	const tables::users users_table{};
+	auto query = sqlpp::dynamic_select(*db, scores_table.id, scores_table.ranking, scores_table.score, scores_table.full_combo, scores_table.mods,
+		scores_table.count_300, scores_table.count_100, scores_table.count_50,
+		scores_table.count_gekis, scores_table.count_katus, scores_table.count_misses,
+		scores_table.time, scores_table.play_mode, scores_table.accuracy, scores_table.pp, scores_table.completed,
+		scores_table.max_combo.as(score_t),
 
-		b_table.beatmap_id, b_table.beatmapset_id, b_table.artist, b_table.title, b_table.difficulty_name,
-		b_table.cs, b_table.ar, b_table.od, b_table.hp, b_table.difficulty_std, b_table.difficulty_taiko,
-		b_table.difficulty_ctb, b_table.difficulty_mania, b_table.hit_length, b_table.ranked,
-		b_table.ranked_status_freezed, b_table.latest_update,
-		b_table.beatmap_md5, b_table.max_combo.as(beatmap_t)
-	).dynamic_from(s_table.join(b_table).on(s_table.beatmap_md5 == b_table.beatmap_md5)).dynamic_where(s_table.is_relax == isRelax).dynamic_order_by();
+		beatmaps_table.beatmap_id, beatmaps_table.beatmap_md5, beatmaps_table.max_combo.as(beatmap_t),
+		beatmaps_table.beatmapset_id, beatmaps_table.artist, beatmaps_table.title, beatmaps_table.difficulty_name,
+		beatmaps_table.cs, beatmaps_table.ar, beatmaps_table.od, beatmaps_table.hp, 
+		beatmaps_table.difficulty_std, beatmaps_table.difficulty_taiko, beatmaps_table.difficulty_ctb, beatmaps_table.difficulty_mania, 
+		beatmaps_table.hit_length, beatmaps_table.ranked_status, beatmaps_table.ranked_status_freezed, beatmaps_table.latest_update
+	).dynamic_from(scores_table.join(beatmaps_table).on(scores_table.beatmap_md5 == beatmaps_table.beatmap_md5)).dynamic_where(scores_table.is_relax == isRelax).dynamic_order_by();
 
 	switch (type)
 	{
 		case scores_type::Best:
 		{
-			query.from.add(dynamic_join(u_table).on(s_table.userid == u_table.id));
-			query.where.add(without_table_check(s_table.completed == 3 and s_table.pp > 0 and u_table.id == (*id) and s_table.play_mode == (*user_mode) and u_table.is_public == true));
-			query.order_by.add(s_table.pp.desc());
+			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
+			query.where.add(without_table_check(scores_table.completed == 3 and scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true));
+			query.order_by.add(scores_table.pp.desc());
 			break;
 		}
 		case scores_type::Recent:
 		{
-			query.from.add(dynamic_join(u_table).on(s_table.userid == u_table.id));
-			query.where.add(without_table_check(s_table.play_mode == (*user_mode) and u_table.id == (*id) and u_table.is_public == true));
-			query.order_by.add(s_table.id.desc());
+			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
+			query.where.add(without_table_check(scores_table.play_mode == (*user_mode) and users_table.id == (*id) and users_table.is_public == true));
+			query.order_by.add(scores_table.id.desc());
 			break;
 		}
 		case scores_type::First:
 		{
-			scores_first sf_table{};
-			query.from.add(dynamic_join(sf_table).on(sf_table.beatmap_md5 == s_table.beatmap_md5));
-			query.where.add(without_table_check(sf_table.userid == (*id) and sf_table.play_mode == (*user_mode) and sf_table.is_relax == isRelax));
-			query.order_by.add(s_table.time.desc());
+			const tables::scores_first scores_first_table{};
+			query.from.add(dynamic_join(scores_first_table).on(scores_first_table.beatmap_md5 == scores_table.beatmap_md5));
+			query.where.add(without_table_check(scores_first_table.user_id == (*id) and scores_first_table.play_mode == (*user_mode) and scores_first_table.is_relax == isRelax));
+			query.order_by.add(scores_table.time.desc());
 			break;
 		}
 	}
@@ -75,6 +76,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		json score;
 
 		score["id"] = row.id.value();
+		score["rank"] = row.ranking.value();
 		score["score"] = row.score.value();
 		score["max_combo"] = row.score_t.value();
 		score["full_combo"] = row.full_combo.value();
@@ -127,7 +129,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		beatmap["difficulty_full"] = diff;
 		beatmap["max_combo"] = row.beatmap_t.value();
 		beatmap["hit_length"] = row.hit_length.value();
-		beatmap["ranked"] = row.ranked.value();
+		beatmap["ranked_status"] = row.ranked_status.value();
 		beatmap["ranked_status_frozen"] = row.ranked_status_freezed.value();
 		beatmap["latest_update"] = row.latest_update.value();
 
@@ -142,8 +144,8 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 bool UsersController::getMode(Int32 id, std::string* ans) const
 {
 	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-	users user{};
-	auto result = (*db)(sqlpp::select(user.favourite_mode).from(user).where(user.id == (*id)));
+	const tables::users users_table{};
+	auto result = (*db)(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == (*id)));
 
 	if (result.empty())
 		return false; // player doesn't exist

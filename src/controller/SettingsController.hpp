@@ -88,6 +88,19 @@ public:
 			return createResponse(Status::CODE_422, himitsu::createError(Status::CODE_422, "Sorry, but avatars currently not available to change!").c_str());
 		}
 
+		auto size = request->getHeader("Content-Length");
+		if (!size)
+		{
+			fmt::print("Warning: User {} trying to send image without Content-Length header.", (*id));
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Image cannot be sended without Content-Length header").c_str());
+		}
+
+		if (std::stoi(size->c_str()) > 1024 * 1024)
+		{
+			fmt::print("Warning: User {} trying to send really huge image (or maybe not image). Size: {}\n", (*id), size->c_str());
+			return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Image files cannot be more than 1 MB").c_str());
+		}
+
 		oatpp::data::stream::FileOutputStream fileOutputStream(fmt::format(config::avatar_folder, (*id)).c_str());
 		request->transferBodyToStream(&fileOutputStream);
 		return createResponse(Status::CODE_200, "OK");

@@ -51,38 +51,37 @@ public:
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
-		users user_data{};
+		const tables::users users_table{};
 		json response;
 
-		users_stats table{};
 		if (relax == 1)
 		{
-			users_stats_relax table{};
+			const tables::users_stats_relax users_stats_table{};
 			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
-				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
-			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
+				users_table.id, users_table.username, users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax
+			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
 			switch (himitsu::osu::modeToInt(mode))
 			{
 				default:
 				{
-					query.selected_columns.add(table.pp_std);
-					query.selected_columns.add(table.avg_accuracy_std);
-					query.selected_columns.add(table.playcount_std);
+					query.selected_columns.add(users_stats_table.pp_std);
+					query.selected_columns.add(users_stats_table.avg_accuracy_std);
+					query.selected_columns.add(users_stats_table.playcount_std);
 					break;
 				}
 				case 1:
 				{
-					query.selected_columns.add(table.pp_taiko);
-					query.selected_columns.add(table.avg_accuracy_taiko);
-					query.selected_columns.add(table.playcount_taiko);
+					query.selected_columns.add(users_stats_table.pp_taiko);
+					query.selected_columns.add(users_stats_table.avg_accuracy_taiko);
+					query.selected_columns.add(users_stats_table.playcount_taiko);
 					break;
 				}
 				case 2:
 				{
-					query.selected_columns.add(table.pp_ctb);
-					query.selected_columns.add(table.avg_accuracy_ctb);
-					query.selected_columns.add(table.playcount_ctb);
+					query.selected_columns.add(users_stats_table.pp_ctb);
+					query.selected_columns.add(users_stats_table.avg_accuracy_ctb);
+					query.selected_columns.add(users_stats_table.playcount_ctb);
 					break;
 				}
 			}
@@ -109,39 +108,39 @@ public:
 		}
 		else
 		{
-			users_stats table{};
+			const tables::users_stats users_stats_table{};
 			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
-				user_data.id, user_data.username, user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax
-			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u);
+				users_table.id, users_table.username, users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax
+			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
 			switch (himitsu::osu::modeToInt(mode))
 			{
 				default:
 				{
-					query.selected_columns.add(table.pp_std);
-					query.selected_columns.add(table.avg_accuracy_std);
-					query.selected_columns.add(table.playcount_std);
+					query.selected_columns.add(users_stats_table.pp_std);
+					query.selected_columns.add(users_stats_table.avg_accuracy_std);
+					query.selected_columns.add(users_stats_table.playcount_std);
 					break;
 				}
 				case 1:
 				{
-					query.selected_columns.add(table.pp_taiko);
-					query.selected_columns.add(table.avg_accuracy_taiko);
-					query.selected_columns.add(table.playcount_taiko);
+					query.selected_columns.add(users_stats_table.pp_taiko);
+					query.selected_columns.add(users_stats_table.avg_accuracy_taiko);
+					query.selected_columns.add(users_stats_table.playcount_taiko);
 					break;
 				}
 				case 2:
 				{
-					query.selected_columns.add(table.pp_ctb);
-					query.selected_columns.add(table.avg_accuracy_ctb);
-					query.selected_columns.add(table.playcount_ctb);
+					query.selected_columns.add(users_stats_table.pp_ctb);
+					query.selected_columns.add(users_stats_table.avg_accuracy_ctb);
+					query.selected_columns.add(users_stats_table.playcount_ctb);
 					break;
 				}
 				case 3:
 				{
-					query.selected_columns.add(table.pp_mania);
-					query.selected_columns.add(table.avg_accuracy_mania);
-					query.selected_columns.add(table.playcount_mania);
+					query.selected_columns.add(users_stats_table.pp_mania);
+					query.selected_columns.add(users_stats_table.avg_accuracy_mania);
+					query.selected_columns.add(users_stats_table.playcount_mania);
 					break;
 				}
 			}
@@ -189,17 +188,17 @@ public:
 		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
-		users user_data{};
+		const tables::users users_table{};
 		json response;
 
 		if (relax == 1)
 		{
-			users_stats_relax table{};
+			const tables::users_stats_relax users_stats_table{};
 			auto result = (*db)(sqlpp::select( // id inside users_stats_relax
-				user_data.username, user_data.register_datetime, user_data.latest_activity,
-				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
-				sqlpp::all_of(table)
-			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u));
+				users_table.username, users_table.registration_date, users_table.latest_activity,
+				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style,
+				sqlpp::all_of(users_stats_table)
+			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u));
 
 			if (result.empty())
 				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
@@ -211,7 +210,7 @@ public:
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
-			response["register_time"] = himitsu::time_convert::getDate(row.register_datetime);
+			response["register_time"] = himitsu::time_convert::getDate(row.registration_date);
 			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
@@ -280,12 +279,12 @@ public:
 		}
 		else
 		{
-			users_stats table{};
+			const tables::users_stats users_stats_table{};
 			auto result = (*db)(sqlpp::select( // id inside users_stats
-				user_data.username, user_data.register_datetime, user_data.latest_activity,
-				user_data.country, user_data.status, user_data.favourite_mode, user_data.favourite_relax, user_data.play_style,
-				sqlpp::all_of(table)
-			).from(user_data.join(table).on(user_data.id == table.id)).where(user_data.is_public == true and user_data.id == (*id)).limit(1u));
+				users_table.username, users_table.registration_date, users_table.latest_activity,
+				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style,
+				sqlpp::all_of(users_stats_table)
+			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u));
 
 			if (result.empty())
 				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
@@ -297,7 +296,7 @@ public:
 
 			response["id"] = row.id.value();
 			response["username"] = row.username.value();
-			response["register_time"] = himitsu::time_convert::getDate(row.register_datetime);
+			response["register_time"] = himitsu::time_convert::getDate(row.registration_date);
 			response["latest_activity"] = himitsu::time_convert::getDate(row.latest_activity);
 			response["status"] = row.status.value();
 			response["country"] = row.country.value();
@@ -382,9 +381,9 @@ public:
 			}
 		}
 
-		user_badges badges{};
+		const tables::user_badges badges_table{};
 		response["badges"] = json::array();
-		for (const auto& badge : (*db)(sqlpp::select(badges.badge).from(badges).where(badges.id == (*id))))
+		for (const auto& badge : (*db)(sqlpp::select(badges_table.badge).from(badges_table).where(badges_table.id == (*id))))
 			response["badges"].push_back(badge.badge.value());
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -393,9 +392,9 @@ public:
 	ENDPOINT("GET", "/users/{id}/profile", userProfile, PATH(Int32, id))
 	{
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-		users user_data{};
+		const tables::users users_table{};
 
-		auto result = (*db)(sqlpp::select(user_data.background, user_data.userpage).from(user_data).where(user_data.id == (*id)).limit(1u));
+		auto result = (*db)(sqlpp::select(users_table.background, users_table.userpage).from(users_table).where(users_table.id == (*id)).limit(1u));
 		if (result.empty())
 			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 

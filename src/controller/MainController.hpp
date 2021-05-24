@@ -21,7 +21,7 @@ public:
 	{}
 public:
 
-	ENDPOINT("GET", "/ping", Ping)
+	ENDPOINT("GET", "/ping", Ping, REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
 		json response;
 		response["message"] = himitsu::memes[rand() % himitsu::memes.size()].c_str();
@@ -60,44 +60,44 @@ public:
 		std::for_each(range.begin(), range.end(), [&](cpp_redis::reply& str) { users_vec += str.as_string() + ","; });
 		users_vec.pop_back(); // remove ',' after for_each
 
-		users u_table{};
+		const tables::users users_table{};
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 		json response = json::array();
 
 		if (relax == 1)
 		{
-			users_stats_relax us_table{};
+			const tables::users_stats_relax users_stats_table{};
 			auto query = sqlpp::dynamic_select(*db)
-				.dynamic_columns(u_table.id, u_table.username, u_table.country)
-				.from(u_table.join(us_table).on(u_table.id == us_table.id))
+				.dynamic_columns(users_stats_table.id, users_table.username, users_table.country)
+				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.dynamic_order_by().unconditionally();
 			switch (user_mode)
 			{
 				default:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_std));
-					query.selected_columns.add(without_table_check(us_table.playcount_std));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_std));
-					query.selected_columns.add(without_table_check(us_table.pp_std));
-					query.order_by.add(us_table.pp_std.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_std));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_std));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_std));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_std));
+					query.order_by.add(users_stats_table.pp_std.desc());
 					break;
 				}
 				case 1:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_taiko));
-					query.selected_columns.add(without_table_check(us_table.playcount_taiko));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_taiko));
-					query.selected_columns.add(without_table_check(us_table.pp_taiko));
-					query.order_by.add(us_table.pp_taiko.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_taiko));
+					query.order_by.add(users_stats_table.pp_taiko.desc());
 					break;
 				}
 				case 2:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_ctb));
-					query.selected_columns.add(without_table_check(us_table.playcount_ctb));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_ctb));
-					query.selected_columns.add(without_table_check(us_table.pp_ctb));
-					query.order_by.add(us_table.pp_ctb.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_ctb));
+					query.order_by.add(users_stats_table.pp_ctb.desc());
 					break;
 				}
 			}
@@ -123,47 +123,47 @@ public:
 		}
 		else
 		{
-			users_stats us_table{};
+			const tables::users_stats users_stats_table{};
 			auto query = sqlpp::dynamic_select(*db)
-				.dynamic_columns(u_table.id, u_table.username, u_table.country)
-				.from(u_table.join(us_table).on(u_table.id == us_table.id))
+				.dynamic_columns(users_table.id, users_table.username, users_table.country)
+				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.dynamic_order_by().unconditionally();
 			switch (user_mode)
 			{
 				default:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_std));
-					query.selected_columns.add(without_table_check(us_table.playcount_std));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_std));
-					query.selected_columns.add(without_table_check(us_table.pp_std));
-					query.order_by.add(us_table.pp_std.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_std));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_std));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_std));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_std));
+					query.order_by.add(users_stats_table.pp_std.desc());
 					break;
 				}
 				case 1:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_taiko));
-					query.selected_columns.add(without_table_check(us_table.playcount_taiko));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_taiko));
-					query.selected_columns.add(without_table_check(us_table.pp_taiko));
-					query.order_by.add(us_table.pp_taiko.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_taiko));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_taiko));
+					query.order_by.add(users_stats_table.pp_taiko.desc());
 					break;
 				}
 				case 2:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_ctb));
-					query.selected_columns.add(without_table_check(us_table.playcount_ctb));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_ctb));
-					query.selected_columns.add(without_table_check(us_table.pp_ctb));
-					query.order_by.add(us_table.pp_ctb.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_ctb));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_ctb));
+					query.order_by.add(users_stats_table.pp_ctb.desc());
 					break;
 				}
 				case 3:
 				{
-					query.selected_columns.add(without_table_check(us_table.ranked_score_mania));
-					query.selected_columns.add(without_table_check(us_table.playcount_mania));
-					query.selected_columns.add(without_table_check(us_table.avg_accuracy_mania));
-					query.selected_columns.add(without_table_check(us_table.pp_mania));
-					query.order_by.add(us_table.pp_mania.desc());
+					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_mania));
+					query.selected_columns.add(without_table_check(users_stats_table.playcount_mania));
+					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_mania));
+					query.selected_columns.add(without_table_check(users_stats_table.pp_mania));
+					query.order_by.add(users_stats_table.pp_mania.desc());
 					break;
 				}
 			}

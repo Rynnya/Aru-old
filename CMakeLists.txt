@@ -39,7 +39,7 @@ if (MSVC)
 		$<$<CONFIG:Release>:/MD>
 	)
 else()
-	add_compile_options(-O2 -lcurl)
+	add_compile_options(-O2 -lcurl -lopenssl)
 	if (USE_MARIADB)
 		add_compile_options(-lmariadb)
 	else()
@@ -58,9 +58,9 @@ add_subdirectory(libs/json)
 
 include_directories(src)
 
-add_library(${project_name}-lib
+add_executable(${project_name}
+	src/controller/AuthController.cpp
 	src/controller/AuthController.hpp
-	src/controller/BeatmapController.cpp
 	src/controller/BeatmapController.hpp
 	src/controller/MainController.hpp
 	src/controller/SettingsController.cpp
@@ -80,10 +80,9 @@ add_library(${project_name}-lib
 	src/handlers/AuthorizationHandler.hpp
 	src/handlers/ErrorHandler.hpp
 	src/handlers/HeaderHandler.hpp
-	src/utils/bcrypt.hpp
 	src/utils/curl.hpp
+	src/utils/hash.hpp
 	src/utils/math.hpp
-	src/utils/md5.hpp
 	src/utils/osu.hpp
 	src/utils/time.hpp
 	src/utils/utils.hpp
@@ -91,19 +90,10 @@ add_library(${project_name}-lib
 	src/Config.cpp
 	src/Config.hpp
 	src/Globals.hpp
+	src/App.cpp
 )
 
-add_executable(${project_name}-exe src/App.cpp)
-
-target_include_directories(${project_name}-lib PRIVATE
-	${CMAKE_SOURCE_DIR}/libs/oatpp/src
-	${CMAKE_SOURCE_DIR}/libs/fmt/include
-	${CMAKE_SOURCE_DIR}/libs/sqlpp11/include
-	${CMAKE_SOURCE_DIR}/libs/sqlpp11-connector-mysql/include
-	${CMAKE_SOURCE_DIR}/libs/cpp_redis/includes
-	${CMAKE_SOURCE_DIR}/libs/date/include
-)
-target_include_directories(${project_name}-exe PRIVATE
+target_include_directories(${project_name} PRIVATE
 	${CMAKE_SOURCE_DIR}/libs/oatpp/src
 	${CMAKE_SOURCE_DIR}/libs/fmt/include
 	${CMAKE_SOURCE_DIR}/libs/sqlpp11/include
@@ -119,8 +109,15 @@ else (CURL_FOUND)
 	message(FATAL_ERROR "Could not find the CURL library and development files.")
 endif (CURL_FOUND)
 
-target_include_directories(${project_name}-lib PUBLIC src)
-target_link_libraries(${project_name}-lib PUBLIC
+find_package(OpenSSL)
+if (OPENSSL_FOUND)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+else (OPENSSL_FOUND)
+	message(FATAL_ERROR "Could not find the OpenSSL library and development files.")
+endif (OPENSSL_FOUND)
+
+target_include_directories(${project_name} PUBLIC src)
+target_link_libraries(${project_name} PUBLIC
 	oatpp
 	fmt
 	sqlpp-mysql
@@ -129,7 +126,7 @@ target_link_libraries(${project_name}-lib PUBLIC
 )
 
 if (NOT MSVC)
-	target_link_libraries(${project_name}-lib PUBLIC curl)
+	target_link_libraries(${project_name}-lib PUBLIC curl openssl)
 	if (USE_MARIADB)
 		target_link_libraries(${project_name}-lib PUBLIC mariadb)
 	else()
@@ -137,10 +134,7 @@ if (NOT MSVC)
 	endif()
 endif()
 
-target_link_libraries(${project_name}-exe ${project_name}-lib)
-add_dependencies(${project_name}-exe ${project_name}-lib)
-
-set_target_properties(${project_name}-lib ${project_name}-exe PROPERTIES
+set_target_properties(${project_name} PROPERTIES
 	CXX_STANDARD 17
 	CXX_EXTENSIONS OFF
 	CXX_STANDARD_REQUIRED ON
@@ -166,5 +160,5 @@ if (MSVC)
 		string(REPLACE "/" "\\" _group_path "${_group_path}")
 		source_group("${_group_path}" FILES "${_source}")
 	endforeach()
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME}-exe)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${CMAKE_PROJECT_NAME})
 endif()

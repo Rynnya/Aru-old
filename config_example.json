@@ -1,7 +1,8 @@
 {
   "database": {
     "connection_amount": 10,
-    "port": 3307,
+    "host": "localhost",
+    "port": 3306,
     "username": "root",
     "password": "",
     "database": "himitsu",
@@ -12,12 +13,6 @@
     "port": 6379,
     "reconnection_attempts": 3,
     "password": ""
-  },
-  "api": {
-    "enabled": true,
-    "osu_key": "",
-    "bancho_key": "",
-    "cooldown": 4
   },
   "avatar_folder": "/path/to/folder/{}.png"
 }

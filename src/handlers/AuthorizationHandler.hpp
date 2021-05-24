@@ -40,10 +40,10 @@ public:
         if (token)
         {
             auto db(himitsu::ConnectionPool::getInstance()->getConnection());
-            tokens token_table{};
-            auto query = db->prepare(sqlpp::select(token_table.user, token_table.privileges, token_table.token)
-                .from(token_table)
-                .where(token_table.token == sqlpp::parameter(token_table.token)));
+            const tables::tokens tokens_table{};
+            auto query = db->prepare(sqlpp::select(tokens_table.user, tokens_table.privileges, tokens_table.token)
+                .from(tokens_table)
+                .where(tokens_table.token == sqlpp::parameter(tokens_table.token)));
             query.params.token = token->c_str();
             auto result = (*db)(query);
 

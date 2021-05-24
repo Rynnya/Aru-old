@@ -11,6 +11,7 @@ namespace config
 	namespace database
 	{
 		extern int connection_amount;
+		extern std::string host;
 		extern int port;
 		extern std::string username;
 		extern std::string password;
@@ -24,15 +25,6 @@ namespace config
 		extern size_t port;
 		extern uint32_t reconnection_attempts;
 		extern std::string password;
-	}
-
-	namespace osu_api
-	{
-		extern bool enabled;
-		extern std::string osu_key;
-		extern std::string bancho_key;
-		extern int cooldown;
-		extern bool currently_running;
 	}
 
 	extern std::string avatar_folder;

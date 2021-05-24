@@ -13,7 +13,7 @@
 #include "database/connection/HimitsuDB.hpp"
 #include "database/connection/Redis.hpp"
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 #include "Config.hpp"
 

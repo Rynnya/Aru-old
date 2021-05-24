@@ -6,7 +6,8 @@ namespace config
 	namespace database
 	{
 		int         connection_amount = 10;
-		int         port              = 3307;
+		std::string host              = "localhost";
+		int         port              = 3306;
 		std::string username          = "root";
 		std::string password          = "";
 		std::string database          = "himitsu";
@@ -19,15 +20,6 @@ namespace config
 		size_t      port                  = 6379;
 		uint32_t    reconnection_attempts = 3;
 		std::string password              = "";
-	}
-
-	namespace osu_api
-	{
-		bool        enabled           = true;  // Set False if you don't want to download full beatmap set when Bancho request it
-		std::string osu_key           = "";    // Get key there: https://osu.ppy.sh/p/api/
-		std::string bancho_key        = "";    // Use this key to authorize Bancho
-		int         cooldown          = 4;     // Cooldown to Beatmap Download, recommended ~3-4
-		bool        currently_running = false; // Leave this as False
 	}
 
 	std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id)
@@ -69,6 +61,8 @@ namespace config
 		// Unreadable shit incoming!
 		if (json_config["database"]["connection_amount"].is_number_integer())
 			database::connection_amount = json_config["database"]["connection_amount"];
+		if (json_config["database"]["host"].is_string())
+			database::host = json_config["database"]["host"];
 		if (json_config["database"]["port"].is_number_integer())
 			database::port = json_config["database"]["port"];
 		if (json_config["database"]["username"].is_string())
@@ -88,15 +82,6 @@ namespace config
 			redis::reconnection_attempts = json_config["redis"]["reconnection_attempts"];
 		if (json_config["redis"]["password"].is_string())
 			redis::password = json_config["redis"]["password"];
-
-		if (json_config["api"]["enabled"].is_boolean())
-			osu_api::enabled = json_config["api"]["enabled"];
-		if (json_config["api"]["osu_key"].is_string())
-			osu_api::osu_key = json_config["api"]["osu_key"];
-		if (json_config["api"]["bancho_key"].is_string())
-			osu_api::bancho_key = json_config["api"]["bancho_key"];
-		if (json_config["api"]["cooldown"].is_number_integer())
-			osu_api::cooldown = json_config["api"]["cooldown"];
 
 		if (json_config["avatar_folder"].is_string())
 			avatar_folder = json_config["avatar_folder"];
