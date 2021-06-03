@@ -233,8 +233,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_std.value();
 					response["stats"]["pp"] = row.pp_std.value();
 					response["stats"]["playtime"] = row.playtime_std.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_std.value();
 					response["stats"]["count_S"] = row.count_S_std.value();
 					response["stats"]["count_SH"] = row.count_SH_std.value();
@@ -250,8 +249,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_taiko.value();
 					response["stats"]["pp"] = row.pp_taiko.value();
 					response["stats"]["playtime"] = row.playtime_taiko.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_taiko.value();
 					response["stats"]["count_S"] = row.count_S_taiko.value();
 					response["stats"]["count_SH"] = row.count_SH_taiko.value();
@@ -267,8 +265,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_ctb.value();
 					response["stats"]["pp"] = row.pp_ctb.value();
 					response["stats"]["playtime"] = row.playtime_ctb.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_ctb.value();
 					response["stats"]["count_S"] = row.count_S_ctb.value();
 					response["stats"]["count_SH"] = row.count_SH_ctb.value();
@@ -319,8 +316,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_std.value();
 					response["stats"]["pp"] = row.pp_std.value();
 					response["stats"]["playtime"] = row.playtime_std.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_std.value();
 					response["stats"]["count_S"] = row.count_S_std.value();
 					response["stats"]["count_SH"] = row.count_SH_std.value();
@@ -336,8 +332,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_taiko.value();
 					response["stats"]["pp"] = row.pp_taiko.value();
 					response["stats"]["playtime"] = row.playtime_taiko.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_taiko.value();
 					response["stats"]["count_S"] = row.count_S_taiko.value();
 					response["stats"]["count_SH"] = row.count_SH_taiko.value();
@@ -353,8 +348,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_ctb.value();
 					response["stats"]["pp"] = row.pp_ctb.value();
 					response["stats"]["playtime"] = row.playtime_ctb.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_ctb.value();
 					response["stats"]["count_S"] = row.count_S_ctb.value();
 					response["stats"]["count_SH"] = row.count_SH_ctb.value();
@@ -370,8 +364,7 @@ public:
 					response["stats"]["accuracy"] = row.avg_accuracy_mania.value();
 					response["stats"]["pp"] = row.pp_mania.value();
 					response["stats"]["playtime"] = row.playtime_mania.value();
-					response["stats"]["level"] = himitsu::osu_level::GetLevel(score);
-					response["stats"]["percentage"] = himitsu::osu_level::GetLevelPrecise(score);
+					response["stats"]["level"] = himitsu::osu_level::GetLevelPrecise(score);
 					response["stats"]["count_A"] = row.count_A_mania.value();
 					response["stats"]["count_S"] = row.count_S_mania.value();
 					response["stats"]["count_SH"] = row.count_SH_mania.value();

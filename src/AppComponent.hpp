@@ -71,7 +71,6 @@ public:
 			"GET, POST, OPTIONS, PUT, DELETE, PATCH"
 		));
 		/* Set Content-Type header */
-		connectionHandler->addRequestInterceptor(std::make_shared<RequestData>());
 		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());
 
 		return connectionHandler;

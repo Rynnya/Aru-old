@@ -19,7 +19,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	json response = json::array();
 
 	const tables::beatmaps beatmaps_table{};
-	bool isRelax = himitsu::utils::intToBoolean(relax);
+	bool isRelax = himitsu::utils::intToBoolean(*relax);
 
 	const tables::scores scores_table{};
 	const tables::users users_table{};
@@ -41,14 +41,14 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		case scores_type::Best:
 		{
 			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
-			query.where.add(without_table_check(scores_table.completed == 3 and scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true));
+			query.where.add(without_table_check(scores_table.completed == 1 and scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true and scores_table.is_relax == isRelax));
 			query.order_by.add(scores_table.pp.desc());
 			break;
 		}
 		case scores_type::Recent:
 		{
 			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
-			query.where.add(without_table_check(scores_table.play_mode == (*user_mode) and users_table.id == (*id) and users_table.is_public == true));
+			query.where.add(without_table_check(scores_table.play_mode == (*user_mode) and users_table.id == (*id) and users_table.is_public == true and scores_table.is_relax == isRelax));
 			query.order_by.add(scores_table.id.desc());
 			break;
 		}

@@ -40,6 +40,7 @@ namespace himitsu
 		inline void returnConnection(Connection&& connection);
 		int size;
 		std::mutex _mtx;
+		std::condition_variable _wait;
 		std::list<Connection> m_connections;
 	};
 
@@ -87,13 +88,13 @@ namespace himitsu
 
 	himitsu::Connection ConnectionPool::getConnection()
 	{
-		std::unique_lock lock(_mtx);
 		while (true)
 		{
+			std::unique_lock lock(_mtx);
 			if (m_connections.empty())
 			{
 				lock.unlock();
-				std::this_thread::sleep_for(std::chrono::milliseconds(5));
+				std::this_thread::sleep_for(std::chrono::microseconds(5));
 				continue;
 			}
 

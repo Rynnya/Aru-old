@@ -38,7 +38,8 @@ namespace himitsu
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 				"abcdefghijklmnopqrstuvwxyz";
 
-			static thread_local std::mt19937 engine;
+			static std::random_device rd;
+			static std::mt19937 engine(rd());
 
 			tmp_s.reserve(len);
 			for (int i = 0; i < len; ++i)

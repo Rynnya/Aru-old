@@ -175,7 +175,7 @@ public:
 		const tables::users users_table{};
 		const tables::scores scores_table{};
 
-		auto query = sqlpp::select(scores_table.user_id, users_table.username, users_table.country,
+		auto query = sqlpp::select(scores_table.user_id, users_table.username, users_table.country, scores_table.ranking,
 			scores_table.score, scores_table.pp, scores_table.accuracy, scores_table.max_combo, scores_table.mods,
 			scores_table.count_300, scores_table.count_100, scores_table.count_50, scores_table.count_misses)
 			.from(scores_table.join(users_table).on(scores_table.user_id == users_table.id))
@@ -189,7 +189,8 @@ public:
 		{
 			json score;
 			score["user_id"]      = row.user_id.value();
-			score["username"]     = row.username.value();
+			score["rank"]         = row.ranking.value();
+ 			score["username"]     = row.username.value();
 			score["country"]      = row.country.value();
 			score["score"]        = row.score.value();
 			score["pp"]           = row.pp.value();
