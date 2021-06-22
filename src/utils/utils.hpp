@@ -29,6 +29,14 @@ namespace himitsu
 			return ltrim(rtrim(s, t), t);
 		}
 
+		static unsigned int genRandomInt()
+		{
+			static std::random_device rd;
+			static std::mt19937 engine(rd());
+
+			return engine();
+		}
+
 		static std::string genRandomString(const int len) 
 		{
 
@@ -38,12 +46,10 @@ namespace himitsu
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 				"abcdefghijklmnopqrstuvwxyz";
 
-			static std::random_device rd;
-			static std::mt19937 engine(rd());
 
 			tmp_s.reserve(len);
 			for (int i = 0; i < len; ++i)
-				tmp_s.push_back(alphanum[engine() % (sizeof(alphanum) - 1)]);
+				tmp_s.push_back(alphanum[genRandomInt() % (sizeof(alphanum) - 1)]);
 
 			return tmp_s;
 		}

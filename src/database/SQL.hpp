@@ -16,15 +16,6 @@ public:
 		unsigned int start_pos = (page - 1) * length;
 		return std::make_pair(start_pos, length);
 	}
-
-	static int Limitize(int start, int number, int end)
-	{
-		if (number < start)
-			return start;
-		if (number > end)
-			return end;
-		return number;
-	}
 };
 
 #endif

@@ -9,7 +9,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	if (user_mode == -1 && !getMode(id, &mode))
 		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
 
-	length = SQLHelper::Limitize(1, length, 100);
+	length = std::clamp(*length, 1, 100);
 
 	if (relax == 1 && mode == "mania")
 		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
@@ -19,7 +19,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	json response = json::array();
 
 	const tables::beatmaps beatmaps_table{};
-	bool isRelax = himitsu::utils::intToBoolean(*relax);
+	bool isRelax = himitsu::utils::intToBoolean(relax);
 
 	const tables::scores scores_table{};
 	const tables::users users_table{};

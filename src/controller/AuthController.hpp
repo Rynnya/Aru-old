@@ -20,7 +20,8 @@ using hash = himitsu::hash;
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class AuthController : public oatpp::web::server::api::ApiController {
+class AuthController : public oatpp::web::server::api::ApiController
+{
 private:
 	typedef AuthController __ControllerType;
 public:
@@ -30,7 +31,6 @@ public:
 		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
 	}
 	static std::string getIPAddress(std::shared_ptr<IncomingRequest> request);
-public:
 
 	ENDPOINT("POST", "/login", loginUser,
 		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))

@@ -12,53 +12,26 @@
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class MainController : public oatpp::web::server::api::ApiController {
+class MainController : public oatpp::web::server::api::ApiController
+{
 private:
 	typedef MainController __ControllerType;
 public:
 	MainController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
-public:
 
 	ENDPOINT("GET", "/ping", Ping, REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
 		json response;
-		response["message"] = himitsu::memes[rand() % himitsu::memes.size()].c_str();
+		response["message"] = himitsu::memes[himitsu::utils::genRandomInt() % himitsu::memes.size()].c_str();
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/leaderboard", Leaderboard, 
-		QUERY(Int32, user_mode, "mode", "0"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"), QUERY(String, country, "country", ""))
+		QUERY(Int32, user_mode, "mode", "0"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		std::string mode = himitsu::osu::modeToString(user_mode);
-		std::string key = "ripple:leaderboard:" + mode;
-		if (country != "")
-		{
-			std::string c = country->c_str();
-			key += ":" + c;
-		}
-		if (relax == 1) { key += ":relax"; }
-
-		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
-		std::vector<cpp_redis::reply> range;
-
-		m_redis->get()->zrevrange(key, page * length, page * length + length + 1, false, [&](cpp_redis::reply& reply)
-		{
-			if (reply)
-				range = reply.as_array();
-		});
-		m_redis->get()->sync_commit();
-
-		if (range.empty())
-		{
-			range.~vector();
-			return createResponse(Status::CODE_200, json::array().dump().c_str());
-		}
-
-		std::string users_vec;
-		std::for_each(range.begin(), range.end(), [&](cpp_redis::reply& str) { users_vec += str.as_string() + ","; });
-		users_vec.pop_back(); // remove ',' after for_each
 
 		const tables::users users_table{};
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
@@ -67,131 +40,179 @@ public:
 		if (relax == 1)
 		{
 			const tables::users_stats_relax users_stats_table{};
-			auto query = sqlpp::dynamic_select(*db)
-				.dynamic_columns(users_stats_table.id, users_table.username, users_table.country)
+			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username, users_table.country)
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
-				.dynamic_order_by().unconditionally();
-			switch (user_mode)
-			{
-				default:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_std));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_std));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_std));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_std));
-					query.order_by.add(users_stats_table.pp_std.desc());
-					break;
-				}
-				case 1:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_taiko));
-					query.order_by.add(users_stats_table.pp_taiko.desc());
-					break;
-				}
-				case 2:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_ctb));
-					query.order_by.add(users_stats_table.pp_ctb.desc());
-					break;
-				}
-			}
+				.unconditionally();
 
 			auto result = (*db)(query);
 
 			for (const auto& row : result)
 			{
-				json user;
+				switch (user_mode)
+				{
+					default:
+					{
+						int64_t position = row.rank_std;
+						if (position == 0)
+							continue;
 
-				int id = row.id;
-				user["id"] = id;
-				user["username"] = row.username.value();
-				user["country"] = row.country.value();
-				user["ranked_score"] = row.at(fmt::format("ranked_score_{0}", mode)).value();
-				user["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-				user["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), fmt::to_string(id));
+						json user;
 
-				response.push_back(user);
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_std.value();
+						user["playcount"] = row.playcount_std.value();
+						user["accuracy"] = row.avg_accuracy_std.value();
+						user["pp"] = row.pp_std.value();
+						user["global_rank"] = position;
+						
+						response.push_back(user);
+						break;
+					}
+					case 1:
+					{
+						int64_t position = row.rank_taiko;
+						if (position == 0)
+							continue;
+
+						json user;
+
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_taiko.value();
+						user["playcount"] = row.playcount_taiko.value();
+						user["accuracy"] = row.avg_accuracy_taiko.value();
+						user["pp"] = row.pp_taiko.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+					case 2:
+					{
+						int64_t position = row.rank_ctb;
+						if (position == 0)
+							continue;
+
+						json user;
+
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_ctb.value();
+						user["playcount"] = row.playcount_ctb.value();
+						user["accuracy"] = row.avg_accuracy_ctb.value();
+						user["pp"] = row.pp_ctb.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+				}
 			}
 		}
 		else
 		{
 			const tables::users_stats users_stats_table{};
-			auto query = sqlpp::dynamic_select(*db)
-				.dynamic_columns(users_table.id, users_table.username, users_table.country)
+			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username, users_table.country)
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
-				.dynamic_order_by().unconditionally();
-			switch (user_mode)
-			{
-				default:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_std));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_std));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_std));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_std));
-					query.order_by.add(users_stats_table.pp_std.desc());
-					break;
-				}
-				case 1:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_taiko));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_taiko));
-					query.order_by.add(users_stats_table.pp_taiko.desc());
-					break;
-				}
-				case 2:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_ctb));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_ctb));
-					query.order_by.add(users_stats_table.pp_ctb.desc());
-					break;
-				}
-				case 3:
-				{
-					query.selected_columns.add(without_table_check(users_stats_table.ranked_score_mania));
-					query.selected_columns.add(without_table_check(users_stats_table.playcount_mania));
-					query.selected_columns.add(without_table_check(users_stats_table.avg_accuracy_mania));
-					query.selected_columns.add(without_table_check(users_stats_table.pp_mania));
-					query.order_by.add(users_stats_table.pp_mania.desc());
-					break;
-				}
-			}
+				.unconditionally();
 
 			auto result = (*db)(query);
 
 			for (const auto& row : result)
 			{
-				json user;
+				switch (user_mode)
+				{
+					default:
+					{
+						int64_t position = row.rank_std;
+						if (position == 0)
+							continue;
 
-				int id = row.id;
-				user["id"] = id;
-				user["username"] = row.username.value();
-				user["country"] = row.country.value();
-				user["ranked_score"] = row.at(fmt::format("ranked_score_{0}", mode)).value();
-				user["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-				user["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-				user["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-				user["global_rank"] = m_redis->getRedisRank(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : ""), fmt::to_string(id));
+						json user;
 
-				response.push_back(user);
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_std.value();
+						user["playcount"] = row.playcount_std.value();
+						user["accuracy"] = row.avg_accuracy_std.value();
+						user["pp"] = row.pp_std.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+					case 1:
+					{
+						int64_t position = row.rank_taiko;
+						if (position == 0)
+							continue;
+
+						json user;
+
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_taiko.value();
+						user["playcount"] = row.playcount_taiko.value();
+						user["accuracy"] = row.avg_accuracy_taiko.value();
+						user["pp"] = row.pp_taiko.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+					case 2:
+					{
+						int64_t position = row.rank_ctb;
+						if (position == 0)
+							continue;
+
+						json user;
+
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_ctb.value();
+						user["playcount"] = row.playcount_ctb.value();
+						user["accuracy"] = row.avg_accuracy_ctb.value();
+						user["pp"] = row.pp_ctb.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+					case 3:
+					{
+						int64_t position = row.rank_mania;
+						if (position == 0)
+							continue;
+
+						json user;
+
+						user["id"] = row.id.value();
+						user["username"] = row.username.value();
+						user["country"] = row.country.value();
+						user["ranked_score"] = row.ranked_score_mania.value();
+						user["playcount"] = row.playcount_mania.value();
+						user["accuracy"] = row.avg_accuracy_mania.value();
+						user["pp"] = row.pp_mania.value();
+						user["global_rank"] = position;
+
+						response.push_back(user);
+						break;
+					}
+				}
 			}
 		}
 
-		range.~vector();
+		std::sort(response.begin(), response.end(), [](json first, json second) { return first["global_rank"] < second["global_rank"]; });
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
-
 };
 
 #include OATPP_CODEGEN_END(ApiController)

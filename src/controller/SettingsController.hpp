@@ -12,16 +12,10 @@
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class SettingsController : public oatpp::web::server::api::ApiController {
+class SettingsController : public oatpp::web::server::api::ApiController
+{
 private:
 	typedef SettingsController __ControllerType;
-public:
-	SettingsController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
-		: oatpp::web::server::api::ApiController(objectMapper)
-	{
-		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
-	}
-private:
 	std::shared_ptr<SettingsController::OutgoingResponse> getSettings(Int32 id) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateBackground(Int32 id, std::string request) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateUserpage(Int32 id, std::string request) const;
@@ -29,6 +23,11 @@ private:
 	std::shared_ptr<SettingsController::OutgoingResponse> updatePref(Int32 id, int fav_mode, bool fav_relax, int playstyle) const;
 	std::shared_ptr<SettingsController::OutgoingResponse> updateScoreboard(Int32 id, int pref, int auto_classic, int auto_relax) const;
 public:
+	SettingsController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
+		: oatpp::web::server::api::ApiController(objectMapper)
+	{
+		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
+	}
 
 	ENDPOINT("GET", "/users/{id}/settings", getUserSettings,
 		PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))

@@ -94,7 +94,7 @@ namespace himitsu
 			if (m_connections.empty())
 			{
 				lock.unlock();
-				std::this_thread::sleep_for(std::chrono::microseconds(5));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 				continue;
 			}
 

@@ -15,14 +15,14 @@
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class BeatmapController : public oatpp::web::server::api::ApiController {
+class BeatmapController : public oatpp::web::server::api::ApiController
+{
 private:
 	typedef BeatmapController __ControllerType;
 public:
 	BeatmapController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
 	{}
-public:
 
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
 	{
@@ -153,7 +153,7 @@ public:
 		const tables::beatmaps b_table{};
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
-		int _length = SQLHelper::Limitize(1, length, 100);
+		int _length = std::clamp(*length, 1, 100);
 		bool isRelax = himitsu::utils::intToBoolean(relax);
 		int play_mode = mode;
 		if (play_mode == 3 && isRelax)

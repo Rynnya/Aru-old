@@ -14,14 +14,10 @@ SQLPP_ALIAS_PROVIDER(beatmap_t);
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class UsersController : public oatpp::web::server::api::ApiController {
+class UsersController : public oatpp::web::server::api::ApiController
+{
 private:
 	typedef UsersController __ControllerType;
-public:
-	UsersController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
-		: oatpp::web::server::api::ApiController(objectMapper)
-	{}
-private:
 	enum class scores_type
 	{
 		Best = 0,
@@ -32,21 +28,13 @@ private:
 	// also checks if player exists. if not, returns false, otherwise returns true and mode as string in ans
 	bool getMode(Int32 id, std::string* ans) const;
 public:
+	UsersController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
+		: oatpp::web::server::api::ApiController(objectMapper)
+	{}
 
 	ENDPOINT("GET", "/users/{id}", userInfo, PATH(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
 	{
-		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
-
-		std::string mode;
-		if (user_mode == -1)
-		{
-			if (!getMode(id, &mode))
-				return createResponse(Status::CODE_404,	himitsu::createError(Status::CODE_404, "Player not found").c_str());
-		}
-		else
-			mode = himitsu::osu::modeToString(user_mode);
-
-		if (relax == 1 && mode == "mania")
+		if (relax == 1 && user_mode == 3)
 			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
@@ -57,34 +45,10 @@ public:
 		if (relax == 1)
 		{
 			const tables::users_stats_relax users_stats_table{};
-			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
-				users_table.id, users_table.username, users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax
-			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
-
-			switch (himitsu::osu::modeToInt(mode))
-			{
-				default:
-				{
-					query.selected_columns.add(users_stats_table.pp_std);
-					query.selected_columns.add(users_stats_table.avg_accuracy_std);
-					query.selected_columns.add(users_stats_table.playcount_std);
-					break;
-				}
-				case 1:
-				{
-					query.selected_columns.add(users_stats_table.pp_taiko);
-					query.selected_columns.add(users_stats_table.avg_accuracy_taiko);
-					query.selected_columns.add(users_stats_table.playcount_taiko);
-					break;
-				}
-				case 2:
-				{
-					query.selected_columns.add(users_stats_table.pp_ctb);
-					query.selected_columns.add(users_stats_table.avg_accuracy_ctb);
-					query.selected_columns.add(users_stats_table.playcount_ctb);
-					break;
-				}
-			}
+			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username, 
+				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax)
+				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
+				.where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
 			auto result = (*db)(query);
 			if (result.empty())
@@ -101,49 +65,42 @@ public:
 			response["status"] = row.status.value();
 			response["default_mode"] = row.favourite_mode.value();
 			response["default_relax"] = (int)row.favourite_relax;
-			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-			response["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
+
+			switch (user_mode)
+			{
+				default:
+				{
+					response["global_rank"] = row.rank_std.value();
+					response["pp"] = row.pp_std.value();
+					response["accuracy"] = row.avg_accuracy_std.value();
+					response["playcount"] = row.playcount_std.value();
+					break;
+				}
+				case 1:
+				{
+					response["global_rank"] = row.rank_taiko.value();
+					response["pp"] = row.pp_taiko.value();
+					response["accuracy"] = row.avg_accuracy_taiko.value();
+					response["playcount"] = row.playcount_taiko.value();
+					break;
+				}
+				case 2:
+				{
+					response["global_rank"] = row.rank_ctb.value();
+					response["pp"] = row.pp_ctb.value();
+					response["accuracy"] = row.avg_accuracy_ctb.value();
+					response["playcount"] = row.playcount_ctb.value();
+					break;
+				}
+			}
 		}
 		else
 		{
 			const tables::users_stats users_stats_table{};
-			auto query = sqlpp::dynamic_select(*db).dynamic_columns(
-				users_table.id, users_table.username, users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax
-			).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)).where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
-
-			switch (himitsu::osu::modeToInt(mode))
-			{
-				default:
-				{
-					query.selected_columns.add(users_stats_table.pp_std);
-					query.selected_columns.add(users_stats_table.avg_accuracy_std);
-					query.selected_columns.add(users_stats_table.playcount_std);
-					break;
-				}
-				case 1:
-				{
-					query.selected_columns.add(users_stats_table.pp_taiko);
-					query.selected_columns.add(users_stats_table.avg_accuracy_taiko);
-					query.selected_columns.add(users_stats_table.playcount_taiko);
-					break;
-				}
-				case 2:
-				{
-					query.selected_columns.add(users_stats_table.pp_ctb);
-					query.selected_columns.add(users_stats_table.avg_accuracy_ctb);
-					query.selected_columns.add(users_stats_table.playcount_ctb);
-					break;
-				}
-				case 3:
-				{
-					query.selected_columns.add(users_stats_table.pp_mania);
-					query.selected_columns.add(users_stats_table.avg_accuracy_mania);
-					query.selected_columns.add(users_stats_table.playcount_mania);
-					break;
-				}
-			}
+			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username,
+				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax)
+				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
+				.where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
 			auto result = (*db)(query);
 			if (result.empty())
@@ -160,32 +117,56 @@ public:
 			response["status"] = row.status.value();
 			response["default_mode"] = row.favourite_mode.value();
 			response["default_relax"] = (int)row.favourite_relax;
-			response["pp"] = row.at(fmt::format("pp_{0}", mode)).value();
-			response["accuracy"] = row.at(fmt::format("avg_accuracy_{0}", mode)).value();
-			response["playcount"] = row.at(fmt::format("playcount_{0}", mode)).value();
-			response["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
-		}
 
-		response["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
+			switch (user_mode)
+			{
+				default:
+				{
+					response["global_rank"] = row.rank_std.value();
+					response["pp"] = row.pp_std.value();
+					response["accuracy"] = row.avg_accuracy_std.value();
+					response["playcount"] = row.playcount_std.value();
+					break;
+				}
+
+				case 1:
+				{
+					response["global_rank"] = row.rank_taiko.value();
+					response["pp"] = row.pp_taiko.value();
+					response["accuracy"] = row.avg_accuracy_taiko.value();
+					response["playcount"] = row.playcount_taiko.value();
+					break;
+				}
+
+				case 2:
+				{
+					response["global_rank"] = row.rank_ctb.value();
+					response["pp"] = row.pp_ctb.value();
+					response["accuracy"] = row.avg_accuracy_ctb.value();
+					response["playcount"] = row.playcount_ctb.value();
+					break;
+				}
+
+				case 3:
+				{
+					response["global_rank"] = row.rank_mania.value();
+					response["pp"] = row.pp_mania.value();
+					response["accuracy"] = row.avg_accuracy_mania.value();
+					response["playcount"] = row.playcount_mania.value();
+					break;
+				}
+			}
+		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/users/{id}/full", fullUserInfo, PATH(Int32, id), QUERY(Int32, user_mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"))
 	{
-		std::string mode;
-		if (user_mode == -1)
-		{
-			if (!getMode(id, &mode))
-				return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
-		}
-		else
-			mode = himitsu::osu::modeToString(user_mode);
 
-		if (relax == 1 && mode == "mania")
+		if (relax == 1 && user_mode == 3)
 			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
-		OATPP_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis);
 		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
 
 		const tables::users users_table{};
@@ -218,14 +199,13 @@ public:
 			response["default_mode"] = row.favourite_mode.value();
 			response["default_relax"] = (int)row.favourite_relax;
 
-			response["stats"]["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
-			response["stats"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
-
 			long long score = 0;
-			switch (himitsu::osu::modeToInt(mode))
+			switch (user_mode)
 			{
 				default:
+				{
 					score = row.total_score_std;
+					response["stats"]["global_rank"] = row.rank_std.value();
 					response["stats"]["ranked_score"] = row.ranked_score_std.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_std.value();
@@ -240,8 +220,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_std.value();
 					response["stats"]["count_XH"] = row.count_XH_std.value();
 					break;
+				}
+
 				case 1:
+				{
 					score = row.total_score_taiko;
+					response["stats"]["global_rank"] = row.rank_taiko.value();
 					response["stats"]["ranked_score"] = row.ranked_score_taiko.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_taiko.value();
@@ -256,8 +240,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_taiko.value();
 					response["stats"]["count_XH"] = row.count_XH_taiko.value();
 					break;
+				}
+
 				case 2:
+				{
 					score = row.total_score_ctb;
+					response["stats"]["global_rank"] = row.rank_ctb.value();
 					response["stats"]["ranked_score"] = row.ranked_score_ctb.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_ctb.value();
@@ -272,6 +260,7 @@ public:
 					response["stats"]["count_X"] = row.count_X_ctb.value();
 					response["stats"]["count_XH"] = row.count_XH_ctb.value();
 					break;
+				}
 			}
 		}
 		else
@@ -301,14 +290,13 @@ public:
 			response["default_mode"] = row.favourite_mode.value();
 			response["default_relax"] = (int)row.favourite_relax;
 
-			response["stats"]["global_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}{1}", mode, relax == 1 ? ":relax" : "")));
-			response["stats"]["country_rank"] = std::stoi(m_redis->getRedisString(fmt::format("ripple:leaderboard:{0}:{1}{2}", mode, country, relax == 1 ? ":relax" : "")));
-
 			long long score = 0;
-			switch (himitsu::osu::modeToInt(mode))
+			switch (user_mode)
 			{
 				default:
+				{
 					score = row.total_score_std;
+					response["stats"]["global_rank"] = row.rank_std.value();
 					response["stats"]["ranked_score"] = row.ranked_score_std.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_std.value();
@@ -323,8 +311,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_std.value();
 					response["stats"]["count_XH"] = row.count_XH_std.value();
 					break;
+				}
+
 				case 1:
+				{
 					score = row.total_score_taiko;
+					response["stats"]["global_rank"] = row.rank_taiko.value();
 					response["stats"]["ranked_score"] = row.ranked_score_taiko.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_taiko.value();
@@ -339,8 +331,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_taiko.value();
 					response["stats"]["count_XH"] = row.count_XH_taiko.value();
 					break;
+				}
+
 				case 2:
+				{
 					score = row.total_score_ctb;
+					response["stats"]["global_rank"] = row.rank_ctb.value();
 					response["stats"]["ranked_score"] = row.ranked_score_ctb.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_ctb.value();
@@ -355,8 +351,12 @@ public:
 					response["stats"]["count_X"] = row.count_X_ctb.value();
 					response["stats"]["count_XH"] = row.count_XH_ctb.value();
 					break;
+				}
+
 				case 3:
+				{
 					score = row.total_score_mania;
+					response["stats"]["global_rank"] = row.rank_mania.value();
 					response["stats"]["ranked_score"] = row.ranked_score_mania.value();
 					response["stats"]["total_score"] = score;
 					response["stats"]["playcount"] = row.playcount_mania.value();
@@ -371,6 +371,7 @@ public:
 					response["stats"]["count_X"] = row.count_X_mania.value();
 					response["stats"]["count_XH"] = row.count_XH_mania.value();
 					break;
+				}
 			}
 		}
 
