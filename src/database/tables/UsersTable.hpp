@@ -60,10 +60,6 @@ namespace tables
 		object_struct(max_combo_taiko, sqlpp::integer);
 		object_struct(max_combo_ctb, sqlpp::integer);
 		object_struct(max_combo_mania, sqlpp::integer);
-		object_struct(level_std, sqlpp::integer);
-		object_struct(level_taiko, sqlpp::integer);
-		object_struct(level_ctb, sqlpp::integer);
-		object_struct(level_mania, sqlpp::integer);
 		object_struct(play_time_std, sqlpp::integer);
 		object_struct(play_time_taiko, sqlpp::integer);
 		object_struct(play_time_ctb, sqlpp::integer);
@@ -190,10 +186,6 @@ namespace tables
 		users_stats_objects::max_combo_taiko,
 		users_stats_objects::max_combo_ctb,
 		users_stats_objects::max_combo_mania,
-		users_stats_objects::level_std,
-		users_stats_objects::level_taiko,
-		users_stats_objects::level_ctb,
-		users_stats_objects::level_mania,
 		users_stats_objects::play_time_std,
 		users_stats_objects::play_time_taiko,
 		users_stats_objects::play_time_ctb,
@@ -251,9 +243,6 @@ namespace tables
 		users_stats_objects::max_combo_std,
 		users_stats_objects::max_combo_taiko,
 		users_stats_objects::max_combo_ctb,
-		users_stats_objects::level_std,
-		users_stats_objects::level_taiko,
-		users_stats_objects::level_ctb,
 		users_stats_objects::play_time_std,
 		users_stats_objects::play_time_taiko,
 		users_stats_objects::play_time_ctb,
