@@ -27,11 +27,11 @@ public:
 	ENDPOINT("GET", "/beatmapset/{id}", beatmapSet, PATH(Int32, id))
 	{
 		const tables::beatmaps beatmaps_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		auto result = (*db)(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmapset_id == (*id)));
 
 		if (result.empty())
-			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap set").c_str());
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap set").c_str());
 
 		json response = json::array();
 		for (const auto& row : result)
@@ -90,11 +90,11 @@ public:
 	ENDPOINT("GET", "/beatmap/{id}", beatmapDefault, PATH(Int32, id))
 	{
 		const tables::beatmaps beatmaps_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		auto result = (*db)(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmap_id == (*id)));
 
 		if (result.empty())
-			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str());
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap").c_str());
 
 		const auto& row = result.front();
 		json beatmap;
@@ -151,13 +151,12 @@ public:
 		PATH(Int32, id), QUERY(Int32, mode, "mode", "-1"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, length, "length", "50"))
 	{
 		const tables::beatmaps b_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 
-		int _length = std::clamp(*length, 1, 100);
-		bool isRelax = himitsu::utils::intToBoolean(relax);
-		int play_mode = mode;
+		bool isRelax = aru::utils::intToBoolean(relax);
+		int32_t play_mode = mode;
 		if (play_mode == 3 && isRelax)
-			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		std::string md5 = "";
 		auto res = (*db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
@@ -166,7 +165,7 @@ public:
 			.limit(1u)
 		);
 		if (res.empty())
-			return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Cannot find beatmap").c_str());
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap").c_str());
 
 		const auto& r = res.front();
 		if (play_mode == -1) play_mode = r.mode;
@@ -179,9 +178,9 @@ public:
 			scores_table.score, scores_table.pp, scores_table.accuracy, scores_table.max_combo, scores_table.mods,
 			scores_table.count_300, scores_table.count_100, scores_table.count_50, scores_table.count_misses)
 			.from(scores_table.join(users_table).on(scores_table.user_id == users_table.id))
-			.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode)
+			.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode and scores_table.completed)
 			.order_by(scores_table.pp.desc());
-		std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(1, _length, 100);
+		std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(1, length, 100);
 		auto result = (*db)(query.offset(limit.first).limit(limit.second));
 
 		json response = json::array();

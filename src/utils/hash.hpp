@@ -5,7 +5,7 @@
 #include <openssl/md5.h>
 #include <openssl/evp.h>
 
-namespace himitsu
+namespace aru
 {
 	class hash
 	{
@@ -23,7 +23,7 @@ namespace himitsu
 
 			return std::string(output);
 		}
-		
+
 		static std::string createMD5(std::string input)
 		{
 			unsigned char result[16];

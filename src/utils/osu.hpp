@@ -4,7 +4,7 @@
 #include "Globals.hpp"
 #include <vector>
 
-namespace himitsu
+namespace aru
 {
 	static const long long sc[100] = {
 		0,
@@ -119,11 +119,11 @@ namespace himitsu
 	class osu_level
 	{
 	public:
-		static int GetLevel(long long score)
+		static int32_t GetLevel(long long score)
 		{
 			if (score <= 0) return 1;
-			if (score >= sc[99]) return 100 + int((score - sc[99]) / 100000000000);
-			for (int i = 0; i != 100; i++)
+			if (score >= sc[99]) return 100 + int32_t((score - sc[99]) / 100000000000);
+			for (int32_t i = 0; i != 100; i++)
 			{
 				if (sc[i] > score)
 					return i;
@@ -131,7 +131,7 @@ namespace himitsu
 			return 1;
 		}
 
-		static long long GetRequiredScoreForLevel(int level)
+		static long long GetRequiredScoreForLevel(int32_t level)
 		{
 			if (level <= 0) return 0;
 			if (level <= 100) return sc[level - 1];
@@ -140,13 +140,13 @@ namespace himitsu
 
 		static double GetLevelPrecise(long long score)
 		{
-			int baseLevel = GetLevel(score);
-			long long baseLevelScore = GetRequiredScoreForLevel(baseLevel);
-			long long scoreProgress = score - baseLevelScore;
-			long long scoreLevelDifference = GetRequiredScoreForLevel(baseLevel + 1) - baseLevelScore;
+			int32_t baseLevel = GetLevel(score);
+			int64_t baseLevelScore = GetRequiredScoreForLevel(baseLevel);
+			int64_t scoreProgress = score - baseLevelScore;
+			int64_t scoreLevelDifference = GetRequiredScoreForLevel(baseLevel + 1) - baseLevelScore;
 
 			double result = double(scoreProgress) / double(scoreLevelDifference) + double(baseLevel);
-			if (himitsu::math::is_infinite(result) || himitsu::math::is_nan(result))
+			if (aru::math::is_infinite(result) || aru::math::is_nan(result))
 				return 0;
 			return result;
 		}
@@ -155,7 +155,7 @@ namespace himitsu
 	class osu
 	{
 	public:
-		static std::string modeToString(int number)
+		static std::string modeToString(int32_t number)
 		{
 			switch (number)
 			{
@@ -170,7 +170,7 @@ namespace himitsu
 			}
 		}
 
-		static int modeToInt(std::string mode)
+		static int32_t modeToInt(std::string mode)
 		{
 			if (mode == "mania") return 3;
 			if (mode == "ctb")   return 2;

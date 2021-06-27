@@ -6,42 +6,42 @@
 std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(Int32 id, Int32 user_mode, Int32 relax, Int32 page, Int32 length, scores_type type) const
 {
 	std::string mode;
-	if (user_mode == -1 && !getMode(id, &mode))
-		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Player not found").c_str());
+	if (user_mode == -1 && !getMode(id, mode))
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found").c_str());
 
 	length = std::clamp(*length, 1, 100);
 
 	if (relax == 1 && mode == "mania")
-		return createResponse(Status::CODE_404, himitsu::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
-	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+	auto db(aru::ConnectionPool::getInstance()->getConnection());
 
 	json response = json::array();
 
 	const tables::beatmaps beatmaps_table{};
-	bool isRelax = himitsu::utils::intToBoolean(relax);
+	bool isRelax = aru::utils::intToBoolean(relax);
 
 	const tables::scores scores_table{};
 	const tables::users users_table{};
 	auto query = sqlpp::dynamic_select(*db, scores_table.id, scores_table.ranking, scores_table.score, scores_table.full_combo, scores_table.mods,
 		scores_table.count_300, scores_table.count_100, scores_table.count_50,
 		scores_table.count_gekis, scores_table.count_katus, scores_table.count_misses,
-		scores_table.time, scores_table.play_mode, scores_table.accuracy, scores_table.pp, scores_table.completed,
+		scores_table.time, scores_table.play_mode, scores_table.accuracy, scores_table.pp,
 		scores_table.max_combo.as(score_t),
 
 		beatmaps_table.beatmap_id, beatmaps_table.beatmap_md5, beatmaps_table.max_combo.as(beatmap_t),
 		beatmaps_table.beatmapset_id, beatmaps_table.artist, beatmaps_table.title, beatmaps_table.difficulty_name,
-		beatmaps_table.cs, beatmaps_table.ar, beatmaps_table.od, beatmaps_table.hp, 
-		beatmaps_table.difficulty_std, beatmaps_table.difficulty_taiko, beatmaps_table.difficulty_ctb, beatmaps_table.difficulty_mania, 
+		beatmaps_table.cs, beatmaps_table.ar, beatmaps_table.od, beatmaps_table.hp,
+		beatmaps_table.difficulty_std, beatmaps_table.difficulty_taiko, beatmaps_table.difficulty_ctb, beatmaps_table.difficulty_mania,
 		beatmaps_table.hit_length, beatmaps_table.ranked_status, beatmaps_table.ranked_status_freezed, beatmaps_table.latest_update
-	).dynamic_from(scores_table.join(beatmaps_table).on(scores_table.beatmap_md5 == beatmaps_table.beatmap_md5)).dynamic_where(scores_table.is_relax == isRelax).dynamic_order_by();
+	).dynamic_from(scores_table.join(beatmaps_table).on(scores_table.beatmap_md5 == beatmaps_table.beatmap_md5)).dynamic_where(scores_table.is_relax == isRelax and scores_table.completed).dynamic_order_by();
 
 	switch (type)
 	{
 		case scores_type::Best:
 		{
 			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
-			query.where.add(without_table_check(scores_table.completed == 1 and scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true and scores_table.is_relax == isRelax));
+			query.where.add(without_table_check(scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true and scores_table.is_relax == isRelax));
 			query.order_by.add(scores_table.pp.desc());
 			break;
 		}
@@ -62,14 +62,12 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		}
 	}
 
-	std::pair<unsigned int, unsigned int> limit = SQLHelper::Paginate(page, length, 100);
+	std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(page, length, 100);
 	auto q = query.offset(limit.first).limit(limit.second);
 	auto result = (*db)(q);
 
 	if (result.empty())
-	{
 		return this->createResponse(Status::CODE_200, json::array().dump().c_str());
-	}
 
 	for (const auto& row : result)
 	{
@@ -87,11 +85,10 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		score["count_geki"] = row.count_gekis.value();
 		score["count_katu"] = row.count_katus.value();
 		score["count_miss"] = row.count_misses.value();
-		score["time"] = himitsu::time_convert::getDate(row.time);
+		score["time"] = aru::time_convert::getDate(row.time);
 		score["mode"] = row.play_mode.value();
 		score["accuracy"] = row.accuracy.value();
 		score["pp"] = row.pp.value();
-		score["completed"] = row.completed.value();
 
 		json beatmap;
 		beatmap["beatmap_id"] = row.beatmap_id.value();
@@ -141,9 +138,9 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	return createResponse(Status::CODE_200, response.dump().c_str());
 }
 
-bool UsersController::getMode(Int32 id, std::string* ans) const
+bool UsersController::getMode(Int32 id, std::string& ans) const
 {
-	auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users users_table{};
 	auto result = (*db)(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == (*id)));
 
@@ -151,6 +148,6 @@ bool UsersController::getMode(Int32 id, std::string* ans) const
 		return false; // player doesn't exist
 
 	const auto& res = result.front();
-	*ans = himitsu::osu::modeToString(res.favourite_mode);
+	ans = aru::osu::modeToString(res.favourite_mode);
 	return true;
 }

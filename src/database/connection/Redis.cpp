@@ -1,6 +1,6 @@
 #include "Redis.hpp"
 
-himitsu::redis::redis(std::string address, size_t port, uint32_t attempts, std::string password)
+aru::redis::redis(std::string address, size_t port, uint32_t attempts, std::string password)
     : address(std::move(address))
     , port(port)
     , attempts(attempts)
@@ -9,7 +9,7 @@ himitsu::redis::redis(std::string address, size_t port, uint32_t attempts, std::
     // Initialized in initializer list
 }
 
-void himitsu::redis::connect() {
+void aru::redis::connect() {
     if (is_connected())
         return;
 
@@ -36,7 +36,7 @@ void himitsu::redis::connect() {
     }
 }
 
-void himitsu::redis::disconnect() {
+void aru::redis::disconnect() {
     std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()
     );
@@ -47,11 +47,11 @@ void himitsu::redis::disconnect() {
     this->client->disconnect();
 }
 
-bool himitsu::redis::is_connected() {
+bool aru::redis::is_connected() {
     return this->client != nullptr;
 }
 
-std::shared_ptr<cpp_redis::client> himitsu::redis::get() {
+std::shared_ptr<cpp_redis::client> aru::redis::get() {
     if (!is_connected())
     {
         connect();

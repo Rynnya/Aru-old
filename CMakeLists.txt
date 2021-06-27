@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(project_name HimitsuAPI)
+set(project_name Aru)
 set(CMAKE_CXX_STANDARD 17)
 project(${project_name})
 
@@ -67,8 +67,8 @@ add_executable(${project_name}
 	src/controller/SettingsController.hpp
 	src/controller/UsersController.cpp
 	src/controller/UsersController.hpp
-	src/database/connection/HimitsuDB.cpp
-	src/database/connection/HimitsuDB.hpp
+	src/database/connection/AruDB.cpp
+	src/database/connection/AruDB.hpp
 	src/database/connection/Redis.cpp
 	src/database/connection/Redis.hpp
 	src/database/tables/CoreTable.hpp

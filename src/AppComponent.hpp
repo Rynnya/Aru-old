@@ -31,17 +31,17 @@ public:
 	}());
 
 	// Redis
-	OATPP_CREATE_COMPONENT(std::shared_ptr<himitsu::redis>, m_redis)([]
+	OATPP_CREATE_COMPONENT(std::shared_ptr<aru::redis>, m_redis)([]
 	{
 		cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger());
-		himitsu::redis client(
+		aru::redis client(
 			config::redis::address,
 			config::redis::port,
 			config::redis::reconnection_attempts,
 			config::redis::password
 		);
 		client.connect();
-		return std::make_shared<himitsu::redis>(client);
+		return std::make_shared<aru::redis>(client);
 	}());
 
 	// ConnectionProvider component which listens on the port

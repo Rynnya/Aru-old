@@ -35,7 +35,19 @@ void run() {
 	userController->addEndpointsToRouter(router);
 
 	/* Initialize database pool */
-	himitsu::ConnectionPool pool(config::database::connection_amount);
+	aru::ConnectionPool pool(config::database::connection_amount);
+
+	/* Initialize timer to wake up connections in pool */
+	std::thread wakeUp([&]()
+		{ 
+			while (true)
+			{
+				// Every 7.5 hours
+				std::this_thread::sleep_for(std::chrono::milliseconds(27000000));
+				pool.wakeUpPool();
+			}
+		});
+	wakeUp.detach();
 
 	/* Get connection handler component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler);

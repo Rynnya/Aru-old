@@ -4,7 +4,7 @@
 #include "Globals.hpp"
 #include "cpp_redis/core/client.hpp"
 
-namespace himitsu
+namespace aru
 {
 	class redis
 	{
@@ -28,7 +28,7 @@ namespace himitsu
 		*/
 		long long getRedisRank(std::string key, std::string id)
 		{
-			int temp = 0;
+			int32_t temp = 0;
 			this->client->zrevrank(key, id, [&](cpp_redis::reply& reply)
 				{
 					if (reply)

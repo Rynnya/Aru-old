@@ -10,7 +10,7 @@
 #include "sqlpp11/sqlpp11.h"
 #include "sqlpp11/mysql/mysql.h"
 #include "database/SQL.hpp"
-#include "database/connection/HimitsuDB.hpp"
+#include "database/connection/AruDB.hpp"
 #include "database/connection/Redis.hpp"
 
 using json = nlohmann::ordered_json;
@@ -27,7 +27,7 @@ using json = nlohmann::ordered_json;
 
 namespace mysql = sqlpp::mysql;
 
-namespace himitsu
+namespace aru
 {
 	inline std::string createError(const oatpp::web::protocol::http::Status& status, std::string message)
 	{

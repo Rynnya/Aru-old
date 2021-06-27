@@ -24,25 +24,26 @@ public:
 	ENDPOINT("GET", "/ping", Ping, REQUEST(std::shared_ptr<IncomingRequest>, request))
 	{
 		json response;
-		response["message"] = himitsu::memes[himitsu::utils::genRandomInt() % himitsu::memes.size()].c_str();
+		response["message"] = aru::memes[aru::utils::genRandomInt() % aru::memes.size()];
 		return createResponse(Status::CODE_200, response.dump().c_str());
 	};
 
 	ENDPOINT("GET", "/leaderboard", Leaderboard, 
 		QUERY(Int32, user_mode, "mode", "0"), QUERY(Int32, relax, "relax", "0"), QUERY(Int32, page, "page", "0"), QUERY(Int32, length, "length", "50"))
 	{
-		std::string mode = himitsu::osu::modeToString(user_mode);
+		std::string mode = aru::osu::modeToString(user_mode);
 
 		const tables::users users_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		json response = json::array();
 
+		std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(page, length, 100);
 		if (relax == 1)
 		{
 			const tables::users_stats_relax users_stats_table{};
 			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username, users_table.country)
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
-				.unconditionally();
+				.offset(limit.first).limit(limit.second).unconditionally();
 
 			auto result = (*db)(query);
 
@@ -62,7 +63,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_std.value();
-						user["playcount"] = row.playcount_std.value();
+						user["play_count"] = row.play_count_std.value();
 						user["accuracy"] = row.avg_accuracy_std.value();
 						user["pp"] = row.pp_std.value();
 						user["global_rank"] = position;
@@ -82,7 +83,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_taiko.value();
-						user["playcount"] = row.playcount_taiko.value();
+						user["play_count"] = row.play_count_taiko.value();
 						user["accuracy"] = row.avg_accuracy_taiko.value();
 						user["pp"] = row.pp_taiko.value();
 						user["global_rank"] = position;
@@ -102,7 +103,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_ctb.value();
-						user["playcount"] = row.playcount_ctb.value();
+						user["play_count"] = row.play_count_ctb.value();
 						user["accuracy"] = row.avg_accuracy_ctb.value();
 						user["pp"] = row.pp_ctb.value();
 						user["global_rank"] = position;
@@ -118,7 +119,7 @@ public:
 			const tables::users_stats users_stats_table{};
 			auto query = sqlpp::select(sqlpp::all_of(users_stats_table), users_table.username, users_table.country)
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
-				.unconditionally();
+				.offset(limit.first).limit(limit.second).unconditionally();
 
 			auto result = (*db)(query);
 
@@ -138,7 +139,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_std.value();
-						user["playcount"] = row.playcount_std.value();
+						user["play_count"] = row.play_count_std.value();
 						user["accuracy"] = row.avg_accuracy_std.value();
 						user["pp"] = row.pp_std.value();
 						user["global_rank"] = position;
@@ -158,7 +159,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_taiko.value();
-						user["playcount"] = row.playcount_taiko.value();
+						user["play_count"] = row.play_count_taiko.value();
 						user["accuracy"] = row.avg_accuracy_taiko.value();
 						user["pp"] = row.pp_taiko.value();
 						user["global_rank"] = position;
@@ -178,7 +179,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_ctb.value();
-						user["playcount"] = row.playcount_ctb.value();
+						user["play_count"] = row.play_count_ctb.value();
 						user["accuracy"] = row.avg_accuracy_ctb.value();
 						user["pp"] = row.pp_ctb.value();
 						user["global_rank"] = position;
@@ -198,7 +199,7 @@ public:
 						user["username"] = row.username.value();
 						user["country"] = row.country.value();
 						user["ranked_score"] = row.ranked_score_mania.value();
-						user["playcount"] = row.playcount_mania.value();
+						user["play_count"] = row.play_count_mania.value();
 						user["accuracy"] = row.avg_accuracy_mania.value();
 						user["pp"] = row.pp_mania.value();
 						user["global_rank"] = position;

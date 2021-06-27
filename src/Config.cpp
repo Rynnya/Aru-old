@@ -5,12 +5,12 @@ namespace config
 {
 	namespace database
 	{
-		int         connection_amount = 10;
+		int32_t     connection_amount = 10;
 		std::string host              = "localhost";
-		int         port              = 3306;
+		int32_t     port              = 3306;
 		std::string username          = "root";
 		std::string password          = "";
-		std::string database          = "himitsu";
+		std::string database          = "yukime";
 		bool        debug             = false; // Set True if want to see all sqlpp requests
 	}
 
@@ -32,7 +32,7 @@ namespace config
 		"hvick225", "_index", "my_aim_sucks", "kynan", "rafis", "sayonara-bye", "thelewa", "wubwoofwolf", "millhioref", "tom94", "tillerino", "clsw",
 		"spectator", "exgon", "axarious", "angelsim", "recia", "nara", "emperorpenguin83", "bikko", "xilver", "vettel", "kuu01", "_yu68", "tasuke912", "dusk",
 		"ttobas", "velperk", "jakads", "jhlee0133", "abcdullah", "yuko-", "entozer", "hdhr", "ekoro", "snowwhite", "osuplayer111", "musty", "nero", "elysion",
-		"ztrot", "koreapenguin", "fort", "asphyxia", "niko", "shigetora", "whitecat", "fokabot", "himitsu", "nebula", "howl", "nyo", "angelwar", "mm00"
+		"ztrot", "koreapenguin", "fort", "asphyxia", "niko", "shigetora", "whitecat", "fokabot", "himitsu", "nebula", "howl", "nyo", "angelwar", "mm00", "yukime"
 	};
 
 	void parse()

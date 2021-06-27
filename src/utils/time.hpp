@@ -5,7 +5,7 @@
 #include <chrono>
 #include "date/date.h"
 
-namespace himitsu
+namespace aru
 {
 	class time_convert
 	{

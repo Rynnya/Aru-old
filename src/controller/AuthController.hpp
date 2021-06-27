@@ -16,7 +16,7 @@
 #include "utils/hash.hpp"
 #include "utils/utils.hpp"
 
-using hash = himitsu::hash;
+using hash = aru::hash;
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
@@ -38,9 +38,9 @@ public:
 		if (authObject->valid)
 		{
 			const tables::tokens tokens_table{};
-			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			auto db(aru::ConnectionPool::getInstance()->getConnection());
 			(*db)(sqlpp::update(tokens_table).set(
-				tokens_table.last_updated = himitsu::time_convert::getEpochNow()
+				tokens_table.last_updated = aru::time_convert::getEpochNow()
 			).where(tokens_table.token == authObject->token->c_str()));
 
 			json ok;
@@ -49,7 +49,7 @@ public:
 			auto response = createResponse(Status::CODE_200, ok.dump().c_str());
 			response->putHeader("set-cookie",
 				fmt::format(
-					"hat={}; Path=/; Domain=himitsu.ml; Max-Age={}; Secure",
+					"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
 					authObject->token->c_str(),
 					14 * 24 * 60 * 60 // 14 days
 				).c_str()
@@ -61,27 +61,27 @@ public:
 		if (!body.is_discarded())
 		{
 			if (body["username"].is_null() || body["password"].is_null())
-				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+				return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
 
 			const std::string& password = body["password"];
-			std::string username = himitsu::utils::str_tolower(body["username"]);
-			himitsu::utils::trim(username);
+			std::string username = aru::utils::str_tolower(body["username"]);
+			aru::utils::trim(username);
 			std::replace(username.begin(), username.end(), ' ', '_');
 
-			if (username == "nebula")
-				return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "No.").c_str());
-
 			const tables::users users_table{};
-			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			auto db(aru::ConnectionPool::getInstance()->getConnection());
 			auto result = (*db)(sqlpp::select(
 				users_table.id, users_table.password_md5, users_table.salt
 			).from(users_table).where(users_table.safe_username == username).limit(1u));
 
 			if (result.empty())
-				return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong login").c_str());
+				return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Wrong login").c_str());
 
 			const auto& row = result.front();
-			int userID = row.id;
+			int32_t userID = row.id;
+
+			if (userID == 1)
+				return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "No.").c_str());
 
 			if (hash::createSHA512(hash::createMD5(password), row.salt) == row.password_md5.value())
 			{
@@ -93,7 +93,7 @@ public:
 
 				while (true)
 				{
-					token = hash::createMD5(himitsu::utils::genRandomString(25));
+					token = hash::createMD5(aru::utils::genRandomString(25));
 					auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 					if (result.empty())
 					{
@@ -102,7 +102,7 @@ public:
 							tokens_table.token = token,
 							tokens_table._private = true,
 							tokens_table.privileges = 0,
-							tokens_table.last_updated = himitsu::time_convert::getEpochNow()
+							tokens_table.last_updated = aru::time_convert::getEpochNow()
 						));
 						break;
 					}
@@ -118,7 +118,7 @@ public:
 				auto wait = createResponse(Status::CODE_200, response.dump().c_str());
 				wait->putHeader("set-cookie",
 					fmt::format(
-						"hat={}; Path=/; Domain=himitsu.ml; Max-Age={}; Secure",
+						"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
 						token,
 						14 * 24 * 60 * 60 // 14 days
 					).c_str()
@@ -126,10 +126,10 @@ public:
 				return wait;
 			}
 
-			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Wrong login").c_str());
+			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Wrong login").c_str());
 		}
 
-		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+		return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
 	}
 
 	ENDPOINT("POST", "/register", registerUser, BODY_STRING(String, userInfo), REQUEST(std::shared_ptr<IncomingRequest>, request))
@@ -138,43 +138,43 @@ public:
 		if (!body.is_discarded())
 		{
 			if (body["username"].is_null() || body["password"].is_null() || body["email"].is_null())
-				return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+				return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
 
 			std::string username = body["username"];
-			himitsu::utils::trim(username);
+			aru::utils::trim(username);
 			std::string safe_username = username;
-			himitsu::utils::str_tolower(safe_username);
+			aru::utils::str_tolower(safe_username);
 			std::replace(safe_username.begin(), safe_username.end(), ' ', '_');
 
 			static std::regex user_regex("^[A-Za-z0-9 _[\\]-]{2,15}$");
 			if (!std::regex_search(username, user_regex))
 				return createResponse(Status::CODE_403, 
-					himitsu::createError(521, "This nickname contains forbidden symbols. Allowed symbols: a-Z 0-9 _[]-").c_str());
+					aru::createError(521, "This nickname contains forbidden symbols. Allowed symbols: a-Z 0-9 _[]-").c_str());
 
 			if (username.find('_') != std::string::npos && username.find(' ') != std::string::npos)
 				return createResponse(Status::CODE_403,
-					himitsu::createError(522, "Nickname should not contain spaces and underscores at the same time.").c_str());
+					aru::createError(522, "Nickname should not contain spaces and underscores at the same time.").c_str());
 
 			for (std::string& nick : config::forbidden_nicknames)
 				if (nick == safe_username)
 					return createResponse(Status::CODE_403, 
-						himitsu::createError(523, "This nickname are forbidden. If you are real owner of this nickname, please contact us.").c_str());
+						aru::createError(523, "This nickname are forbidden. If you are real owner of this nickname, please contact us.").c_str());
 
 			const tables::users users_table{};
-			auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+			auto db(aru::ConnectionPool::getInstance()->getConnection());
 			auto result1 = (*db)(sqlpp::select(users_table.id).from(users_table).where(users_table.safe_username == safe_username || users_table.username == username).limit(1u));
 
 			if (!result1.empty())
-				return createResponse(Status::CODE_403, himitsu::createError(524, "This nickname already taken!").c_str());
+				return createResponse(Status::CODE_403, aru::createError(524, "This nickname already taken!").c_str());
 			result1.pop_front();
 
 			const std::string& email = body["email"];
 			auto result2 = (*db)(sqlpp::select(users_table.email).from(users_table).where(users_table.email == email).limit(1u));
 			if (!result2.empty())
-				return createResponse(Status::CODE_403, himitsu::createError(525, "This email already taken!").c_str());
+				return createResponse(Status::CODE_403, aru::createError(525, "This email already taken!").c_str());
 			result2.pop_front();
 
-			std::string salt = himitsu::utils::genRandomString(24);
+			std::string salt = aru::utils::genRandomString(24);
 			std::string password = hash::createSHA512(hash::createMD5(body["password"]), salt);
 			(*db)(sqlpp::insert_into(users_table).set(
 				users_table.username = username,
@@ -184,12 +184,12 @@ public:
 				users_table.password_md5 = password,
 				users_table.salt = salt,
 				users_table.ip = getIPAddress(request),
-				users_table.registration_date = himitsu::time_convert::getEpochNow(),
+				users_table.registration_date = aru::time_convert::getEpochNow(),
 				users_table.roles = 3
 			));
 
 			auto result = (*db)(sqlpp::select(users_table.id).from(users_table).where(users_table.email == email).limit(1u));
-			int user_id = result.front().id;
+			int32_t user_id = result.front().id;
 			result.pop_front();
 
 			const tables::users_stats users_stats_table{};
@@ -205,7 +205,7 @@ public:
 
 			while (true)
 			{
-				token = hash::createMD5(himitsu::utils::genRandomString(25));
+				token = hash::createMD5(aru::utils::genRandomString(25));
 				auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 				if (result.empty())
 				{
@@ -214,7 +214,7 @@ public:
 						tokens_table.token = token,
 						tokens_table._private = true,
 						tokens_table.privileges = 0,
-						tokens_table.last_updated = himitsu::time_convert::getEpochNow()
+						tokens_table.last_updated = aru::time_convert::getEpochNow()
 					));
 					break;
 				}
@@ -229,7 +229,7 @@ public:
 			auto wait = createResponse(Status::CODE_201, response.dump().c_str());
 			wait->putHeader("set-cookie",
 				fmt::format(
-					"hat={}; Path=/; Domain=himitsu.ml; Max-Age={}; Secure",
+					"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
 					token,
 					14 * 24 * 60 * 60 // 14 days
 				).c_str()
@@ -237,18 +237,18 @@ public:
 			return wait;
 		}
 
-		return createResponse(Status::CODE_400, himitsu::createError(Status::CODE_400, "Bad request").c_str());
+		return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
 	}
 
 	ENDPOINT("GET", "/tokens/{id}", getTokens, PATH(Int32, id), AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))
 	{
 		if (!authObject->valid)
-			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
 		if (!(authObject->userID == id))
-			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		const tables::tokens tokens_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		auto result = (*db)(sqlpp::select(
 			tokens_table.token, tokens_table.privileges
 		).from(tokens_table).where(tokens_table.user == (*id) and tokens_table._private == false));
@@ -269,17 +269,17 @@ public:
 		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
 	{
 		if (!authObject->valid)
-			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
 		if (!(authObject->userID == id))
-			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(userInfo->c_str(), nullptr, false);
-		int privileges = 0;
+		int32_t privileges = 0;
 		if (!body.is_discarded())
 			if (body["privileges"].is_number_integer())
 				privileges = body["privileges"];
 
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 
 		if (privileges > 0)
 		{
@@ -296,7 +296,7 @@ public:
 
 		while (true)
 		{
-			token = hash::createMD5(himitsu::utils::genRandomString(25));
+			token = hash::createMD5(aru::utils::genRandomString(25));
 			auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 			if (result.empty())
 			{
@@ -305,7 +305,7 @@ public:
 					tokens_table.token = token,
 					tokens_table._private = false,
 					tokens_table.privileges = privileges,
-					tokens_table.last_updated = himitsu::time_convert::getEpochNow()
+					tokens_table.last_updated = aru::time_convert::getEpochNow()
 				));
 				break;
 			}
@@ -324,12 +324,12 @@ public:
 		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject))
 	{
 		if (!authObject->valid)
-			return createResponse(Status::CODE_401, himitsu::createError(Status::CODE_401, "Unauthorized").c_str());
+			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
 		if (!(authObject->userID == id))
-			return createResponse(Status::CODE_403, himitsu::createError(Status::CODE_403, "Forbidden").c_str());
+			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		const tables::tokens tokens_table{};
-		auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		(*db)(sqlpp::remove_from(tokens_table).where(tokens_table.token == authObject->token->c_str()));
 
 		json response;

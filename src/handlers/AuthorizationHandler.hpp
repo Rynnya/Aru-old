@@ -39,7 +39,7 @@ public:
     {
         if (token)
         {
-            auto db(himitsu::ConnectionPool::getInstance()->getConnection());
+            auto db(aru::ConnectionPool::getInstance()->getConnection());
             const tables::tokens tokens_table{};
             auto query = db->prepare(sqlpp::select(tokens_table.user, tokens_table.privileges, tokens_table.token)
                 .from(tokens_table)

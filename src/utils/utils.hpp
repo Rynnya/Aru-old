@@ -4,7 +4,7 @@
 #include "Globals.hpp"
 #include <random>
 
-namespace himitsu
+namespace aru
 {
 	class utils
 	{
@@ -29,7 +29,7 @@ namespace himitsu
 			return ltrim(rtrim(s, t), t);
 		}
 
-		static unsigned int genRandomInt()
+		static uint32_t genRandomInt()
 		{
 			static std::random_device rd;
 			static std::mt19937 engine(rd());
@@ -37,7 +37,7 @@ namespace himitsu
 			return engine();
 		}
 
-		static std::string genRandomString(const int len) 
+		static std::string genRandomString(const int32_t len)
 		{
 
 			std::string tmp_s;
@@ -48,7 +48,7 @@ namespace himitsu
 
 
 			tmp_s.reserve(len);
-			for (int i = 0; i < len; ++i)
+			for (int32_t i = 0; i < len; ++i)
 				tmp_s.push_back(alphanum[genRandomInt() % (sizeof(alphanum) - 1)]);
 
 			return tmp_s;
@@ -69,10 +69,14 @@ namespace himitsu
 			return res;
 		}
 
-		static bool intToBoolean(int i, bool more = false)
+		static bool intToBoolean(int32_t i, bool more = false)
 		{
-			if (i == 1) return true;
-			if (more && i >= 1) return true;
+			if (i == 1)
+				return true;
+
+			if (more && i >= 1)
+				return true;
+
 			return false;
 		}
 	};

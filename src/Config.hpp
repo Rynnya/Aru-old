@@ -2,7 +2,7 @@
 #define Config_hpp_included
 
 #include "Globals.hpp"
-#include <sstream> 
+#include <sstream>
 #include <fstream>
 
 // Config table, to change default values see Config.cpp
@@ -10,9 +10,9 @@ namespace config
 {
 	namespace database
 	{
-		extern int connection_amount;
+		extern int32_t connection_amount;
 		extern std::string host;
-		extern int port;
+		extern int32_t port;
 		extern std::string username;
 		extern std::string password;
 		extern std::string database;

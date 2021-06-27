@@ -5,7 +5,7 @@
     "port": 3306,
     "username": "root",
     "password": "",
-    "database": "himitsu",
+    "database": "yukime",
     "debug": false
   },
   "redis": {

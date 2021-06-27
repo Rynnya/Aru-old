@@ -5,7 +5,7 @@
 #include <curl/curl.h>
 #include <tuple>
 
-namespace himitsu
+namespace aru
 {
 	class curl
 	{
@@ -40,7 +40,7 @@ namespace himitsu
 
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, internal_callback);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output);
-			curl_easy_setopt(curl, CURLOPT_USERAGENT, "osu!Himitsu");
+			curl_easy_setopt(curl, CURLOPT_USERAGENT, "osu! Aru");
 			curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 			status_code = curl_easy_perform(curl);

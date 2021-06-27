@@ -31,8 +31,8 @@ namespace tables
 		object_struct(count_normal, sqlpp::integer);
 		object_struct(count_slider, sqlpp::integer);
 		object_struct(count_spinner, sqlpp::integer);
-		object_struct(playcount, sqlpp::integer);
-		object_struct(passcount, sqlpp::integer);
+		object_struct(play_count, sqlpp::integer);
+		object_struct(pass_count, sqlpp::integer);
 		object_struct(ranked_status, sqlpp::integer);
 		object_struct(latest_update, sqlpp::bigint);
 		object_struct(ranked_status_freezed, sqlpp::boolean);
@@ -63,8 +63,8 @@ namespace tables
 		beatmap_objects::count_normal,
 		beatmap_objects::count_slider,
 		beatmap_objects::count_spinner,
-		beatmap_objects::playcount,
-		beatmap_objects::passcount,
+		beatmap_objects::play_count,
+		beatmap_objects::pass_count,
 		beatmap_objects::ranked_status,
 		beatmap_objects::latest_update,
 		beatmap_objects::ranked_status_freezed,

@@ -8,9 +8,11 @@ ZERO_CHECK*
 CMakeCache.txt
 CMakeFiles/
 HimitsuAPI*
+Aru.*
 _deps/
 cmake_install.cmake
 lib/
+build/
 
 # User-specific files
 *.rsuser

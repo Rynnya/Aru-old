@@ -1,12 +1,12 @@
-#ifndef database_connection_HimitsuDB_hpp_included
-#define database_connection_HimitsuDB_hpp_included
+#ifndef database_connection_AruDB_hpp_included
+#define database_connection_AruDB_hpp_included
 
 #include "Globals.hpp"
 #include <thread>
 #include <mutex>
 #include <list>
 
-namespace himitsu
+namespace aru
 {
 	class ConnectionPool;
 
@@ -32,13 +32,14 @@ namespace himitsu
 		friend Connection;
 	public:
 		inline static ConnectionPool* getInstance();
-		ConnectionPool(int size);
+		ConnectionPool(int32_t size);
 		~ConnectionPool();
-		inline himitsu::Connection getConnection();
+		inline aru::Connection getConnection();
+		void wakeUpPool();
 	private:
 		static ConnectionPool* inst_;
 		inline void returnConnection(Connection&& connection);
-		int size;
+		int32_t size;
 		std::mutex _mtx;
 		std::condition_variable _wait;
 		std::list<Connection> m_connections;
@@ -68,7 +69,7 @@ namespace himitsu
 	{
 		if (end_of_life) return;
 		if (!this->connection) return;
-		himitsu::ConnectionPool::getInstance()->returnConnection(std::move(*this));
+		aru::ConnectionPool::getInstance()->returnConnection(std::move(*this));
 	}
 
 	sqlpp::mysql::connection& Connection::operator*()
@@ -81,12 +82,12 @@ namespace himitsu
 		return connection;
 	}
 
-	himitsu::ConnectionPool* ConnectionPool::getInstance()
+	aru::ConnectionPool* ConnectionPool::getInstance()
 	{
 		return inst_;
 	}
 
-	himitsu::Connection ConnectionPool::getConnection()
+	aru::Connection ConnectionPool::getConnection()
 	{
 		while (true)
 		{

@@ -3,7 +3,7 @@
 
 #include "Globals.hpp"
 
-namespace himitsu
+namespace aru
 {
 	class math
 	{
