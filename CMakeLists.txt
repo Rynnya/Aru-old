@@ -59,7 +59,6 @@ add_subdirectory(libs/json)
 include_directories(src)
 
 add_executable(${project_name}
-	src/controller/AuthController.cpp
 	src/controller/AuthController.hpp
 	src/controller/BeatmapController.hpp
 	src/controller/BeatmapController.cpp
