@@ -38,7 +38,7 @@ void run() {
 	aru::ConnectionPool pool(config::database::connection_amount);
 
 	/* Initialize timer to wake up connections in pool */
-	std::thread wakeUp([&]()
+	std::thread([&]()
 		{ 
 			while (true)
 			{
@@ -46,8 +46,7 @@ void run() {
 				std::this_thread::sleep_for(std::chrono::milliseconds(27000000));
 				pool.wakeUpPool();
 			}
-		});
-	wakeUp.detach();
+		}).detach();
 
 	/* Get connection handler component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler);

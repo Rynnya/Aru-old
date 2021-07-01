@@ -64,7 +64,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 
 	std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(page, length, 100);
 	auto q = query.offset(limit.first).limit(limit.second);
-	auto result = (*db)(q);
+	auto result = db(q);
 
 	if (result.empty())
 		return this->createResponse(Status::CODE_200, json::array().dump().c_str());
@@ -142,7 +142,7 @@ bool UsersController::getMode(Int32 id, std::string& ans) const
 {
 	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users users_table{};
-	auto result = (*db)(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == (*id)));
+	auto result = db(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == (*id)));
 
 	if (result.empty())
 		return false; // player doesn't exist

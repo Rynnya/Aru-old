@@ -30,8 +30,7 @@ void aru::redis::connect() {
     {
         std::cout << "Cannot connect to Redis. Server is down?" << std::endl;
         std::cout << "Press any button to exit." << std::endl;
-#pragma warning(disable : 6031)
-        getchar();
+        std::ignore = getchar();
         exit(-1);
     }
 }

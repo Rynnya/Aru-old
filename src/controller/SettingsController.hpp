@@ -34,7 +34,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		return getSettings(id);
@@ -45,7 +45,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		return updateBackground(id, userInfo->c_str());
@@ -56,7 +56,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		return updateUserpage(id, userInfo->c_str());
@@ -67,7 +67,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		return updateStatus(id, userInfo->c_str());
@@ -78,7 +78,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		if (config::avatar_folder == "/path/to/folder/{}.png")
@@ -94,7 +94,7 @@ public:
 			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Image cannot be sended without Content-Length header").c_str());
 		}
 
-		if (std::stoi(size->c_str()) > 1024 * 1024)
+		if (std::stoi(size->c_str()) > 1048576 /* 1024 * 1024 */)
 		{
 			fmt::print("Warning: User {} trying to send really huge image (or maybe not image). Size: {}\n", (*id), size->c_str());
 			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Image files cannot be more than 1 MB").c_str());
@@ -110,7 +110,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(fav_modes->c_str(), nullptr, false);
@@ -134,7 +134,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(scoreboard->c_str(), nullptr, false);

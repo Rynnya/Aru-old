@@ -9,7 +9,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSet
 	const tables::users users_table{};
 	const tables::users_preferences users_preferences_table{};
 
-	auto result = (*db)(sqlpp::select(
+	auto result = db(sqlpp::select(
 		users_table.id, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style, users_table.is_relax,
 		users_preferences_table.scoreboard_display_classic, users_preferences_table.scoreboard_display_relax,
 		users_preferences_table.auto_last_classic, users_preferences_table.auto_last_relax,
@@ -61,7 +61,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		auto upd = db->prepare(sqlpp::update(users_table)
 			.set(users_table.background = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["background"].get<std::string>();
-		(*db)(upd);
+		db(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -89,7 +89,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		auto upd = db->prepare(sqlpp::update(users_table)
 			.set(users_table.userpage = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["userpage"].get<std::string>();
-		(*db)(upd);
+		db(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -117,7 +117,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		auto upd = db->prepare(sqlpp::update(users_table)
 			.set(users_table.status = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
 		upd.params.background = jsonRoot["status"].get<std::string>();
-		(*db)(upd);
+		db(upd);
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
@@ -137,7 +137,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users users_table{};
 
-	(*db)(sqlpp::update(users_table).set(
+	db(sqlpp::update(users_table).set(
 		users_table.favourite_mode = fav_mode,
 		users_table.favourite_relax = fav_relax,
 		users_table.play_style = play_style
@@ -163,7 +163,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	const tables::users users_table{};
 
 	using namespace aru;
-	(*db)(sqlpp::update(users_preferences_table).set(
+	db(sqlpp::update(users_preferences_table).set(
 		users_preferences_table.scoreboard_display_classic = utils::intToBoolean(pref & 1, true),
 		users_preferences_table.scoreboard_display_relax   = utils::intToBoolean(pref & 2, true),
 		users_preferences_table.auto_last_classic          = auto_classic,
@@ -174,7 +174,7 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 		users_preferences_table.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
 	).where(users_preferences_table.id == (*id)));
 
-	(*db)(sqlpp::update(users_table).set(users_table.is_relax = utils::intToBoolean(pref & 64, true)).where(users_table.id == (*id)));
+	db(sqlpp::update(users_table).set(users_table.is_relax = utils::intToBoolean(pref & 64, true)).where(users_table.id == (*id)));
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");

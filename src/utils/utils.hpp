@@ -2,13 +2,28 @@
 #define utils_utils_hpp_included
 
 #include "Globals.hpp"
+
 #include <random>
+#include <oatpp/web/server/HttpRequestHandler.hpp>
 
 namespace aru
 {
 	class utils
 	{
 	public:
+		static std::string getIPAddress(std::shared_ptr<oatpp::web::protocol::http::incoming::Request> request)
+		{
+			oatpp::String address = request->getHeader("CF-Connecting-IP");
+			if (address)
+				return address->c_str();
+
+			address = request->getHeader("X-Real-IP");
+			if (address)
+				return address->c_str();
+
+			return "0.0.0.0";
+		}
+
 		// trim from end of string (right)
 		static std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
 		{

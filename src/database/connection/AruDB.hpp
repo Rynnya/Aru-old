@@ -21,6 +21,8 @@ namespace aru
 		inline ~Connection();
 		inline sqlpp::mysql::connection& operator*();
 		inline sqlpp::mysql::connection* operator->();
+		template <typename T>
+		inline auto operator()(const T& t) { return this->connection->run(t); }
 	private:
 		inline Connection(std::shared_ptr<sqlpp::mysql::connection_config>& connection);
 		bool end_of_life = false;
@@ -41,7 +43,6 @@ namespace aru
 		inline void returnConnection(Connection&& connection);
 		int32_t size;
 		std::mutex _mtx;
-		std::condition_variable _wait;
 		std::list<Connection> m_connections;
 	};
 

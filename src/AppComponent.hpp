@@ -4,6 +4,7 @@
 #include "Globals.hpp"
 #include "handlers/ErrorHandler.hpp"
 #include "handlers/HeaderHandler.hpp"
+#include "handlers/RateLimitHandler.hpp"
 
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
@@ -64,12 +65,19 @@ public:
 
 		/* Setup custom error page */
 		connectionHandler->setErrorHandler(JsonErrorHandler::createShared());
-		/* Add CORS request and response interceptors */
-		connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
-		connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>(
-			"*",
-			"GET, POST, OPTIONS, PUT, DELETE, PATCH"
-		));
+
+		/* Add CORS and Rate Limit interceptors if allowed in config */
+		if (config::limits::enable_rate_limit)
+			connectionHandler->addRequestInterceptor(std::make_shared<RateLimit>());
+
+		if (config::disable_cors)
+		{
+			connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>(
+				"*",
+				"GET, POST, OPTIONS, PUT, DELETE, PATCH"
+			));
+		}
+
 		/* Set Content-Type header */
 		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());
 

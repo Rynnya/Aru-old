@@ -30,7 +30,6 @@ public:
 	{
 		setDefaultAuthorizationHandler(std::make_shared<TokenAuthorizationHandler>());
 	}
-	static std::string getIPAddress(std::shared_ptr<IncomingRequest> request);
 
 	ENDPOINT("POST", "/login", loginUser,
 		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject), BODY_STRING(String, userInfo))
@@ -39,7 +38,7 @@ public:
 		{
 			const tables::tokens tokens_table{};
 			auto db(aru::ConnectionPool::getInstance()->getConnection());
-			(*db)(sqlpp::update(tokens_table).set(
+			db(sqlpp::update(tokens_table).set(
 				tokens_table.last_updated = aru::time_convert::getEpochNow()
 			).where(tokens_table.token == authObject->token->c_str()));
 
@@ -49,8 +48,9 @@ public:
 			auto response = createResponse(Status::CODE_200, ok.dump().c_str());
 			response->putHeader("set-cookie",
 				fmt::format(
-					"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
+					"hat={}; Path=/; Domain={}; Max-Age={}; Secure",
 					authObject->token->c_str(),
+					config::frontend_site,
 					14 * 24 * 60 * 60 // 14 days
 				).c_str()
 			);
@@ -70,7 +70,7 @@ public:
 
 			const tables::users users_table{};
 			auto db(aru::ConnectionPool::getInstance()->getConnection());
-			auto result = (*db)(sqlpp::select(
+			auto result = db(sqlpp::select(
 				users_table.id, users_table.password_md5, users_table.salt
 			).from(users_table).where(users_table.safe_username == username).limit(1u));
 
@@ -89,15 +89,15 @@ public:
 				std::string token;
 
 				// Delete every old token of this user
-				(*db)(sqlpp::remove().from(tokens_table).where(tokens_table.user == userID and tokens_table._private == true));
+				db(sqlpp::remove().from(tokens_table).where(tokens_table.user == userID and tokens_table._private == true));
 
 				while (true)
 				{
 					token = hash::createMD5(aru::utils::genRandomString(25));
-					auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
+					auto result = db(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 					if (result.empty())
 					{
-						(*db)(sqlpp::insert_into(tokens_table).set(
+						db(sqlpp::insert_into(tokens_table).set(
 							tokens_table.user = userID,
 							tokens_table.token = token,
 							tokens_table._private = true,
@@ -118,8 +118,9 @@ public:
 				auto wait = createResponse(Status::CODE_200, response.dump().c_str());
 				wait->putHeader("set-cookie",
 					fmt::format(
-						"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
+						"hat={}; Path=/; Domain={}; Max-Age={}; Secure",
 						token,
+						config::frontend_site,
 						14 * 24 * 60 * 60 // 14 days
 					).c_str()
 				);
@@ -162,33 +163,33 @@ public:
 
 			const tables::users users_table{};
 			auto db(aru::ConnectionPool::getInstance()->getConnection());
-			auto result1 = (*db)(sqlpp::select(users_table.id).from(users_table).where(users_table.safe_username == safe_username || users_table.username == username).limit(1u));
+			auto result1 = db(sqlpp::select(users_table.id).from(users_table).where(users_table.safe_username == safe_username || users_table.username == username).limit(1u));
 
 			if (!result1.empty())
 				return createResponse(Status::CODE_403, aru::createError(524, "This nickname already taken!").c_str());
 			result1.pop_front();
 
 			const std::string& email = body["email"];
-			auto result2 = (*db)(sqlpp::select(users_table.email).from(users_table).where(users_table.email == email).limit(1u));
+			auto result2 = db(sqlpp::select(users_table.email).from(users_table).where(users_table.email == email).limit(1u));
 			if (!result2.empty())
 				return createResponse(Status::CODE_403, aru::createError(525, "This email already taken!").c_str());
 			result2.pop_front();
 
 			std::string salt = aru::utils::genRandomString(24);
 			std::string password = hash::createSHA512(hash::createMD5(body["password"]), salt);
-			(*db)(sqlpp::insert_into(users_table).set(
+			db(sqlpp::insert_into(users_table).set(
 				users_table.username = username,
 				users_table.safe_username = safe_username,
 				users_table.country = "XX",
 				users_table.email = email,
 				users_table.password_md5 = password,
 				users_table.salt = salt,
-				users_table.ip = getIPAddress(request),
+				users_table.ip = aru::utils::getIPAddress(request),
 				users_table.registration_date = aru::time_convert::getEpochNow(),
 				users_table.roles = 3
 			));
 
-			auto result = (*db)(sqlpp::select(users_table.id).from(users_table).where(users_table.email == email).limit(1u));
+			auto result = db(sqlpp::select(users_table.id).from(users_table).where(users_table.email == email).limit(1u));
 			int32_t user_id = result.front().id;
 			result.pop_front();
 
@@ -196,9 +197,9 @@ public:
 			const tables::users_stats_relax users_stats_relax_table{};
 			const tables::users_preferences users_preferences_table{};
 
-			(*db)(sqlpp::insert_into(users_stats_table).set(users_stats_table.id = user_id));
-			(*db)(sqlpp::insert_into(users_stats_relax_table).set(users_stats_relax_table.id = user_id));
-			(*db)(sqlpp::insert_into(users_preferences_table).set(users_preferences_table.id = user_id));
+			db(sqlpp::insert_into(users_stats_table).set(users_stats_table.id = user_id));
+			db(sqlpp::insert_into(users_stats_relax_table).set(users_stats_relax_table.id = user_id));
+			db(sqlpp::insert_into(users_preferences_table).set(users_preferences_table.id = user_id));
 
 			const tables::tokens tokens_table{};
 			std::string token;
@@ -206,10 +207,10 @@ public:
 			while (true)
 			{
 				token = hash::createMD5(aru::utils::genRandomString(25));
-				auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
+				auto result = db(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 				if (result.empty())
 				{
-					(*db)(sqlpp::insert_into(tokens_table).set(
+					db(sqlpp::insert_into(tokens_table).set(
 						tokens_table.user = user_id,
 						tokens_table.token = token,
 						tokens_table._private = true,
@@ -229,8 +230,9 @@ public:
 			auto wait = createResponse(Status::CODE_201, response.dump().c_str());
 			wait->putHeader("set-cookie",
 				fmt::format(
-					"hat={}; Path=/; Domain=yukime.ml; Max-Age={}; Secure",
+					"hat={}; Path=/; Domain={}; Max-Age={}; Secure",
 					token,
+					config::frontend_site,
 					14 * 24 * 60 * 60 // 14 days
 				).c_str()
 			);
@@ -244,12 +246,12 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		const tables::tokens tokens_table{};
 		auto db(aru::ConnectionPool::getInstance()->getConnection());
-		auto result = (*db)(sqlpp::select(
+		auto result = db(sqlpp::select(
 			tokens_table.token, tokens_table.privileges
 		).from(tokens_table).where(tokens_table.user == (*id) and tokens_table._private == false));
 
@@ -270,7 +272,7 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		json body = json::parse(userInfo->c_str(), nullptr, false);
@@ -284,7 +286,7 @@ public:
 		if (privileges > 0)
 		{
 			const tables::users users_table{};
-			auto check_privileges = (*db)(sqlpp::select(users_table.roles).from(users_table).where(users_table.id == (*id)).limit(1u));
+			auto check_privileges = db(sqlpp::select(users_table.roles).from(users_table).where(users_table.id == (*id)).limit(1u));
 
 			const auto& row = check_privileges.front();
 			if (privileges > row.roles)
@@ -297,10 +299,10 @@ public:
 		while (true)
 		{
 			token = hash::createMD5(aru::utils::genRandomString(25));
-			auto result = (*db)(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
+			auto result = db(sqlpp::select(tokens_table.id).from(tokens_table).where(tokens_table.token == token).limit(1u));
 			if (result.empty())
 			{
-				(*db)(sqlpp::insert_into(tokens_table).set(
+				db(sqlpp::insert_into(tokens_table).set(
 					tokens_table.user = (*id),
 					tokens_table.token = token,
 					tokens_table._private = false,
@@ -325,12 +327,12 @@ public:
 	{
 		if (!authObject->valid)
 			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
-		if (!(authObject->userID == id))
+		if (authObject->userID != id)
 			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
 
 		const tables::tokens tokens_table{};
 		auto db(aru::ConnectionPool::getInstance()->getConnection());
-		(*db)(sqlpp::remove_from(tokens_table).where(tokens_table.token == authObject->token->c_str()));
+		db(sqlpp::remove_from(tokens_table).where(tokens_table.token == authObject->token->c_str()));
 
 		json response;
 		response["message"] = "Bye!";

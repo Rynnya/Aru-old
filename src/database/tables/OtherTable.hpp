@@ -16,6 +16,15 @@ namespace tables
 		object_detailed_struct("private", _private, sqlpp::boolean);
 	};
 
+	struct ranking_log_objects
+	{
+		object_struct(id, sqlpp::integer);
+		object_struct(map_id, sqlpp::integer);
+		object_struct(modified_by, sqlpp::integer);
+		object_struct(status, sqlpp::tinyint);
+		object_struct(map_type, sqlpp::varchar);
+	};
+
 	database_table(tokens,
 		token_objects::id,
 		token_objects::user,
@@ -23,6 +32,14 @@ namespace tables
 		token_objects::token,
 		token_objects::_private,
 		token_objects::last_updated
+	);
+
+	database_table(ranking_logs,
+		ranking_log_objects::id,
+		ranking_log_objects::map_id,
+		ranking_log_objects::modified_by,
+		ranking_log_objects::status,
+		ranking_log_objects::map_type
 	);
 
 }

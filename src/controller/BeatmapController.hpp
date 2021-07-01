@@ -6,6 +6,7 @@
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
+#include "handlers/AuthorizationHandler.hpp"
 
 #include "database/tables/BeatmapTable.hpp"
 #include "database/tables/ScoresTable.hpp"
@@ -19,6 +20,8 @@ class BeatmapController : public oatpp::web::server::api::ApiController
 {
 private:
 	typedef BeatmapController __ControllerType;
+	std::shared_ptr<TokenAuthorizationHandler> tokenAuth = std::make_shared<TokenAuthorizationHandler>();
+	void logRankChange(aru::Connection db, int32_t id, int64_t bid, int32_t status, std::string type);
 public:
 	BeatmapController(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 		: oatpp::web::server::api::ApiController(objectMapper)
@@ -28,7 +31,7 @@ public:
 	{
 		const tables::beatmaps beatmaps_table{};
 		auto db(aru::ConnectionPool::getInstance()->getConnection());
-		auto result = (*db)(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmapset_id == (*id)));
+		auto result = db(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmapset_id == (*id)));
 
 		if (result.empty())
 			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap set").c_str());
@@ -91,7 +94,7 @@ public:
 	{
 		const tables::beatmaps beatmaps_table{};
 		auto db(aru::ConnectionPool::getInstance()->getConnection());
-		auto result = (*db)(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmap_id == (*id)));
+		auto result = db(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmap_id == (*id)));
 
 		if (result.empty())
 			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap").c_str());
@@ -159,7 +162,7 @@ public:
 			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
 
 		std::string md5 = "";
-		auto res = (*db)(sqlpp::select(b_table.mode, b_table.beatmap_md5)
+		auto res = db(sqlpp::select(b_table.mode, b_table.beatmap_md5)
 			.from(b_table)
 			.where(b_table.beatmap_id == (*id))
 			.limit(1u)
@@ -181,7 +184,7 @@ public:
 			.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode and scores_table.completed)
 			.order_by(scores_table.pp.desc());
 		std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(1, length, 100);
-		auto result = (*db)(query.offset(limit.first).limit(limit.second));
+		auto result = db(query.offset(limit.first).limit(limit.second));
 
 		json response = json::array();
 		for (const auto& row : result)
@@ -204,6 +207,64 @@ public:
 		}
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
+	};
+
+	ENDPOINT("POST", "/beatmap/ranking", ranking,
+		AUTHORIZATION(std::shared_ptr<TokenObject>, authObject, tokenAuth), BODY_STRING(String, userRequest))
+	{
+		if (!authObject->valid)
+			return createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized").c_str());
+
+		json beatmap = json::parse(userRequest->c_str(), nullptr, false);
+		if (!beatmap["id"].is_number() || authObject->userID != beatmap["id"].get<int64_t>())
+			return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden").c_str());
+
+		int32_t userID = authObject->userID;
+		auto db(aru::ConnectionPool::getInstance()->getConnection());
+		const tables::users users_table {};
+		auto result = db(sqlpp::select(users_table.roles).from(users_table).where(users_table.id == userID));
+
+		auto& role = result.front();
+		if (role.roles & (1 << 8))
+		{
+			if (beatmap["bid"].is_number() && beatmap["status"].is_number() && beatmap["type"].is_string())
+			{
+				const tables::beatmaps beatmaps_tables {};
+				int64_t bid = beatmap["bid"].get<int64_t>();
+				int32_t status = beatmap["status"].get<int32_t>();
+				std::string type = beatmap["type"].get<std::string>();
+
+				if (status < -2 || status > 5)
+					return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
+
+				if (type == "b")
+				{
+					auto& exist = db(sqlpp::select(beatmaps_tables.beatmap_md5).from(beatmaps_tables).where(beatmaps_tables.beatmap_id == bid));
+					if (exist.empty())
+						return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Beatmap not found").c_str());
+
+					db(sqlpp::update(beatmaps_tables).set(beatmaps_tables.ranked_status = status).where(beatmaps_tables.beatmap_id == bid));
+					logRankChange(std::move(db), userID, bid, status, type);
+				}
+				else if (type == "s")
+				{
+					auto& exist = db(sqlpp::select(beatmaps_tables.beatmap_md5).from(beatmaps_tables).where(beatmaps_tables.beatmapset_id == bid));
+					if (exist.empty())
+						return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Beatmapset not found").c_str());
+
+					db(sqlpp::update(beatmaps_tables).set(beatmaps_tables.ranked_status = status).where(beatmaps_tables.beatmapset_id == bid));
+					logRankChange(std::move(db), userID, bid, status, type);
+				}
+				else
+					return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
+
+				return createResponse(Status::CODE_200, "");
+			}
+
+			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request").c_str());
+		}
+
+		return createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Insufficient permissions").c_str());
 	};
 
 };

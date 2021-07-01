@@ -22,12 +22,22 @@ namespace config
 		std::string password              = "";
 	}
 
+	namespace limits
+	{
+		bool enable_rate_limit = true;
+		uint32_t limit = 2000;
+		uint32_t timer = 60;
+	}
+
+	std::string frontend_site = "yukime.ml";
+	bool disable_cors = false;
 	std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id)
 
 	// Before adding nickname to this vector, please make it safe
 	// Replace all spaces with underscores and all capital letters with small ones
 	// Example: 'My Super Nick' => 'my_super_nick'
-	std::vector<std::string> forbidden_nicknames = {
+	std::vector<std::string> forbidden_nicknames =
+	{
 		"peppy", "rrtyui", "cookiezi", "azer", "loctav", "banchobot", "happystick", "doomsday", "sharingan33", "andrea", "cptnxn", "reimu-desu",
 		"hvick225", "_index", "my_aim_sucks", "kynan", "rafis", "sayonara-bye", "thelewa", "wubwoofwolf", "millhioref", "tom94", "tillerino", "clsw",
 		"spectator", "exgon", "axarious", "angelsim", "recia", "nara", "emperorpenguin83", "bikko", "xilver", "vettel", "kuu01", "_yu68", "tasuke912", "dusk",
@@ -76,13 +86,24 @@ namespace config
 
 		if (json_config["redis"]["address"].is_string())
 			redis::address = json_config["redis"]["address"];
-		if (json_config["redis"]["port"].is_number_integer())
+		if (json_config["redis"]["port"].is_number_unsigned())
 			redis::port = json_config["redis"]["port"];
-		if (json_config["redis"]["reconnection_attempts"].is_number_integer())
+		if (json_config["redis"]["reconnection_attempts"].is_number_unsigned())
 			redis::reconnection_attempts = json_config["redis"]["reconnection_attempts"];
 		if (json_config["redis"]["password"].is_string())
 			redis::password = json_config["redis"]["password"];
 
+		if (json_config["limits"]["enable_rate_limit"].is_boolean())
+			limits::enable_rate_limit = json_config["limits"]["enable_rate_limit"];
+		if (json_config["limits"]["limit"].is_number_unsigned())
+			limits::limit = json_config["limits"]["limit"];
+		if (json_config["limits"]["timer"].is_number_unsigned())
+			limits::timer = json_config["limits"]["timer"];
+
+		if (json_config["frontend_site"].is_string())
+			frontend_site = json_config["frontend_site"];
+		if (json_config["enable_cors"].is_boolean())
+			disable_cors = json_config["enable_cors"];
 		if (json_config["avatar_folder"].is_string())
 			avatar_folder = json_config["avatar_folder"];
 

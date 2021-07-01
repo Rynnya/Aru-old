@@ -27,6 +27,15 @@ namespace config
 		extern std::string password;
 	}
 
+	namespace limits
+	{
+		extern bool enable_rate_limit;
+		extern uint32_t limit;
+		extern uint32_t timer;
+	}
+
+	extern std::string frontend_site;
+	extern bool disable_cors;
 	extern std::string avatar_folder;
 
 	extern std::vector<std::string> forbidden_nicknames;

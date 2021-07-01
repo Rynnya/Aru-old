@@ -45,7 +45,7 @@ public:
                 .from(tokens_table)
                 .where(tokens_table.token == sqlpp::parameter(tokens_table.token)));
             query.params.token = token->c_str();
-            auto result = (*db)(query);
+            auto result = db(query);
 
             if (result.empty())
                 return std::make_shared<TokenObject>(false, "", 0, 0);

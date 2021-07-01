@@ -45,7 +45,7 @@ public:
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.offset(limit.first).limit(limit.second).unconditionally();
 
-			auto result = (*db)(query);
+			auto result = db(query);
 
 			for (const auto& row : result)
 			{
@@ -121,7 +121,7 @@ public:
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.offset(limit.first).limit(limit.second).unconditionally();
 
-			auto result = (*db)(query);
+			auto result = db(query);
 
 			for (const auto& row : result)
 			{

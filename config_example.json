@@ -14,5 +14,12 @@
     "reconnection_attempts": 3,
     "password": ""
   },
+  "limits": {
+    "enable_rate_limit": true,
+    "limit": 2000,
+    "timer": 60
+  },
+  "frontend_site": "yukime.ml",
+  "disable_cors": false,
   "avatar_folder": "/path/to/folder/{}.png"
 }

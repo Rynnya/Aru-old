@@ -50,7 +50,7 @@ public:
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
-			auto result = (*db)(query);
+			auto result = db(query);
 			if (result.empty())
 				return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found").c_str());
 
@@ -102,7 +102,7 @@ public:
 				.from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id))
 				.where(users_table.is_public == true and users_table.id == (*id)).limit(1u);
 
-			auto result = (*db)(query);
+			auto result = db(query);
 			if (result.empty())
 				return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found").c_str());
 
@@ -175,7 +175,7 @@ public:
 		if (relax == 1)
 		{
 			const tables::users_stats_relax users_stats_table{};
-			auto result = (*db)(sqlpp::select( // id inside users_stats_relax
+			auto result = db(sqlpp::select( // id inside users_stats_relax
 				users_table.username, users_table.registration_date, users_table.latest_activity,
 				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style,
 				sqlpp::all_of(users_stats_table)
@@ -266,7 +266,7 @@ public:
 		else
 		{
 			const tables::users_stats users_stats_table{};
-			auto result = (*db)(sqlpp::select( // id inside users_stats
+			auto result = db(sqlpp::select( // id inside users_stats
 				users_table.username, users_table.registration_date, users_table.latest_activity,
 				users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style,
 				sqlpp::all_of(users_stats_table)
@@ -377,7 +377,7 @@ public:
 
 		const tables::user_badges badges_table{};
 		response["badges"] = json::array();
-		for (const auto& badge : (*db)(sqlpp::select(badges_table.badge).from(badges_table).where(badges_table.id == (*id))))
+		for (const auto& badge : db(sqlpp::select(badges_table.badge).from(badges_table).where(badges_table.id == (*id))))
 			response["badges"].push_back(badge.badge.value());
 
 		return createResponse(Status::CODE_200, response.dump().c_str());
@@ -388,7 +388,7 @@ public:
 		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		const tables::users users_table{};
 
-		auto result = (*db)(sqlpp::select(users_table.background, users_table.userpage).from(users_table).where(users_table.id == (*id)).limit(1u));
+		auto result = db(sqlpp::select(users_table.background, users_table.userpage).from(users_table).where(users_table.id == (*id)).limit(1u));
 		if (result.empty())
 			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found").c_str());
 

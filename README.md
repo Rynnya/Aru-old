@@ -1,8 +1,7 @@
-# Himitsu API (osu!)
+# Aru (osu!) - C++ API
 
-API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Himitsu [site](https://github.com/makatymba2001/-WIP-himitsu-web)
-
-Still WIP, but every path verified.
+API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Yukime [site](https://github.com/makatymba2001/-WIP-himitsu-web)<br>
+Fully done, can be used in production.<br>
 
 # Requirements
 - C++ compiler

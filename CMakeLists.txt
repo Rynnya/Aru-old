@@ -62,6 +62,7 @@ add_executable(${project_name}
 	src/controller/AuthController.cpp
 	src/controller/AuthController.hpp
 	src/controller/BeatmapController.hpp
+	src/controller/BeatmapController.cpp
 	src/controller/MainController.hpp
 	src/controller/SettingsController.cpp
 	src/controller/SettingsController.hpp
@@ -80,6 +81,7 @@ add_executable(${project_name}
 	src/handlers/AuthorizationHandler.hpp
 	src/handlers/ErrorHandler.hpp
 	src/handlers/HeaderHandler.hpp
+	src/handlers/RateLimitHandler.hpp
 	src/utils/curl.hpp
 	src/utils/hash.hpp
 	src/utils/math.hpp
