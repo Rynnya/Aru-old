@@ -66,17 +66,14 @@ public:
 		/* Setup custom error page */
 		connectionHandler->setErrorHandler(JsonErrorHandler::createShared());
 
-		/* Add CORS and Rate Limit interceptors if allowed in config */
+		/* Add Rate Limit interceptor if allowed in config */
 		if (config::limits::enable_rate_limit)
 			connectionHandler->addRequestInterceptor(std::make_shared<RateLimit>());
 
-		if (config::disable_cors)
-		{
-			connectionHandler->addResponseInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowCorsGlobal>(
-				"*",
-				"GET, POST, OPTIONS, PUT, DELETE, PATCH"
-			));
-		}
+		/* Add CORS interceptor to allow use API everywhere */
+		using namespace oatpp::web::server::interceptor;
+		connectionHandler->addRequestInterceptor(std::make_shared<AllowOptionsGlobal>());
+		connectionHandler->addResponseInterceptor(std::make_shared<AllowCorsGlobal>("*", "GET, POST, OPTIONS, PUT, DELETE, PATCH"));
 
 		/* Set Content-Type header */
 		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());

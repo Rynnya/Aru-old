@@ -35,7 +35,6 @@ namespace config
 	}
 
 	extern std::string frontend_site;
-	extern bool disable_cors;
 	extern std::string avatar_folder;
 
 	extern std::vector<std::string> forbidden_nicknames;

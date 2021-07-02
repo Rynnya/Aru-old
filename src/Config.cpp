@@ -30,7 +30,6 @@ namespace config
 	}
 
 	std::string frontend_site = "yukime.ml";
-	bool disable_cors = false;
 	std::string avatar_folder = "/path/to/folder/{}.png"; // {} -> fmt::format(id)
 
 	// Before adding nickname to this vector, please make it safe
@@ -102,8 +101,6 @@ namespace config
 
 		if (json_config["frontend_site"].is_string())
 			frontend_site = json_config["frontend_site"];
-		if (json_config["enable_cors"].is_boolean())
-			disable_cors = json_config["enable_cors"];
 		if (json_config["avatar_folder"].is_string())
 			avatar_folder = json_config["avatar_folder"];
 

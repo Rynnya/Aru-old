@@ -20,6 +20,5 @@
     "timer": 60
   },
   "frontend_site": "yukime.ml",
-  "disable_cors": false,
   "avatar_folder": "/path/to/folder/{}.png"
 }
