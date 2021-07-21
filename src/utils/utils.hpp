@@ -71,10 +71,8 @@ namespace aru
 
 		static void str_tolower(std::string& str)
 		{
-			for (size_t i = 0; i < str.size(); i++)
-			{
-				str[i] = std::tolower(str[i]);
-			}
+			for (char& c : str)
+				c = std::tolower(c);
 		}
 
 		static std::string str_tolower(const std::string& str)
@@ -93,6 +91,11 @@ namespace aru
 				return true;
 
 			return false;
+		}
+
+		inline static void sanitize(int32_t& value, int32_t min, int32_t max, int32_t _default = 0)
+		{
+			value = value > max ? _default : value < min ? _default : value;
 		}
 	};
 }

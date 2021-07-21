@@ -6,7 +6,7 @@
 #include "handlers/HeaderHandler.hpp"
 #include "handlers/RateLimitHandler.hpp"
 
-#include "oatpp/web/server/HttpConnectionHandler.hpp"
+#include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 #include "oatpp/web/server/interceptor/AllowCorsGlobal.hpp"
@@ -32,23 +32,26 @@ public:
 	}());
 
 	// Redis
-	OATPP_CREATE_COMPONENT(std::shared_ptr<aru::redis>, m_redis)([]
+	OATPP_CREATE_COMPONENT(std::shared_ptr<cpp_redis::client>, m_redis)([]
 	{
 		cpp_redis::active_logger = std::unique_ptr<cpp_redis::logger>(new cpp_redis::logger());
-		aru::redis client(
-			config::redis::address,
-			config::redis::port,
-			config::redis::reconnection_attempts,
-			config::redis::password
-		);
-		client.connect();
-		return std::make_shared<aru::redis>(client);
+		std::shared_ptr<cpp_redis::client> client = std::make_shared<cpp_redis::client>();
+		client->connect(config::redis::address, config::redis::port);
+		if (!config::redis::password.empty())
+			client->auth(config::redis::password);
+
+		return client;
+	}());
+
+	// Create Async Executor
+	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor)([] {
+		return std::make_shared<oatpp::async::Executor>(9, 2, 1);
 	}());
 
 	// ConnectionProvider component which listens on the port
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, serverConnectionProvider)([]
 	{
-		return oatpp::network::tcp::server::ConnectionProvider::createShared({ "0.0.0.0", 8000 });
+		return oatpp::network::tcp::server::ConnectionProvider::createShared({ "0.0.0.0", 8000, oatpp::network::Address::IP_4 });
 	}());
 
 	// Router component
@@ -61,7 +64,8 @@ public:
 	OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([]
 	{
 		OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
-		auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
+		OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor);
+		auto connectionHandler = oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executor);
 
 		/* Setup custom error page */
 		connectionHandler->setErrorHandler(JsonErrorHandler::createShared());

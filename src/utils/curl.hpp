@@ -21,7 +21,7 @@ namespace aru
 			}
 			catch (const std::bad_alloc& ex)
 			{
-				std::cout << "Unable to allocate new memory for http response: " << ex.what() << std::endl;
+				std::cout << "CURL: Unable to allocate new memory for http response: " << ex.what() << std::endl;
 				return 0;
 			}
 

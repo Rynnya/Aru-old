@@ -27,7 +27,7 @@ public:
         {
             using namespace oatpp::web::protocol::http;
             return outgoing::ResponseFactory::createResponse(Status::CODE_429, 
-                aru::createError(Status::CODE_429, fmt::format("Rate limit occurred ({} requests/{} seconds)", config::limits::limit, config::limits::timer)).c_str());
+                aru::createError(Status::CODE_429, fmt::format("Rate limit occurred ({} requests/{} seconds)", config::limits::limit, config::limits::timer)));
         }
         std::unique_lock mutex(_mtx);
         _limiter[ip]++;

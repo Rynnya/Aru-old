@@ -18,7 +18,7 @@ public:
         handleError(const oatpp::web::protocol::http::Status& status, const oatpp::String& message, const Headers& headers) override
     {
         auto response = oatpp::web::protocol::http::outgoing::Response::createShared
-        (status, oatpp::web::protocol::http::outgoing::BufferBody::createShared(aru::createError(status, message->c_str()).c_str()));
+        (status, oatpp::web::protocol::http::outgoing::BufferBody::createShared(aru::createError(status, message->c_str())));
 
         response->putHeader(oatpp::web::protocol::http::Header::SERVER, oatpp::web::protocol::http::Header::Value::SERVER);
         response->putHeader(oatpp::web::protocol::http::Header::CONNECTION, oatpp::web::protocol::http::Header::Value::CONNECTION_CLOSE);

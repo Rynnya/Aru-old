@@ -18,7 +18,6 @@ namespace config
 	{
 		std::string address               = "127.0.0.1";
 		size_t      port                  = 6379;
-		uint32_t    reconnection_attempts = 3;
 		std::string password              = "";
 	}
 
@@ -87,8 +86,6 @@ namespace config
 			redis::address = json_config["redis"]["address"];
 		if (json_config["redis"]["port"].is_number_unsigned())
 			redis::port = json_config["redis"]["port"];
-		if (json_config["redis"]["reconnection_attempts"].is_number_unsigned())
-			redis::reconnection_attempts = json_config["redis"]["reconnection_attempts"];
 		if (json_config["redis"]["password"].is_string())
 			redis::password = json_config["redis"]["password"];
 

@@ -23,6 +23,16 @@ namespace aru
 			// True if NAN
 			return value != value;
 		}
+
+		// https://stackoverflow.com/a/16826908
+		static int32_t fast_atoi(const char* str, size_t size)
+		{
+			int32_t val = 0;
+			for (; size != 0; size--)
+				val = val * 10 + (*str++ - '0');
+
+			return std::max(0, val);
+		}
 	};
 }
 

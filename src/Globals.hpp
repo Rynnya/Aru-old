@@ -10,13 +10,13 @@
 #include "sqlpp11/sqlpp11.h"
 #include "sqlpp11/mysql/mysql.h"
 #include "database/SQL.hpp"
-#include "database/connection/AruDB.hpp"
-#include "database/connection/Redis.hpp"
+#include "cpp_redis/core/client.hpp"
 
 using json = nlohmann::ordered_json;
 
 #include "Config.hpp"
 
+#include "utils/convert.hpp"
 #include "utils/curl.hpp"
 #include "utils/math.hpp"
 #include "utils/osu.hpp"
@@ -29,20 +29,18 @@ namespace mysql = sqlpp::mysql;
 
 namespace aru
 {
-	inline std::string createError(const oatpp::web::protocol::http::Status& status, std::string message)
-	{
-		json response;
-		response["error"]["code"] = status.code;
-		response["error"]["message"] = message;
-		return response.dump();
-	}
-
-	inline std::string createError(int status, std::string message)
+	inline oatpp::String createError(int32_t status, std::string message)
 	{
 		json response;
 		response["error"]["code"] = status;
 		response["error"]["message"] = message;
-		return response.dump();
+		std::string dumped = response.dump();
+		return oatpp::String(dumped.c_str(), dumped.size(), true);
+	}
+
+	inline oatpp::String createError(const oatpp::web::protocol::http::Status& status, std::string message)
+	{
+		return createError(status.code, message);
 	}
 }
 

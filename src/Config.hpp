@@ -23,7 +23,6 @@ namespace config
 	{
 		extern std::string address;
 		extern size_t port;
-		extern uint32_t reconnection_attempts;
 		extern std::string password;
 	}
 

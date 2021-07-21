@@ -2,56 +2,49 @@
 #define handlers_AuthorizationHandler_hpp_included
 
 #include "Globals.hpp"
-#include "oatpp/web/server/handler/AuthorizationHandler.hpp"
+#include <oatpp/core/macro/component.hpp>
 
-class TokenObject : public oatpp::web::server::handler::AuthorizationObject 
+#include "../database/tables/OtherTable.hpp"
+
+class TokenObject
 {
 public:
 
-    TokenObject(
-        const oatpp::Boolean& _valid,
-        const oatpp::String& t,
-        const oatpp::Int32& user,
-        const oatpp::Int64& priv
-    )
-        : valid(_valid)
-        , token(t)
+    TokenObject(const bool& valid, const std::string& token, const int32_t& user, const int64_t& priv)
+        : valid(valid)
+        , token(token)
         , userID(user)
         , privileges(priv)
     {}
 
-    oatpp::Boolean valid;
-    oatpp::String token;
-    oatpp::Int32 userID;
-    oatpp::Int64 privileges;
+    bool valid;
+    std::string token;
+    int32_t userID;
+    int64_t privileges;
 
 };
 
-class TokenAuthorizationHandler : public oatpp::web::server::handler::AuthorizationHandler
+class TokenAuthorizationHandler
 {
 public:
 
-    TokenAuthorizationHandler()
-        : AuthorizationHandler("Authorization", "tokenAuth")
-    {}
+    TokenAuthorizationHandler() {}
 
-    std::shared_ptr<AuthorizationObject> handleAuthorization(const oatpp::String& token) override
+    std::shared_ptr<TokenObject> handleAuthorization(const aru::Connection& db, const oatpp::String& token)
     {
         if (token)
         {
-            auto db(aru::ConnectionPool::getInstance()->getConnection());
             const tables::tokens tokens_table{};
-            auto query = db->prepare(sqlpp::select(tokens_table.user, tokens_table.privileges, tokens_table.token)
+            auto result = db(sqlpp::select(tokens_table.user, tokens_table.privileges, tokens_table.token)
                 .from(tokens_table)
-                .where(tokens_table.token == sqlpp::parameter(tokens_table.token)));
-            query.params.token = token->c_str();
-            auto result = db(query);
+                .where(tokens_table.token == token->c_str()
+                    and tokens_table.last_updated + 1209600 /* 2 weeks */ > aru::time_convert::getEpochNow()));
 
             if (result.empty())
                 return std::make_shared<TokenObject>(false, "", 0, 0);
 
             const auto& res = result.front();
-            return std::make_shared<TokenObject>(true, res.token.value().c_str(), res.user.value(), res.privileges.value());
+            return std::make_shared<TokenObject>(true, res.token, res.user, res.privileges);
         }
 
         return std::make_shared<TokenObject>(false, "", 0, 0);

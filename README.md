@@ -1,6 +1,6 @@
 # Aru (osu!) - C++ API
 
-API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Yukime [site](https://github.com/makatymba2001/-WIP-himitsu-web)<br>
+API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Yukime [site](https://github.com/makatymba2001/WIP-Yukime-web)<br>
 Fully done, can be used in production.<br>
 
 # Requirements
@@ -22,12 +22,14 @@ $ git submodule init && git submodule update --recursive
 ```
 Create CMake files.
 ```
-$ cmake . 
+$ mkdir build
+$ cd build
+$ cmake ..
 ```
 
 Also, if you use MariaDB, you need use this:
 ```
-$ cmake . -DUSE_MARIADB=1
+$ cmake .. -DUSE_MARIADB=1
 ```
 
 # Installation on Windows
@@ -47,12 +49,14 @@ If you use MariaDB, set this. Second requires if you use MariaDB.
 
 Create CMake files.
 ```
-cmake .
+mkdir build
+cd build
+cmake ..
 ```
 
 # Configuration and compilation
 Open Config.h file and set variables as you needed.</br>
 When everything is written, compile the program.
 ```
-cmake --build . --config Release
+cmake --build .. --config Release
 ```

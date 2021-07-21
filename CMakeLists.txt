@@ -67,31 +67,31 @@ add_executable(${project_name}
 	src/controller/SettingsController.hpp
 	src/controller/UsersController.cpp
 	src/controller/UsersController.hpp
-	src/database/connection/AruDB.cpp
-	src/database/connection/AruDB.hpp
-	src/database/connection/Redis.cpp
-	src/database/connection/Redis.hpp
 	src/database/tables/CoreTable.hpp
 	src/database/tables/BeatmapTable.hpp
 	src/database/tables/OtherTable.hpp
 	src/database/tables/ScoresTable.hpp
 	src/database/tables/UsersTable.hpp
+	src/database/SQL.cpp
 	src/database/SQL.hpp
 	src/handlers/AuthorizationHandler.hpp
 	src/handlers/ErrorHandler.hpp
 	src/handlers/HeaderHandler.hpp
+	src/handlers/NativeHandler.hpp
+	src/handlers/PoolHandler.hpp
 	src/handlers/RateLimitHandler.hpp
+	src/utils/convert.hpp
 	src/utils/curl.hpp
 	src/utils/hash.hpp
 	src/utils/math.hpp
 	src/utils/osu.hpp
 	src/utils/time.hpp
 	src/utils/utils.hpp
+	src/App.cpp
 	src/AppComponent.hpp
 	src/Config.cpp
 	src/Config.hpp
 	src/Globals.hpp
-	src/App.cpp
 )
 
 target_include_directories(${project_name} PRIVATE

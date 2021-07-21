@@ -3,9 +3,8 @@
 #include "database/tables/OtherTable.hpp"
 #include "database/tables/UsersTable.hpp"
 
-std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSettings(Int32 id) const
+std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSettings(const aru::Connection& db, int32_t id) const
 {
-	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users users_table{};
 	const tables::users_preferences users_preferences_table{};
 
@@ -15,10 +14,10 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSet
 		users_preferences_table.auto_last_classic, users_preferences_table.auto_last_relax,
 		users_preferences_table.score_overwrite_std, users_preferences_table.score_overwrite_taiko,
 		users_preferences_table.score_overwrite_ctb, users_preferences_table.score_overwrite_mania
-	).from(users_table.join(users_preferences_table).on(users_table.id == users_preferences_table.id)).where(users_table.id == (*id)).limit(1u));
+	).from(users_table.join(users_preferences_table).on(users_table.id == users_preferences_table.id)).where(users_table.id == id).limit(1u));
 
 	if (result.empty())
-		return createResponse(Status::CODE_500, aru::createError(Status::CODE_500, "How this happend? We forgot to remove token?").c_str());
+		return createResponse(Status::CODE_500, aru::createError(Status::CODE_500, "How this happend? We forgot to remove token?"));
 
 	const auto& row = result.front();
 	json response;
@@ -44,7 +43,8 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::getSet
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateBackground(
-	Int32 id,
+	const aru::Connection& db,
+	int32_t id,
 	std::string request
 ) const
 {
@@ -53,26 +53,22 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["background"].is_null())
-			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 
-		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		const tables::users users_table{};
-
-		auto upd = db->prepare(sqlpp::update(users_table)
-			.set(users_table.background = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
-		upd.params.background = jsonRoot["background"].get<std::string>();
-		db(upd);
+		db(sqlpp::update(users_table).set(users_table.background = u8"" + jsonRoot["background"].get<std::string>()).where(users_table.id == userID));
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
 		return response;
 	}
 
-	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateUserpage(
-	Int32 id,
+	const aru::Connection& db,
+	int32_t id,
 	std::string request
 ) const
 {
@@ -81,26 +77,22 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["userpage"].is_null())
-			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 
-		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		const tables::users users_table{};
-
-		auto upd = db->prepare(sqlpp::update(users_table)
-			.set(users_table.userpage = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
-		upd.params.background = jsonRoot["userpage"].get<std::string>();
-		db(upd);
+		db(sqlpp::update(users_table).set(users_table.userpage = u8"" + jsonRoot["userpage"].get<std::string>()).where(users_table.id == userID));
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
 		return response;
 	}
 
-	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateStatus(
-	Int32 id,
+	const aru::Connection& db,
+	int32_t id,
 	std::string request
 ) const
 {
@@ -109,39 +101,67 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 	if (!jsonRoot.is_discarded())
 	{
 		if (jsonRoot["status"].is_null())
-			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+			return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 
-		auto db(aru::ConnectionPool::getInstance()->getConnection());
 		const tables::users users_table{};
-
-		auto upd = db->prepare(sqlpp::update(users_table)
-			.set(users_table.status = sqlpp::parameter(users_table.background)).where(users_table.id == userID));
-		upd.params.background = jsonRoot["status"].get<std::string>();
-		db(upd);
+		db(sqlpp::update(users_table).set(users_table.status = u8"" + jsonRoot["status"].get<std::string>()).where(users_table.id == userID));
 
 		auto response = createResponse(Status::CODE_200, "OK");
 		response->putHeader("Content-Type", "text/plain");
 		return response;
 	}
 
-	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided").c_str());
+	return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "No data provided"));
 }
 
-std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updatePref(Int32 id, int32_t fav_mode, bool fav_relax, int32_t play_style) const
+std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updatePref(
+	const aru::Connection& db,
+	int32_t id,
+	json body
+) const
 {
-	if (fav_mode == 3 && fav_relax)
-		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
-	if (fav_mode > 3 || fav_mode < 0) fav_mode = 0;
-	if (play_style > 15 || play_style < 0) play_style = 0;
+	int32_t favourite_mode = -1;
+	bool favourite_relax = false;
 
-	auto db(aru::ConnectionPool::getInstance()->getConnection());
-	const tables::users users_table{};
+    const tables::users users_table{};
 
-	db(sqlpp::update(users_table).set(
-		users_table.favourite_mode = fav_mode,
-		users_table.favourite_relax = fav_relax,
-		users_table.play_style = play_style
-	).where(users_table.id == (*id)));
+	auto data = db(sqlpp::select(users_table.favourite_mode, users_table.favourite_relax).from(users_table).where(users_table.id == id).limit(1u));
+	if (data.empty())
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found"));
+
+	auto& check_data = data.front();
+
+	auto query = sqlpp::dynamic_update(*db, users_table).dynamic_set().where(users_table.id == id);
+	if (body["favourite_mode"].is_number_integer())
+	{
+		favourite_mode = body["favourite_mode"];
+		aru::utils::sanitize(favourite_mode, 0, 3);
+		if (check_data.favourite_relax && favourite_mode == 3)
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode"));
+
+		query.assignments.add(users_table.favourite_mode = favourite_mode);
+	}
+
+	if (body["favourite_relax"].is_number_integer())
+	{
+		favourite_relax = aru::utils::intToBoolean(body["favourite_relax"]);
+		if (favourite_relax && check_data.favourite_mode.value() == 3)
+			return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode"));
+
+		query.assignments.add(users_table.favourite_relax = favourite_relax);
+	}
+
+	if (favourite_relax == 1 && favourite_mode == 3)
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode"));
+
+	if (body["play_style"].is_number_integer())
+	{
+		int32_t play_style = body["play_style"];
+		aru::utils::sanitize(play_style, 0, 15);
+		query.assignments.add(users_table.play_style = play_style);
+	}
+
+	db(query);
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
@@ -149,32 +169,45 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 }
 
 std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::updateScoreboard(
-	Int32 id,
-	int32_t pref,
-	int32_t auto_classic,
-	int32_t auto_relax
+	const aru::Connection& db,
+	int32_t id,
+	json body
 ) const
 {
-	if (auto_classic > 2 || auto_classic < 0) auto_classic = 0;
-	if (auto_relax > 2 || auto_relax < 0) auto_relax = 0;
+	int32_t preferences = -1;
 
-	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users_preferences users_preferences_table{};
 	const tables::users users_table{};
 
 	using namespace aru;
-	db(sqlpp::update(users_preferences_table).set(
-		users_preferences_table.scoreboard_display_classic = utils::intToBoolean(pref & 1, true),
-		users_preferences_table.scoreboard_display_relax   = utils::intToBoolean(pref & 2, true),
-		users_preferences_table.auto_last_classic          = auto_classic,
-		users_preferences_table.auto_last_relax            = auto_relax,
-		users_preferences_table.score_overwrite_std        = utils::intToBoolean(pref & 4, true),
-		users_preferences_table.score_overwrite_taiko      = utils::intToBoolean(pref & 8, true),
-		users_preferences_table.score_overwrite_ctb        = utils::intToBoolean(pref & 16, true),
-		users_preferences_table.score_overwrite_mania      = utils::intToBoolean(pref & 32, true)
-	).where(users_preferences_table.id == (*id)));
+	auto query = sqlpp::dynamic_update(*db, users_preferences_table).dynamic_set().where(users_preferences_table.id == id);
+	if (body["preferences"].is_number_integer())
+	{
+		preferences = body["preferences"];
+		query.assignments.add(users_preferences_table.scoreboard_display_classic = utils::intToBoolean(preferences & 1, true));
+		query.assignments.add(users_preferences_table.scoreboard_display_relax   = utils::intToBoolean(preferences & 2, true));
+		query.assignments.add(users_preferences_table.score_overwrite_std        = utils::intToBoolean(preferences & 4, true));
+		query.assignments.add(users_preferences_table.score_overwrite_taiko      = utils::intToBoolean(preferences & 8, true));
+		query.assignments.add(users_preferences_table.score_overwrite_ctb        = utils::intToBoolean(preferences & 16, true));
+		query.assignments.add(users_preferences_table.score_overwrite_mania      = utils::intToBoolean(preferences & 32, true));
+		db(sqlpp::update(users_table).set(users_table.is_relax = utils::intToBoolean(preferences & 64, true)).where(users_table.id == id));
+	}
 
-	db(sqlpp::update(users_table).set(users_table.is_relax = utils::intToBoolean(pref & 64, true)).where(users_table.id == (*id)));
+	if (body["auto_classic"].is_number_integer())
+	{
+		int32_t auto_classic = body["auto_classic"];
+		utils::sanitize(auto_classic, 0, 2);
+		query.assignments.add(users_preferences_table.auto_last_classic = auto_classic);
+	}
+
+	if (body["auto_relax"].is_number_integer())
+	{
+		int32_t auto_relax = body["auto_relax"];
+		utils::sanitize(auto_relax, 0, 2);
+		query.assignments.add(users_preferences_table.auto_last_relax = auto_relax);
+	}
+
+	db(query);
 
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");

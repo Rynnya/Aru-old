@@ -10,12 +10,12 @@ namespace aru
 	class time_convert
 	{
 	public:
-		static long long getEpochNow()
+		static int64_t getEpochNow()
 		{
 			return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		}
 
-		static long long getTimestamp(std::string date)
+		static int64_t getTimestamp(std::string date)
 		{
 			std::istringstream in(date);
 			date::sys_seconds tp;
@@ -23,7 +23,7 @@ namespace aru
 			return tp.time_since_epoch().count(); // TODO: Make UTC instead of Local time (Currently not critical)
 		}
 
-		static std::string getDate(long long timestamp)
+		static std::string getDate(int64_t timestamp)
 		{
 			date::sys_seconds time{ std::chrono::seconds(timestamp) };
 			return date::format("%Y-%m-%dT%H:%M:%SZ", time);

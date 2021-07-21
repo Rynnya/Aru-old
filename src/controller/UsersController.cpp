@@ -3,18 +3,24 @@
 #include "database/tables/BeatmapTable.hpp"
 #include "database/tables/ScoresTable.hpp"
 
-std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(Int32 id, Int32 user_mode, Int32 relax, Int32 page, Int32 length, scores_type type) const
+std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
+	const aru::Connection& db,
+	int32_t id,
+	int32_t user_mode,
+	int32_t relax,
+	int32_t page,
+	int32_t length,
+	scores_type type
+) const
 {
-	std::string mode;
-	if (user_mode == -1 && !getMode(id, mode))
-		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found").c_str());
+	aru::utils::sanitize(user_mode, 0, 3, getMode(db, id));
+	if (user_mode == -1)
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found"));
 
-	length = std::clamp(*length, 1, 100);
+	length = std::clamp(length, 1, 100);
 
-	if (relax == 1 && mode == "mania")
-		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode").c_str());
-
-	auto db(aru::ConnectionPool::getInstance()->getConnection());
+	if (relax == 1 && user_mode == 3)
+		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode"));
 
 	json response = json::array();
 
@@ -41,14 +47,14 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		case scores_type::Best:
 		{
 			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
-			query.where.add(without_table_check(scores_table.pp > 0 and users_table.id == (*id) and scores_table.play_mode == (*user_mode) and users_table.is_public == true and scores_table.is_relax == isRelax));
+			query.where.add(without_table_check(scores_table.pp > 0 and users_table.id == id and scores_table.play_mode == user_mode and users_table.is_public == true and scores_table.is_relax == isRelax));
 			query.order_by.add(scores_table.pp.desc());
 			break;
 		}
 		case scores_type::Recent:
 		{
 			query.from.add(dynamic_join(users_table).on(scores_table.user_id == users_table.id));
-			query.where.add(without_table_check(scores_table.play_mode == (*user_mode) and users_table.id == (*id) and users_table.is_public == true and scores_table.is_relax == isRelax));
+			query.where.add(without_table_check(scores_table.play_mode == user_mode and users_table.id == id and users_table.is_public == true and scores_table.is_relax == isRelax));
 			query.order_by.add(scores_table.id.desc());
 			break;
 		}
@@ -56,7 +62,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 		{
 			const tables::scores_first scores_first_table{};
 			query.from.add(dynamic_join(scores_first_table).on(scores_first_table.beatmap_md5 == scores_table.beatmap_md5));
-			query.where.add(without_table_check(scores_first_table.user_id == (*id) and scores_first_table.play_mode == (*user_mode) and scores_first_table.is_relax == isRelax));
+			query.where.add(without_table_check(scores_first_table.user_id == id and scores_first_table.play_mode == user_mode and scores_first_table.is_relax == isRelax));
 			query.order_by.add(scores_table.time.desc());
 			break;
 		}
@@ -138,16 +144,14 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	return createResponse(Status::CODE_200, response.dump().c_str());
 }
 
-bool UsersController::getMode(Int32 id, std::string& ans) const
+int32_t UsersController::getMode(const aru::Connection& db, int32_t id) const
 {
-	auto db(aru::ConnectionPool::getInstance()->getConnection());
 	const tables::users users_table{};
-	auto result = db(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == (*id)));
+	auto result = db(sqlpp::select(users_table.favourite_mode).from(users_table).where(users_table.id == id));
 
 	if (result.empty())
-		return false; // player doesn't exist
+		return -1; // player doesn't exist
 
 	const auto& res = result.front();
-	ans = aru::osu::modeToString(res.favourite_mode);
-	return true;
+	return res.favourite_mode;
 }

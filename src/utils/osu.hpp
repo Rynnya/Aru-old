@@ -6,7 +6,7 @@
 
 namespace aru
 {
-	static const long long sc[100] = {
+	static const uint64_t sc[100] = {
 		0,
 		30000,
 		130000,
@@ -119,10 +119,10 @@ namespace aru
 	class osu_level
 	{
 	public:
-		static int32_t GetLevel(long long score)
+		static int32_t GetLevel(uint64_t score)
 		{
-			if (score <= 0) return 1;
-			if (score >= sc[99]) return 100 + int32_t((score - sc[99]) / 100000000000);
+			if (score >= sc[99]) 
+				return 100 + static_cast<int32_t>((score - sc[99]) / 100000000000);
 			for (int32_t i = 0; i != 100; i++)
 			{
 				if (sc[i] > score)
@@ -131,14 +131,16 @@ namespace aru
 			return 1;
 		}
 
-		static long long GetRequiredScoreForLevel(int32_t level)
+		static uint64_t GetRequiredScoreForLevel(int32_t level)
 		{
-			if (level <= 0) return 0;
-			if (level <= 100) return sc[level - 1];
-			return sc[99] + 100000000000 * (level - 100);
+			if (level <= 0) 
+				return 0;
+			if (level <= 100) 
+				return sc[level - 1];
+			return sc[99] + 100000000000 * (static_cast<int64_t>(level) - 100);
 		}
 
-		static double GetLevelPrecise(long long score)
+		static double GetLevelPrecise(uint64_t score)
 		{
 			int32_t baseLevel = GetLevel(score);
 			int64_t baseLevelScore = GetRequiredScoreForLevel(baseLevel);
