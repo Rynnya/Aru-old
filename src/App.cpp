@@ -87,10 +87,13 @@ void run()
 
 	/* Initialize database pool */
 	aru::ConnectionPool pool(config::database::connection_amount);
-	std::thread([&] 
+	std::thread([&]
 	{
-		std::this_thread::sleep_for(std::chrono::hours(6));
-		pool.wakeUpPool();
+		while (true)
+		{
+			std::this_thread::sleep_for(std::chrono::hours(6));
+			pool.wakeUpPool();
+		}
 	}).detach();
 
 	/* Priny info about server port */
