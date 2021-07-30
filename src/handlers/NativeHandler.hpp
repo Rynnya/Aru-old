@@ -3,6 +3,8 @@
 
 namespace native
 {
+	void install();
+
 	#if defined(_WIN32)
 
 	#include <windows.h>
@@ -20,7 +22,7 @@ namespace native
 		}
 	}
 
-	// Windows normal installer
+	// Windows installer
 	void install() 
 	{
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)handle_signal, true);
@@ -39,7 +41,7 @@ namespace native
 		std::exit(EXIT_SUCCESS);
 	}
 
-	// *nix normal installer
+	// *nix and Mac installer
 	void install() 
 	{
 		struct sigaction sig_int_handler;
@@ -49,11 +51,6 @@ namespace native
 
 		sigaction(SIGINT, &sig_int_handler, nullptr);
 	}
-
-	#else
-
-	// Empty installer to remove crashes on systems other that Windows, *nix and Mac
-	void install() {};
 
 	#endif
 	

@@ -74,12 +74,8 @@ public:
 		if (config::limits::enable_rate_limit)
 			connectionHandler->addRequestInterceptor(std::make_shared<RateLimit>());
 
-		/* Add CORS interceptor to allow use API everywhere */
-		using namespace oatpp::web::server::interceptor;
-		connectionHandler->addRequestInterceptor(std::make_shared<AllowOptionsGlobal>());
-		connectionHandler->addResponseInterceptor(std::make_shared<AllowCorsGlobal>("*", "GET, POST, OPTIONS, PUT, DELETE, PATCH"));
-
-		/* Set Content-Type header */
+		/* Add CORS interceptor to allow use API everywhere and set Content-Type header */
+		connectionHandler->addRequestInterceptor(std::make_shared<oatpp::web::server::interceptor::AllowOptionsGlobal>());
 		connectionHandler->addResponseInterceptor(std::make_shared<BaseHeader>());
 
 		return connectionHandler;

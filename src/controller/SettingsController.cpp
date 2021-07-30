@@ -209,6 +209,10 @@ std::shared_ptr<SettingsController::OutgoingResponse> SettingsController::update
 
 	db(query);
 
+	OATPP_COMPONENT(std::shared_ptr<cpp_redis::client>, redis);
+	redis->publish("shiro.user_preferences", std::to_string(id));
+	redis->commit();
+
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
 	return response;

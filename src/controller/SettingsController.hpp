@@ -218,8 +218,9 @@ public:
 		Action finish()
 		{
 			OATPP_COMPONENT(std::shared_ptr<cpp_redis::client>, redis);
-			redis->publish("aru::change_avatar", std::to_string(user_id));
+			redis->publish("aru.change_avatar", std::to_string(user_id));
 			redis->commit();
+
 			return _return(controller->createResponse(Status::CODE_200, "OK"));
 		}
 	};

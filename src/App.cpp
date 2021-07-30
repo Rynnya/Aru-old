@@ -36,7 +36,7 @@ void on_exit()
 	if (server_thread.joinable())
 		server_thread.join();
 
-	/* Cleanup pool - We can safely use this because every connection now closed and database are not used (except detached thread) */
+	/* Cleanup pool - We can safely use this because every connection now closed and database are not used (except detached thread witch cannot throw exceptions for us) */
 	aru::ConnectionPool::getInstance()->~ConnectionPool();
 
 	/* oatpp::base::Environment::destroy(); do same thing but crash program because of existing AppComponent */

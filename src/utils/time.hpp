@@ -20,7 +20,7 @@ namespace aru
 			std::istringstream in(date);
 			date::sys_seconds tp;
 			in >> date::parse("%Y-%m-%d %H:%M:%S", tp);
-			return tp.time_since_epoch().count(); // TODO: Make UTC instead of Local time (Currently not critical)
+			return tp.time_since_epoch().count();
 		}
 
 		static std::string getDate(int64_t timestamp)
