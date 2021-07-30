@@ -1,6 +1,6 @@
 # Aru (osu!) - C++ API
 
-API for use in conjunction with [Makatymba2001](https://github.com/makatymba2001) Yukime [site](https://github.com/makatymba2001/WIP-Yukime-web)<br>
+API for use in conjunction with unfinished Yukime site, I will create new repository to site alter some time<br>
 Fully done, can be used in production.<br>
 
 # Requirements
