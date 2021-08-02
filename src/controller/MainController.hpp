@@ -76,6 +76,7 @@ public:
 					switch (user_mode)
 					{
 						default:
+						case 0:
 						{
 							int64_t position = row.rank_std;
 							if (position == 0)
@@ -135,6 +136,10 @@ public:
 							response.push_back(user);
 							break;
 						}
+						case 3:
+						{
+							return _return(controller->createResponse(Status::CODE_200, response.dump().c_str()));
+						}
 					}
 				}
 			}
@@ -150,6 +155,7 @@ public:
 					switch (user_mode)
 					{
 						default:
+						case 0:
 						{
 							int64_t position = row.rank_std;
 							if (position == 0)

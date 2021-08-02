@@ -93,7 +93,7 @@ public:
 		if (length < 1)
 			length = 1;
 
-		length = std::max(length, max);
+		length = std::min(length, max);
 
 		uint32_t start_pos = (page - 1) * length;
 		return std::make_pair(start_pos, length);

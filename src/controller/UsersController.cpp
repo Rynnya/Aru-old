@@ -20,7 +20,7 @@ std::shared_ptr<UsersController::OutgoingResponse> UsersController::buildScores(
 	length = std::clamp(length, 1, 100);
 
 	if (relax == 1 && user_mode == 3)
-		return createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode"));
+		return createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Mania don't have relax mode"));
 
 	json response = json::array();
 

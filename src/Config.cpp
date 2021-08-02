@@ -54,9 +54,7 @@ namespace config
 			return;
 		}
 
-		std::stringstream strStream;
-		strStream << cfg_file.rdbuf();
-		json json_config = json::parse(strStream, nullptr, false);
+		json json_config = json::parse(cfg_file, nullptr, false);
 		cfg_file.close();
 
 		if (json_config.is_discarded())

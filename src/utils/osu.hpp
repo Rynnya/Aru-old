@@ -119,19 +119,19 @@ namespace aru
 	class osu_level
 	{
 	public:
-		static int32_t GetLevel(uint64_t score)
+		static int32_t get_level(uint64_t score)
 		{
 			if (score >= sc[99]) 
 				return 100 + static_cast<int32_t>((score - sc[99]) / 100000000000);
+
 			for (int32_t i = 0; i != 100; i++)
-			{
 				if (sc[i] > score)
 					return i;
-			}
+
 			return 1;
 		}
 
-		static uint64_t GetRequiredScoreForLevel(int32_t level)
+		static uint64_t get_required_score_for_level(int32_t level)
 		{
 			if (level <= 0) 
 				return 0;
@@ -140,12 +140,12 @@ namespace aru
 			return sc[99] + 100000000000 * (static_cast<int64_t>(level) - 100);
 		}
 
-		static double GetLevelPrecise(uint64_t score)
+		static double get_level_precise(uint64_t score)
 		{
-			int32_t baseLevel = GetLevel(score);
-			int64_t baseLevelScore = GetRequiredScoreForLevel(baseLevel);
+			int32_t baseLevel = get_level(score);
+			int64_t baseLevelScore = get_required_score_for_level(baseLevel);
 			int64_t scoreProgress = score - baseLevelScore;
-			int64_t scoreLevelDifference = GetRequiredScoreForLevel(baseLevel + 1) - baseLevelScore;
+			int64_t scoreLevelDifference = get_required_score_for_level(baseLevel + 1) - baseLevelScore;
 
 			double result = double(scoreProgress) / double(scoreLevelDifference) + double(baseLevel);
 			if (aru::math::is_infinite(result) || aru::math::is_nan(result))
@@ -157,11 +157,12 @@ namespace aru
 	class osu
 	{
 	public:
-		static std::string modeToString(int32_t number)
+		static std::string mode_to_string(int32_t number)
 		{
 			switch (number)
 			{
 				default:
+				case 0:
 					return "std";
 				case 1:
 					return "taiko";
@@ -172,7 +173,7 @@ namespace aru
 			}
 		}
 
-		static int32_t modeToInt(std::string mode)
+		static int32_t mode_to_int(std::string mode)
 		{
 			if (mode == "mania") return 3;
 			if (mode == "ctb")   return 2;

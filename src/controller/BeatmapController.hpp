@@ -42,7 +42,7 @@ public:
 		{
 			beatmapset_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (beatmapset_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request")));
+				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
 
 			return PoolHandler::startForResult().callbackTo(&beatmapSet::onDatabase);
 		}
@@ -120,7 +120,7 @@ public:
 		{
 			beatmap_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (beatmap_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request")));
+				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
 
 			return PoolHandler::startForResult().callbackTo(&beatmapDefault::onDatabase);
 		}
@@ -189,17 +189,20 @@ public:
 	{
 		ENDPOINT_ASYNC_INIT(beatmapLeaderboard);
 
-		int32_t beatmap_id = 0;
+		int32_t beatmap_id = -1;
 		int32_t mode = -1;
 		int32_t relax = 0;
 		int32_t length = 50;
 
 		Action act() override
 		{
-			int32_t id = aru::convert::safe_int(request->getPathVariable("id"), 0);
-			int32_t mode = aru::convert::safe_int(request->getPathVariable("mode"), -1);
-			int32_t relax = aru::convert::safe_int(request->getPathVariable("relax"), 0);
-			int32_t length = aru::convert::safe_int(request->getPathVariable("length"), 50);
+			beatmap_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
+			if (beatmap_id == -1)
+				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+
+			mode = aru::convert::safe_int(request->getPathVariable("mode"), -1);
+			relax = aru::convert::safe_int(request->getPathVariable("relax"), 0);
+			length = aru::convert::safe_int(request->getPathVariable("length"), 50);
 
 			return PoolHandler::startForResult().callbackTo(&beatmapLeaderboard::onDatabase);
 		}
@@ -210,11 +213,10 @@ public:
 			bool isRelax = aru::utils::intToBoolean(relax);
 			int32_t play_mode = mode;
 			if (play_mode == 3 && isRelax)
-				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Mania don't have relax mode")));
+				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Mania don't have relax mode")));
 
 			std::string md5 = "";
-			auto res = db(sqlpp::select(b_table.mode, b_table.beatmap_md5)
-				.from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
+			auto res = db(sqlpp::select(b_table.mode, b_table.beatmap_md5).from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
 
 			if (res.empty())
 				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap")));
@@ -230,8 +232,7 @@ public:
 				scores_table.score, scores_table.pp, scores_table.accuracy, scores_table.max_combo, scores_table.mods,
 				scores_table.count_300, scores_table.count_100, scores_table.count_50, scores_table.count_misses)
 				.from(scores_table.join(users_table).on(scores_table.user_id == users_table.id))
-				.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode and scores_table.completed)
-				.order_by(scores_table.pp.desc());
+				.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode and scores_table.completed);
 
 			std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(1, length, 100);
 			auto result = db(query.offset(limit.first).limit(limit.second));
@@ -256,6 +257,7 @@ public:
 				response.push_back(score);
 			}
 
+			std::sort(response.begin(), response.end(), [](json first, json second) { return first["pp"] < second["pp"]; });
 			return _return(controller->createResponse(Status::CODE_200, response.dump().c_str()));
 		}
 	};
