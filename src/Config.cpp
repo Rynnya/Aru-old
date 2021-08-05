@@ -43,6 +43,9 @@ namespace config
 		"ztrot", "koreapenguin", "fort", "asphyxia", "niko", "shigetora", "whitecat", "fokabot", "himitsu", "nebula", "howl", "nyo", "angelwar", "mm00", "yukime"
 	};
 
+	/* Base marcos to make config somehow readable */
+	#define CHECK_AND_APPLY_CONFIG(VALUE, TYPE, WHERE) if (VALUE.TYPE()) WHERE = VALUE;
+
 	void parse()
 	{
 		std::fstream cfg_file("config.json");
@@ -64,41 +67,26 @@ namespace config
 			return;
 		}
 
-		// Unreadable shit incoming!
-		if (json_config["database"]["connection_amount"].is_number_integer())
-			database::connection_amount = json_config["database"]["connection_amount"];
-		if (json_config["database"]["host"].is_string())
-			database::host = json_config["database"]["host"];
-		if (json_config["database"]["port"].is_number_integer())
-			database::port = json_config["database"]["port"];
-		if (json_config["database"]["username"].is_string())
-			database::username = json_config["database"]["username"];
-		if (json_config["database"]["password"].is_string())
-			database::password = json_config["database"]["password"];
-		if (json_config["database"]["database"].is_string())
-			database::database = json_config["database"]["database"];
-		if (json_config["database"]["debug"].is_boolean())
-			database::debug = json_config["database"]["debug"];
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["connection_amount"], is_number_integer, database::connection_amount);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["host"], is_string, database::host);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["port"], is_number_integer, database::port);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["username"], is_string, database::username);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["password"], is_string, database::password);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["database"], is_string, database::database);
+		CHECK_AND_APPLY_CONFIG(json_config["database"]["debug"], is_boolean, database::debug);
 
-		if (json_config["redis"]["address"].is_string())
-			redis::address = json_config["redis"]["address"];
-		if (json_config["redis"]["port"].is_number_unsigned())
-			redis::port = json_config["redis"]["port"];
-		if (json_config["redis"]["password"].is_string())
-			redis::password = json_config["redis"]["password"];
+		CHECK_AND_APPLY_CONFIG(json_config["redis"]["address"], is_string, redis::address);
+		CHECK_AND_APPLY_CONFIG(json_config["redis"]["port"], is_number_unsigned, redis::port);
+		CHECK_AND_APPLY_CONFIG(json_config["redis"]["password"], is_string, redis::password);
 
-		if (json_config["limits"]["enable_rate_limit"].is_boolean())
-			limits::enable_rate_limit = json_config["limits"]["enable_rate_limit"];
-		if (json_config["limits"]["limit"].is_number_unsigned())
-			limits::limit = json_config["limits"]["limit"];
-		if (json_config["limits"]["timer"].is_number_unsigned())
-			limits::timer = json_config["limits"]["timer"];
+		CHECK_AND_APPLY_CONFIG(json_config["limits"]["enable_rate_limit"], is_boolean, limits::enable_rate_limit);
+		CHECK_AND_APPLY_CONFIG(json_config["limits"]["limit"], is_number_unsigned, limits::limit);
+		CHECK_AND_APPLY_CONFIG(json_config["limits"]["timer"], is_number_unsigned, limits::timer);
 
-		if (json_config["frontend_site"].is_string())
-			frontend_site = json_config["frontend_site"];
-		if (json_config["avatar_folder"].is_string())
-			avatar_folder = json_config["avatar_folder"];
+		CHECK_AND_APPLY_CONFIG(json_config["frontend_site"], is_string, frontend_site);
+		CHECK_AND_APPLY_CONFIG(json_config["avatar_folder"], is_string, avatar_folder);
 
+		#undef CHECK_AND_APPLY_CONFIG
 		fmt::print("Config: Successfully parsed! Starting...\n");
 	};
 
