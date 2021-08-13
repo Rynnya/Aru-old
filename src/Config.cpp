@@ -1,4 +1,4 @@
-#include "Config.hpp"
+#include "config.hpp"
 
 // Default config
 namespace config

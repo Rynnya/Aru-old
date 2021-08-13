@@ -14,10 +14,14 @@ namespace aru
             const long ans = std::strtol(ptr, &end_ptr, 10);
 
             if (ptr == end_ptr)
+            {
                 return -1;
+            }
 
             if (ans == INT_MAX)
+            {
                 return -1; // I don't think someone can acquire this ID, so we safe :)
+            }
 
             return ans;
         }

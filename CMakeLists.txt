@@ -59,39 +59,45 @@ add_subdirectory(libs/json)
 include_directories(src)
 
 add_executable(${project_name}
-	src/controller/AuthController.hpp
-	src/controller/BeatmapController.hpp
-	src/controller/BeatmapController.cpp
-	src/controller/MainController.hpp
-	src/controller/SettingsController.cpp
-	src/controller/SettingsController.hpp
-	src/controller/UsersController.cpp
-	src/controller/UsersController.hpp
-	src/database/tables/CoreTable.hpp
-	src/database/tables/BeatmapTable.hpp
-	src/database/tables/OtherTable.hpp
-	src/database/tables/ScoresTable.hpp
-	src/database/tables/UsersTable.hpp
-	src/database/SQL.cpp
-	src/database/SQL.hpp
-	src/handlers/AuthorizationHandler.hpp
-	src/handlers/ErrorHandler.hpp
-	src/handlers/HeaderHandler.hpp
-	src/handlers/NativeHandler.hpp
-	src/handlers/PoolHandler.hpp
-	src/handlers/RateLimitHandler.hpp
+	src/controller/auth_controller.hpp
+	src/controller/base_controller.hpp
+	src/controller/beatmap_controller.cpp
+	src/controller/beatmap_controller.hpp
+	src/controller/settings_controller.cpp
+	src/controller/settings_controller.hpp
+	src/controller/users_controller.cpp
+	src/controller/users_controller.hpp
+	src/database/tables/beatmap_table.hpp
+	src/database/tables/core_table.hpp
+	src/database/tables/other_table.hpp
+	src/database/tables/scores_table.hpp
+	src/database/tables/users_table.hpp
+	src/database/sql.cpp
+	src/database/sql.hpp
+	src/handlers/authorization_handler.cpp
+	src/handlers/authorization_handler.hpp
+	src/handlers/error_handler.hpp
+	src/handlers/header_handler.hpp
+	src/handlers/native_handler.hpp
+	src/handlers/pool_handler.hpp
+	src/handlers/rate_limit_handler.hpp
 	src/utils/convert.hpp
+	src/utils/curl.cpp
 	src/utils/curl.hpp
+	src/utils/hash.cpp
 	src/utils/hash.hpp
 	src/utils/math.hpp
+	src/utils/osu.cpp
 	src/utils/osu.hpp
+	src/utils/time.cpp
 	src/utils/time.hpp
+	src/utils/utils.cpp
 	src/utils/utils.hpp
-	src/App.cpp
-	src/AppComponent.hpp
-	src/Config.cpp
-	src/Config.hpp
-	src/Globals.hpp
+	src/app.cpp
+	src/components.hpp
+	src/config.cpp
+	src/config.hpp
+	src/globals.hpp
 )
 
 target_include_directories(${project_name} PRIVATE

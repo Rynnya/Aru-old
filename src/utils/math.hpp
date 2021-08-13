@@ -1,7 +1,7 @@
 #ifndef utils_math_hpp_included
 #define utils_math_hpp_included
 
-#include "Globals.hpp"
+#include "globals.hpp"
 
 namespace aru
 {
@@ -11,6 +11,7 @@ namespace aru
 		template<typename T>
 		static bool is_infinite(const T& value)
 		{
+			static_assert(std::is_arithmetic<T>::value, "T must be arithmetic.");
 			T max_value = std::numeric_limits<T>::max();
 			T min_value = -max_value;
 

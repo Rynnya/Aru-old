@@ -1,46 +1,46 @@
-#ifndef controller_UsersController_hpp_included
-#define controller_UsersController_hpp_included
+#ifndef controller_users_controller_hpp_included
+#define controller_users_controller_hpp_included
 
-#include "Globals.hpp"
+#include "globals.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
 
-#include "database/tables/UsersTable.hpp"
+#include "database/tables/users_table.hpp"
 #include "utils/convert.hpp"
 
-#include "handlers/PoolHandler.hpp"
+#include "handlers/pool_handler.hpp"
 
 SQLPP_ALIAS_PROVIDER(score_t);
 SQLPP_ALIAS_PROVIDER(beatmap_t);
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class UsersController : public oatpp::web::server::api::ApiController
+class users_controller : public oatpp::web::server::api::ApiController
 {
 private:
-	typedef UsersController __ControllerType;
+	typedef users_controller __ControllerType;
 	enum class scores_type
 	{
-		Best = 0,
-		Recent = 1,
-		First = 2
+		best = 0,
+		recent = 1,
+		first = 2
 	};
-	std::shared_ptr<UsersController::OutgoingResponse> buildScores(const aru::Connection& db, int32_t id, int32_t mode, int32_t relax, int32_t page, int32_t length, scores_type type) const;
+	std::shared_ptr<users_controller::OutgoingResponse> build_scores(const aru::database& db, int32_t id, int32_t mode, int32_t relax, int32_t page, int32_t length, scores_type type) const;
 	// also checks if player exists. if not, returns false, otherwise returns true and mode as string in ans
-	int32_t getMode(const aru::Connection& db, int32_t id) const;
-	UsersController(const std::shared_ptr<ObjectMapper>& objectMapper) : oatpp::web::server::api::ApiController(objectMapper) {}
+	int32_t get_mode(const aru::database& db, int32_t id) const;
+	users_controller(const std::shared_ptr<ObjectMapper>& objectMapper) : oatpp::web::server::api::ApiController(objectMapper) {}
 public:
 
-	static std::shared_ptr<UsersController> createShared(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
+	static std::shared_ptr<users_controller> create_shared(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 	{
-		return std::shared_ptr<UsersController>(new UsersController(objectMapper));
+		return std::shared_ptr<users_controller>(new users_controller(objectMapper));
 	}
 
-	ENDPOINT_ASYNC("GET", "/users/{id}", userInfo)
+	ENDPOINT_ASYNC("GET", "/users/{id}", _user_info)
 	{
-		ENDPOINT_ASYNC_INIT(userInfo);
+		ENDPOINT_ASYNC_INIT(_user_info);
 
 		int32_t user_id = -1;
 		int32_t user_mode = -1;
@@ -50,18 +50,24 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			user_mode = aru::convert::safe_int(request->getQueryParameter("mode"), -1);
 			relax = aru::convert::safe_int(request->getQueryParameter("relax"), 0);
 
 			if (relax == 1 && user_mode == 3)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Mania don't have relax mode")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Mania don't have relax mode");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
-			return PoolHandler::startForResult().callbackTo(&userInfo::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_user_info::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::users users_table{};
 			json response;
@@ -75,7 +81,10 @@ public:
 					.where(users_table.is_public == true and users_table.id == user_id).limit(1u));
 
 				if (result.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Player not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				const auto& row = result.front();
 
@@ -128,7 +137,10 @@ public:
 
 				auto result = db(query);
 				if (result.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Player not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				const auto& row = result.front();
 
@@ -187,9 +199,9 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/users/{id}/full", fullUserInfo)
+	ENDPOINT_ASYNC("GET", "/users/{id}/full", _full_user_info)
 	{
-		ENDPOINT_ASYNC_INIT(fullUserInfo);
+		ENDPOINT_ASYNC_INIT(_full_user_info);
 
 		int32_t user_id = -1;
 		int32_t user_mode = -1;
@@ -199,18 +211,24 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			user_mode = aru::convert::safe_int(request->getQueryParameter("mode"), -1);
 			relax = aru::convert::safe_int(request->getQueryParameter("relax"), 0);
 
 			if (relax == 1 && user_mode == 3)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Mania don't have relax mode")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Mania don't have relax mode");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
-			return PoolHandler::startForResult().callbackTo(&fullUserInfo::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_full_user_info::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::users users_table{};
 			json response;
@@ -226,7 +244,10 @@ public:
 				).where(users_table.is_public == true and users_table.id == user_id).limit(1u));
 
 				if (result.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Player not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				const auto& row = result.front();
 
@@ -235,8 +256,8 @@ public:
 
 				response["id"] = row.id.value();
 				response["username"] = row.username.value();
-				response["register_time"] = aru::time_convert::getDate(row.registration_date);
-				response["latest_activity"] = aru::time_convert::getDate(row.latest_activity);
+				response["register_time"] = aru::time_convert::get_date(row.registration_date);
+				response["latest_activity"] = aru::time_convert::get_date(row.latest_activity);
 				response["status"] = row.status.value();
 				response["country"] = row.country.value();
 				response["play_style"] = row.play_style.value();
@@ -312,13 +333,16 @@ public:
 				const tables::users_stats users_stats_table{};
 				auto result = db(sqlpp::select( // id inside users_stats
 					users_table.username, users_table.registration_date, users_table.latest_activity,
-					users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax, users_table.play_style,
-					sqlpp::all_of(users_stats_table)
+					users_table.country, users_table.status, users_table.favourite_mode, users_table.favourite_relax,
+					users_table.play_style, sqlpp::all_of(users_stats_table)
 				).from(users_table.join(users_stats_table).on(users_table.id == users_stats_table.id)
 				).where(users_table.is_public == true and users_table.id == user_id).limit(1u));
 
 				if (result.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Player not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				const auto& row = result.front();
 
@@ -327,8 +351,8 @@ public:
 
 				response["id"] = row.id.value();
 				response["username"] = row.username.value();
-				response["register_time"] = aru::time_convert::getDate(row.registration_date);
-				response["latest_activity"] = aru::time_convert::getDate(row.latest_activity);
+				response["register_time"] = aru::time_convert::get_date(row.registration_date);
+				response["latest_activity"] = aru::time_convert::get_date(row.latest_activity);
 				response["status"] = row.status.value();
 				response["country"] = row.country.value();
 				response["play_style"] = row.play_style.value();
@@ -423,15 +447,17 @@ public:
 			const tables::user_badges badges_table{};
 			response["badges"] = json::array();
 			for (const auto& badge : db(sqlpp::select(badges_table.badge).from(badges_table).where(badges_table.id == user_id)))
+			{
 				response["badges"].push_back(badge.badge.value());
+			}
 
 			return _return(controller->createResponse(Status::CODE_200, response.dump().c_str()));
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/users/{id}/profile", userProfile)
+	ENDPOINT_ASYNC("GET", "/users/{id}/profile", _user_profile)
 	{
-		ENDPOINT_ASYNC_INIT(userProfile);
+		ENDPOINT_ASYNC_INIT(_user_profile);
 
 		int32_t user_id = -1;
 
@@ -439,17 +465,23 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
-
-			return PoolHandler::startForResult().callbackTo(&userProfile::onDatabase);
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
+			
+			return pool_handler::startForResult().callbackTo(&_user_profile::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::users users_table{};
 			auto result = db(sqlpp::select(users_table.background, users_table.userpage).from(users_table).where(users_table.id == user_id).limit(1u));
 			if (result.empty())
-				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Player not found")));
+			{
+				auto error = aru::create_error(Status::CODE_404, "Player not found");
+				return _return(controller->createResponse(Status::CODE_404, error));
+			}
 
 			json response;
 			const auto& row = result.front();
@@ -461,9 +493,9 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/users/{id}/scores/best", bestScores)
+	ENDPOINT_ASYNC("GET", "/users/{id}/scores/best", _best_scores)
 	{
-		ENDPOINT_ASYNC_INIT(bestScores);
+		ENDPOINT_ASYNC_INIT(_best_scores);
 
 		int32_t user_id = -1;
 		int32_t mode = -1;
@@ -475,25 +507,28 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			mode = aru::convert::safe_int(request->getQueryParameter("mode"), -1);
 			relax = aru::convert::safe_int(request->getQueryParameter("relax"), 0);
 			page = aru::convert::safe_int(request->getQueryParameter("page"), 0);
 			length = aru::convert::safe_int(request->getQueryParameter("length"), 50);
 
-			return PoolHandler::startForResult().callbackTo(&bestScores::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_best_scores::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
-			return _return(controller->buildScores(db, user_id, mode, relax, page, length, scores_type::Best));
+			return _return(controller->build_scores(db, user_id, mode, relax, page, length, scores_type::best));
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/users/{id}/scores/recent", recentScores)
+	ENDPOINT_ASYNC("GET", "/users/{id}/scores/recent", _recent_scores)
 	{
-		ENDPOINT_ASYNC_INIT(recentScores);
+		ENDPOINT_ASYNC_INIT(_recent_scores);
 
 		int32_t user_id = -1;
 		int32_t mode = -1;
@@ -505,25 +540,28 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			mode = aru::convert::safe_int(request->getQueryParameter("mode"), -1);
 			relax = aru::convert::safe_int(request->getQueryParameter("relax"), 0);
 			page = aru::convert::safe_int(request->getQueryParameter("page"), 0);
 			length = aru::convert::safe_int(request->getQueryParameter("length"), 50);
 
-			return PoolHandler::startForResult().callbackTo(&recentScores::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_recent_scores::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
-			return _return(controller->buildScores(db, user_id, mode, relax, page, length, scores_type::Recent));
+			return _return(controller->build_scores(db, user_id, mode, relax, page, length, scores_type::recent));
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/users/{id}/scores/first", firstScores)
+	ENDPOINT_ASYNC("GET", "/users/{id}/scores/first", _first_scores)
 	{
-		ENDPOINT_ASYNC_INIT(firstScores);
+		ENDPOINT_ASYNC_INIT(_first_scores);
 
 		int32_t user_id = -1;
 		int32_t mode = -1;
@@ -535,19 +573,22 @@ public:
 		{
 			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (user_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			mode = aru::convert::safe_int(request->getQueryParameter("mode"), -1);
 			relax = aru::convert::safe_int(request->getQueryParameter("relax"), 0);
 			page = aru::convert::safe_int(request->getQueryParameter("page"), 0);
 			length = aru::convert::safe_int(request->getQueryParameter("length"), 50);
 
-			return PoolHandler::startForResult().callbackTo(&firstScores::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_first_scores::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
-			return _return(controller->buildScores(db, user_id, mode, relax, page, length, scores_type::First));
+			return _return(controller->build_scores(db, user_id, mode, relax, page, length, scores_type::first));
 		}
 	};
 

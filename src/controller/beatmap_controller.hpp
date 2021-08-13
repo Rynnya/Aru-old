@@ -1,40 +1,40 @@
-#ifndef controller_BeatmapController_hpp_included
-#define controller_BeatmapController_hpp_included
+#ifndef controller_beatmap_controller_hpp_included
+#define controller_beatmap_controller_hpp_included
 
-#include "Globals.hpp"
+#include "globals.hpp"
 #include "utils/convert.hpp"
 
 #include "oatpp/web/server/api/ApiController.hpp"
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/macro/component.hpp"
-#include "handlers/AuthorizationHandler.hpp"
+#include "handlers/authorization_handler.hpp"
 
-#include "database/tables/BeatmapTable.hpp"
-#include "database/tables/ScoresTable.hpp"
-#include "database/tables/UsersTable.hpp"
-#include "database/tables/OtherTable.hpp"
+#include "database/tables/beatmap_table.hpp"
+#include "database/tables/scores_table.hpp"
+#include "database/tables/users_table.hpp"
+#include "database/tables/other_table.hpp"
 
-#include "handlers/PoolHandler.hpp"
+#include "handlers/pool_handler.hpp"
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
-class BeatmapController : public oatpp::web::server::api::ApiController
+class beatmap_controller : public oatpp::web::server::api::ApiController
 {
 private:
-	typedef BeatmapController __ControllerType;
-	std::shared_ptr<TokenAuthorizationHandler> tokenAuth = std::make_shared<TokenAuthorizationHandler>();
-	void logRankChange(const aru::Connection& db, int32_t id, int64_t bid, int32_t status, std::string type) const;
-	BeatmapController(const std::shared_ptr<ObjectMapper>& objectMapper) : oatpp::web::server::api::ApiController(objectMapper) {}
+	typedef beatmap_controller __ControllerType;
+	std::shared_ptr<token_authorization_handler> token_auth = std::make_shared<token_authorization_handler>();
+	void log_rank_change(const aru::database& db, int32_t id, int64_t bid, int32_t status, std::string type) const;
+	beatmap_controller(const std::shared_ptr<ObjectMapper>& objectMapper) : oatpp::web::server::api::ApiController(objectMapper) {}
 public:
 
-	static std::shared_ptr<BeatmapController> createShared(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
+	static std::shared_ptr<beatmap_controller> create_shared(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
 	{
-		return std::shared_ptr<BeatmapController>(new BeatmapController(objectMapper));
+		return std::shared_ptr<beatmap_controller>(new beatmap_controller(objectMapper));
 	}
 
-	ENDPOINT_ASYNC("GET", "/beatmapset/{id}", beatmapSet)
+	ENDPOINT_ASYNC("GET", "/beatmapset/{id}", _beatmap_set)
 	{
-		ENDPOINT_ASYNC_INIT(beatmapSet);
+		ENDPOINT_ASYNC_INIT(_beatmap_set);
 
 		int32_t beatmapset_id = -1;
 
@@ -42,19 +42,25 @@ public:
 		{
 			beatmapset_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (beatmapset_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
-			return PoolHandler::startForResult().callbackTo(&beatmapSet::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_beatmap_set::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::beatmaps beatmaps_table{};
 			auto result = db(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmapset_id == beatmapset_id));
 
 			if (result.empty())
-				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap set")));
-
+			{
+				auto error = aru::create_error(Status::CODE_404, "Cannot find beatmap set");
+				return _return(controller->createResponse(Status::CODE_404, error));
+			}
+			
 			json response = json::array();
 			for (const auto& row : result)
 			{
@@ -76,18 +82,19 @@ public:
 
 				switch (row.mode)
 				{
-				default:
-					beatmap["difficulty"] = row.difficulty_std.value();
-					break;
-				case 1:
-					beatmap["difficulty"] = row.difficulty_taiko.value();
-					break;
-				case 2:
-					beatmap["difficulty"] = row.difficulty_ctb.value();
-					break;
-				case 3:
-					beatmap["difficulty"] = row.difficulty_mania.value();
-					break;
+					default:
+					case 0:
+						beatmap["difficulty"] = row.difficulty_std.value();
+						break;
+					case 1:
+						beatmap["difficulty"] = row.difficulty_taiko.value();
+						break;
+					case 2:
+						beatmap["difficulty"] = row.difficulty_ctb.value();
+						break;
+					case 3:
+						beatmap["difficulty"] = row.difficulty_mania.value();
+						break;
 				}
 
 				json diff;
@@ -110,9 +117,9 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/beatmap/{id}", beatmapDefault)
+	ENDPOINT_ASYNC("GET", "/beatmap/{id}", _beatmap_default)
 	{
-		ENDPOINT_ASYNC_INIT(beatmapDefault);
+		ENDPOINT_ASYNC_INIT(_beatmap_default);
 
 		int32_t beatmap_id = -1;
 
@@ -120,18 +127,24 @@ public:
 		{
 			beatmap_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (beatmap_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
-			return PoolHandler::startForResult().callbackTo(&beatmapDefault::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_beatmap_default::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::beatmaps beatmaps_table{};
 			auto result = db(sqlpp::select(all_of(beatmaps_table)).from(beatmaps_table).where(beatmaps_table.beatmap_id == beatmap_id));
 
 			if (result.empty())
-				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap")));
+			{
+				auto error = aru::create_error(Status::CODE_404, "Cannot find beatmap");
+				return _return(controller->createResponse(Status::CODE_404, error));
+			}
 
 			const auto& row = result.front();
 			json beatmap;
@@ -153,18 +166,19 @@ public:
 
 			switch (row.mode)
 			{
-			default:
-				beatmap["difficulty"] = row.difficulty_std.value();
-				break;
-			case 1:
-				beatmap["difficulty"] = row.difficulty_taiko.value();
-				break;
-			case 2:
-				beatmap["difficulty"] = row.difficulty_ctb.value();
-				break;
-			case 3:
-				beatmap["difficulty"] = row.difficulty_mania.value();
-				break;
+				default:
+				case 0:
+					beatmap["difficulty"] = row.difficulty_std.value();
+					break;
+				case 1:
+					beatmap["difficulty"] = row.difficulty_taiko.value();
+					break;
+				case 2:
+					beatmap["difficulty"] = row.difficulty_ctb.value();
+					break;
+				case 3:
+					beatmap["difficulty"] = row.difficulty_mania.value();
+					break;
 			}
 
 			json diff;
@@ -185,9 +199,9 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("GET", "/beatmap/{id}/leaderboard", beatmapLeaderboard)
+	ENDPOINT_ASYNC("GET", "/beatmap/{id}/leaderboard", _beatmap_leaderboard)
 	{
-		ENDPOINT_ASYNC_INIT(beatmapLeaderboard);
+		ENDPOINT_ASYNC_INIT(_beatmap_leaderboard);
 
 		int32_t beatmap_id = -1;
 		int32_t mode = -1;
@@ -198,31 +212,39 @@ public:
 		{
 			beatmap_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
 			if (beatmap_id == -1)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request (id is not a number)")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request (id is not a number)");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			mode = aru::convert::safe_int(request->getPathVariable("mode"), -1);
 			relax = aru::convert::safe_int(request->getPathVariable("relax"), 0);
 			length = aru::convert::safe_int(request->getPathVariable("length"), 50);
 
-			return PoolHandler::startForResult().callbackTo(&beatmapLeaderboard::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_beatmap_leaderboard::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
 			const tables::beatmaps b_table{};
-			bool isRelax = aru::utils::intToBoolean(relax);
-			int32_t play_mode = mode;
-			if (play_mode == 3 && isRelax)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Mania don't have relax mode")));
+			bool is_relax = aru::utils::int_to_bool(relax);
+			if (mode == 3 && is_relax)
+			{
+				auto error = aru::create_error(Status::CODE_400, "Mania don't have relax mode");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			std::string md5 = "";
 			auto res = db(sqlpp::select(b_table.mode, b_table.beatmap_md5).from(b_table).where(b_table.beatmap_id == beatmap_id).limit(1u));
 
 			if (res.empty())
-				return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Cannot find beatmap")));
+			{
+				auto error = aru::create_error(Status::CODE_404, "Cannot find beatmap");
+				return _return(controller->createResponse(Status::CODE_404, error));
+			}
 
 			const auto& r = res.front();
-			play_mode = play_mode == -1 ? r.mode : play_mode;
+			mode == -1 ? r.mode : mode;
 			md5 = r.beatmap_md5;
 
 			const tables::users users_table{};
@@ -232,9 +254,9 @@ public:
 				scores_table.score, scores_table.pp, scores_table.accuracy, scores_table.max_combo, scores_table.mods,
 				scores_table.count_300, scores_table.count_100, scores_table.count_50, scores_table.count_misses)
 				.from(scores_table.join(users_table).on(scores_table.user_id == users_table.id))
-				.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == isRelax and scores_table.play_mode == play_mode and scores_table.completed);
+				.where(scores_table.beatmap_md5 == md5 and scores_table.is_relax == is_relax and scores_table.play_mode == mode and scores_table.completed);
 
-			std::pair<uint32_t, uint32_t> limit = SQLHelper::Paginate(1, length, 100);
+			std::pair<uint32_t, uint32_t> limit = sql_helper::paginate(1, length, 100);
 			auto result = db(query.offset(limit.first).limit(limit.second));
 
 			json response = json::array();
@@ -262,43 +284,55 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("POST", "/beatmap/ranking", ranking)
+	ENDPOINT_ASYNC("POST", "/beatmap/ranking", _ranking)
 	{
-		ENDPOINT_ASYNC_INIT(ranking);
+		ENDPOINT_ASYNC_INIT(_ranking);
 
 		json beatmap = nullptr;
 
 		Action act() override
 		{
-			return request->readBodyToStringAsync().callbackTo(&ranking::onBody);
+			return request->readBodyToStringAsync().callbackTo(&_ranking::on_body);
 		}
 
-		Action onBody(const oatpp::String & request_body)
+		Action on_body(const oatpp::String & request_body)
 		{
 			beatmap = json::parse(request_body->c_str(), nullptr, false);
-			return PoolHandler::startForResult().callbackTo(&ranking::onDatabase);
+			return pool_handler::startForResult().callbackTo(&_ranking::on_database);
 		}
 
-		Action onDatabase(const aru::Connection& db)
+		Action on_database(const aru::database& db)
 		{
-			auto authObject = controller->tokenAuth->handleAuthorization(db, request->getHeader("Authorization"));
+			std::shared_ptr<token_object> auth_object = controller->token_auth->handle_authorization(db, request);
 
-			if (!authObject->valid)
-				return _return(controller->createResponse(Status::CODE_401, aru::createError(Status::CODE_401, "Unauthorized")));
+			if (!auth_object->valid)
+			{
+				auto error = aru::create_error(Status::CODE_401, "Unauthorized");
+				return _return(controller->createResponse(Status::CODE_401, error));
+			}
 
-			if (!beatmap["id"].is_number() || authObject->userID != beatmap["id"].get<int64_t>())
-				return _return(controller->createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Forbidden")));
+			if (!beatmap["id"].is_number() || auth_object->user_id != beatmap["id"].get<int64_t>())
+			{
+				auto error = aru::create_error(Status::CODE_403, "Forbidden");
+				return _return(controller->createResponse(Status::CODE_403, error));
+			}
 
-			int32_t id = authObject->userID;
+			int32_t id = auth_object->user_id;
 			const tables::users users_table{};
 			auto result = db(sqlpp::select(users_table.roles).from(users_table).where(users_table.id == id));
 
 			auto& role = result.front();
 			if ((role.roles & 256) == 0)
-				return _return(controller->createResponse(Status::CODE_403, aru::createError(Status::CODE_403, "Insufficient permissions")));
-
+			{
+				auto error = aru::create_error(Status::CODE_403, "Insufficient permissions");
+				return _return(controller->createResponse(Status::CODE_403, error));
+			}
+			
 			if (!beatmap["bid"].is_number() && !beatmap["status"].is_number() && !beatmap["type"].is_string())
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			const tables::beatmaps beatmaps_tables{};
 			int64_t bid = beatmap["bid"].get<int64_t>();
@@ -306,28 +340,40 @@ public:
 			std::string type = beatmap["type"].get<std::string>();
 
 			if (status < -2 || status > 5)
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			if (type == "b")
 			{
 				auto& exist = db(sqlpp::select(beatmaps_tables.beatmap_md5).from(beatmaps_tables).where(beatmaps_tables.beatmap_id == bid));
 				if (exist.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Beatmap not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Beatmap not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				db(sqlpp::update(beatmaps_tables).set(beatmaps_tables.ranked_status = status).where(beatmaps_tables.beatmap_id == bid));
-				controller->logRankChange(db, id, bid, status, type);
+				controller->log_rank_change(db, id, bid, status, type);
 			}
 			else if (type == "s")
 			{
 				auto& exist = db(sqlpp::select(beatmaps_tables.beatmap_md5).from(beatmaps_tables).where(beatmaps_tables.beatmapset_id == bid));
 				if (exist.empty())
-					return _return(controller->createResponse(Status::CODE_404, aru::createError(Status::CODE_404, "Beatmapset not found")));
+				{
+					auto error = aru::create_error(Status::CODE_404, "Beatmapset not found");
+					return _return(controller->createResponse(Status::CODE_404, error));
+				}
 
 				db(sqlpp::update(beatmaps_tables).set(beatmaps_tables.ranked_status = status).where(beatmaps_tables.beatmapset_id == bid));
-				controller->logRankChange(db, id, bid, status, type);
+				controller->log_rank_change(db, id, bid, status, type);
 			}
 			else
-				return _return(controller->createResponse(Status::CODE_400, aru::createError(Status::CODE_400, "Bad request")));
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
 
 			return _return(controller->createResponse(Status::CODE_200, ""));
 		}

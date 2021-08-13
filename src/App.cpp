@@ -1,14 +1,14 @@
-#include "./AppComponent.hpp"
+#include "components.hpp"
 
-#include "./controller/AuthController.hpp"
-#include "./controller/BeatmapController.hpp"
-#include "./controller/MainController.hpp"
-#include "./controller/SettingsController.hpp"
-#include "./controller/UsersController.hpp"
+#include "controller/auth_controller.hpp"
+#include "controller/beatmap_controller.hpp"
+#include "controller/base_controller.hpp"
+#include "controller/settings_controller.hpp"
+#include "controller/users_controller.hpp"
 
 #include "oatpp/network/Server.hpp"
-#include "./handlers/NativeHandler.hpp"
-#include "./database/SQL.hpp"
+#include "handlers/native_handler.hpp"
+#include "database/sql.hpp"
 
 #include <iostream>
 
@@ -27,17 +27,21 @@ void on_exit()
 
 	/* Now, check if server is still running and stop it if needed */
 	if (server->getStatus() == oatpp::network::Server::STATUS_RUNNING)
+	{
 		server->stop();
+	}
 
 	/* Finally, stop the ConnectionHandler and wait until all running connections are closed - actually do nothing */
 	connection_handler->stop();
 
 	/* Wait until server done his job */
 	if (server_thread.joinable())
+	{
 		server_thread.join();
+	}
 
 	/* Cleanup pool - We can safely use this because every connection now closed and database are not used (except detached thread witch cannot throw exceptions for us) */
-	aru::ConnectionPool::getInstance()->~ConnectionPool();
+	aru::connection_pool::get_instance()->~connection_pool();
 
 	/* oatpp::base::Environment::destroy(); do same thing but crash program because of existing AppComponent */
 	#if defined(WIN32) || defined(_WIN32)
@@ -58,23 +62,23 @@ void run()
 	config::parse();
 
 	/* Register Components in scope of run() method */
-	AppComponent components;
+	components _components;
 
 	/* Get router component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 
 	/* Add all endpoints to router */
-	auto authController = AuthController::createShared();
-	auto beatmapController = BeatmapController::createShared();
-	auto settingsController = SettingsController::createShared();
-	auto mainController = MainController::createShared();
-	auto userController = UsersController::createShared();
+	auto auth_controller = auth_controller::create_shared();
+	auto beatmap_controller = beatmap_controller::create_shared();
+	auto settings_controller = settings_controller::create_shared();
+	auto base_controller = base_controller::create_shared();
+	auto users_controller = users_controller::create_shared();
 
-	authController->addEndpointsToRouter(router);
-	beatmapController->addEndpointsToRouter(router);
-	settingsController->addEndpointsToRouter(router);
-	mainController->addEndpointsToRouter(router);
-	userController->addEndpointsToRouter(router);
+	auth_controller->addEndpointsToRouter(router);
+	beatmap_controller->addEndpointsToRouter(router);
+	settings_controller->addEndpointsToRouter(router);
+	base_controller->addEndpointsToRouter(router);
+	users_controller->addEndpointsToRouter(router);
 
 	/* Get connection handler component */
 	OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler);
@@ -86,7 +90,7 @@ void run()
 	server = oatpp::network::Server::createShared(connectionProvider, connectionHandler);
 
 	/* Initialize database pool */
-	aru::ConnectionPool pool(config::database::connection_amount);
+	aru::connection_pool pool(config::database::connection_amount);
 	std::thread([&]
 	{
 		while (true)
@@ -103,7 +107,9 @@ void run()
 	/* Run server */
 	server_thread = std::move(std::thread([] { server->run(); }));
 	while (true)
+	{
 		std::this_thread::sleep_for(std::chrono::hours(240));
+	}
 }
 
 int main(int argc, const char* argv[])

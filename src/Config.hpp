@@ -1,7 +1,7 @@
-#ifndef Config_hpp_included
-#define Config_hpp_included
+#ifndef config_hpp_included
+#define config_hpp_included
 
-#include "Globals.hpp"
+#include "globals.hpp"
 #include <sstream>
 #include <fstream>
 

@@ -1,6 +1,6 @@
-#include "BeatmapController.hpp"
+#include "beatmap_controller.hpp"
 
-void BeatmapController::logRankChange(const aru::Connection& db, int32_t id, int64_t bid, int32_t status, std::string type) const
+void beatmap_controller::log_rank_change(const aru::database& db, int32_t id, int64_t bid, int32_t status, std::string type) const
 {
 	const tables::ranking_logs logs_table {};
 	db(sqlpp::insert_into(logs_table).set(

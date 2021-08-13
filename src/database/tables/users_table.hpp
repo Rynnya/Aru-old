@@ -1,7 +1,7 @@
-#ifndef database_tables_UsersTable_hpp_included
-#define database_tables_UsersTable_hpp_included
+#ifndef database_tables_users_table_hpp_included
+#define database_tables_users_table_hpp_included
 
-#include "CoreTable.hpp"
+#include "core_table.hpp"
 
 namespace tables
 {

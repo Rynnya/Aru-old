@@ -1,5 +1,5 @@
-#ifndef handlers_NativeHandler_hpp_included
-#define handlers_NativeHandler_hpp_included
+#ifndef handlers_native_handler_hpp_included
+#define handlers_native_handler_hpp_included
 
 namespace native
 {
@@ -36,7 +36,9 @@ namespace native
 	void handle_signal(int signal) 
 	{
 		if (signal != SIGINT)
+		{
 			return;
+		}
 
 		std::exit(EXIT_SUCCESS);
 	}
