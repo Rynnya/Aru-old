@@ -21,12 +21,14 @@ class settings_controller : public oatpp::web::server::api::ApiController
 private:
 	typedef settings_controller __ControllerType;
 	std::shared_ptr<token_authorization_handler> token_auth = std::make_shared<token_authorization_handler>();
+	inline static std::unordered_set<int32_t> avatar_limiter = {};
 	std::shared_ptr<settings_controller::OutgoingResponse> get_settings(const aru::database& db, int32_t id) const;
 	std::shared_ptr<settings_controller::OutgoingResponse> update_background(const aru::database& db, int32_t id, std::string request) const;
 	std::shared_ptr<settings_controller::OutgoingResponse> update_userpage(const aru::database& db, int32_t id, std::string request) const;
 	std::shared_ptr<settings_controller::OutgoingResponse> update_status(const aru::database& db, int32_t id, std::string request) const;
 	std::shared_ptr<settings_controller::OutgoingResponse> update_preferences(const aru::database& db, int32_t id, json body) const;
 	std::shared_ptr<settings_controller::OutgoingResponse> update_scoreboard(const aru::database& db, int32_t id, json body) const;
+	std::shared_ptr<settings_controller::OutgoingResponse> change_password(const aru::database& db, int32_t id, json body) const;
 	settings_controller(const std::shared_ptr<ObjectMapper>& objectMapper) : oatpp::web::server::api::ApiController(objectMapper) {}
 public:
 
@@ -248,7 +250,16 @@ public:
 				return _return(controller->createResponse(Status::CODE_422, aru::create_error(Status::CODE_422, "Sorry, but avatars currently not available to change!")));
 			}
 
+			if (config::limits::enable_rate_limit && controller->avatar_limiter.find(user_id) != controller->avatar_limiter.end())
+			{
+				fmt::print("Warning: User {} rate limited.", user_id);
+				static oatpp::String error = aru::create_error(Status::CODE_429, fmt::format("Rate limit occurred (Avatar limiter)"));
+				return _return(controller->createResponse(Status::CODE_429, error));
+			}
+
+			std::ignore = controller->avatar_limiter.insert(user_id);
 			auto size = request->getHeader("Content-Length");
+
 			if (!size)
 			{
 				fmt::print("Warning: User {} trying to send image without Content-Length header.", user_id);
@@ -331,9 +342,9 @@ public:
 		}
 	};
 
-	ENDPOINT_ASYNC("PUT", "/users/{id}/settings/pref", _change_favourite_mode)
+	ENDPOINT_ASYNC("PUT", "/users/{id}/settings/preferences", _change_preferences)
 	{
-		ENDPOINT_ASYNC_INIT(_change_favourite_mode);
+		ENDPOINT_ASYNC_INIT(_change_preferences);
 
 		int32_t user_id = -1;
 		json body = nullptr;
@@ -347,7 +358,7 @@ public:
 				return _return(controller->createResponse(Status::CODE_400, error));
 			}
 
-			return request->readBodyToStringAsync().callbackTo(&_change_favourite_mode::on_body);
+			return request->readBodyToStringAsync().callbackTo(&_change_preferences::on_body);
 		}
 
 		Action on_body(const oatpp::String& request_body)
@@ -359,7 +370,7 @@ public:
 				return _return(controller->createResponse(Status::CODE_400, error));
 			}
 
-			return pool_handler::startForResult().callbackTo(&_change_favourite_mode::on_database);
+			return pool_handler::startForResult().callbackTo(&_change_preferences::on_database);
 		}
 
 		Action on_database(const aru::database& db)
@@ -430,6 +441,63 @@ public:
 			}
 
 			return _return(controller->update_scoreboard(db, user_id, body));
+		}
+	};
+
+	ENDPOINT_ASYNC("PUT", "/users/{id}/settings/password", _change_password)
+	{
+		ENDPOINT_ASYNC_INIT(_change_password);
+
+		int32_t user_id = -1;
+		json body = nullptr;
+
+		Action act() override
+		{
+			user_id = aru::convert::safe_int(request->getPathVariable("id"), -1);
+			if (user_id == -1)
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
+
+			return request->readBodyToStringAsync().callbackTo(&_change_password::on_body);
+		}
+
+		Action on_body(const oatpp::String& request_body)
+		{
+			body = json::parse(request_body->c_str(), nullptr, false);
+			if (body.is_discarded())
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
+
+			if (!body["current_password"].is_string() || !body["new_password"].is_string())
+			{
+				auto error = aru::create_error(Status::CODE_400, "Bad request");
+				return _return(controller->createResponse(Status::CODE_400, error));
+			}
+
+			return pool_handler::startForResult().callbackTo(&_change_password::on_database);
+		}
+
+		Action on_database(const aru::database& db)
+		{
+			std::shared_ptr<token_object> auth_object = controller->token_auth->handle_authorization(db, request);
+
+			if (!auth_object->valid)
+			{
+				auto error = aru::create_error(Status::CODE_401, "Unauthorized");
+				return _return(controller->createResponse(Status::CODE_401, error));
+			}
+
+			if (auth_object->user_id != user_id)
+			{
+				auto error = aru::create_error(Status::CODE_403, "Forbidden");
+				return _return(controller->createResponse(Status::CODE_403, error));
+			}
+
+			return _return(controller->change_password(db, user_id, body));
 		}
 	};
 };

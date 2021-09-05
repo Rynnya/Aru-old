@@ -2,6 +2,7 @@
 
 #include "database/tables/other_table.hpp"
 #include "database/tables/users_table.hpp"
+#include "utils/hash.hpp"
 
 std::shared_ptr<settings_controller::OutgoingResponse> settings_controller::get_settings(const aru::database& db, int32_t id) const
 {
@@ -80,24 +81,13 @@ std::shared_ptr<settings_controller::OutgoingResponse> settings_controller::upda
 ) const
 {
 	int32_t userID = id;
-	json jsonRoot = json::parse(request, nullptr, false);
-	if (!jsonRoot.is_discarded())
-	{
-		if (jsonRoot["userpage"].is_null())
-		{
-			auto error = aru::create_error(Status::CODE_400, "No data provided");
-			return createResponse(Status::CODE_400, error);
-		}
 
-		const tables::users users_table{};
-		db(sqlpp::update(users_table).set(users_table.userpage = u8"" + jsonRoot["userpage"].get<std::string>()).where(users_table.id == userID));
+	const tables::users users_table{};
+	db(sqlpp::update(users_table).set(users_table.userpage = u8"" + request).where(users_table.id == userID));
 
-		auto response = createResponse(Status::CODE_200, "OK");
-		response->putHeader("Content-Type", "text/plain");
-		return response;
-	}
-
-	return createResponse(Status::CODE_400, aru::create_error(Status::CODE_400, "No data provided"));
+	auto response = createResponse(Status::CODE_200, "OK");
+	response->putHeader("Content-Type", "text/plain");
+	return response;
 }
 
 std::shared_ptr<settings_controller::OutgoingResponse> settings_controller::update_status(
@@ -241,4 +231,40 @@ std::shared_ptr<settings_controller::OutgoingResponse> settings_controller::upda
 	auto response = createResponse(Status::CODE_200, "OK");
 	response->putHeader("Content-Type", "text/plain");
 	return response;
+}
+
+std::shared_ptr<settings_controller::OutgoingResponse> settings_controller::change_password(
+	const aru::database& db,
+	int32_t id,
+	json body
+) const
+{
+	std::string password = body["current_password"];
+	std::string new_password = body["new_password"];
+
+	if (password == new_password)
+	{
+		auto error = aru::create_error(Status::CODE_412, "Equal passwords");
+		return createResponse(Status::CODE_412, error);
+	}
+
+	const tables::users users_table{};
+
+	auto result = db(sqlpp::select(users_table.password_md5, users_table.salt).from(users_table).where(users_table.id == id));
+	auto& current_password_info = result.front();
+
+	std::string current_password = aru::hash::create_sha512(aru::hash::create_md5(password), current_password_info.salt);
+	std::string old_password = current_password_info.password_md5;
+
+	if (current_password != old_password)
+	{
+		auto error = aru::create_error(Status::CODE_412, "Wrong current password");
+		return createResponse(Status::CODE_412, error);
+	}
+
+	std::string salt = aru::utils::gen_random_string(24);
+	std::string password_md5 = aru::hash::create_sha512(aru::hash::create_md5(new_password), salt);
+
+	db(sqlpp::update(users_table).set(users_table.password_md5 = password_md5, users_table.salt = salt).where(users_table.id == id));
+	return createResponse(Status::CODE_200, "OK");
 }

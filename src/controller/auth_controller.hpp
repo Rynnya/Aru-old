@@ -70,11 +70,10 @@ public:
 
 				auto response = controller->createResponse(Status::CODE_200, ok.dump().c_str());
 
-				char cookies[128];
-				std::ignore = fmt::format_to(cookies, "hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
+				std::string cookie = fmt::format("hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
 					auth_object->token, config::frontend_site, 1209600 /* 2 weeks */);
 
-				response->putHeader("set-cookie", cookies);
+				response->putHeader("set-cookie", cookie.c_str());
 				return _return(response);
 			}
 
@@ -150,11 +149,10 @@ public:
 
 			auto wait = controller->createResponse(Status::CODE_200, response.dump().c_str());
 
-			char cookies[128];
-			std::ignore = fmt::format_to(cookies, "hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
-				token, config::frontend_site, 1209600 /* 2 weeks */);
+			std::string cookie = fmt::format("hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
+				auth_object->token, config::frontend_site, 1209600 /* 2 weeks */);
 
-			wait->putHeader("set-cookie", cookies);
+			wait->putHeader("set-cookie", cookie.c_str());
 			return _return(wait);
 		}
 	};
@@ -289,11 +287,10 @@ public:
 			response["token"] = token;
 			auto wait = controller->createResponse(Status::CODE_201, response.dump().c_str());
 
-			char cookies[128];
-			std::ignore = fmt::format_to(cookies, "hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
+			std::string cookie = fmt::format("hat={}; Path=/; Domain={}; Max-Age={}; Secure; HttpOnly",
 				token, config::frontend_site, 1209600 /* 2 weeks */);
 
-			wait->putHeader("set-cookie", cookies);
+			wait->putHeader("set-cookie", cookie.c_str());
 			return _return(wait);
 		}
 	};
