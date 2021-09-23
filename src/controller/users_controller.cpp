@@ -79,7 +79,7 @@ std::shared_ptr<users_controller::OutgoingResponse> users_controller::build_scor
 
 	if (result.empty())
 	{
-		return this->createResponse(Status::CODE_200, json::array().dump().c_str());
+		return this->createResponse(Status::CODE_204, "[]");
 	}
 
 	for (const auto& row : result)
