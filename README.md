@@ -1,3 +1,6 @@
+# OUTDATED!
+### Please consider to upgrade aru to new version [here](https://github.com/Rynnya/aru)
+
 # Aru (osu!) - C++ API
 
 API for use in conjunction with unfinished Yukime site, I will create new repository to site after some time<br>
